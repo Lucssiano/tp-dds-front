@@ -112,6 +112,24 @@ public class WebApiCallerService {
    * Ejecuta una llamada HTTP POST
    */
   public <T> T post(String url, Object body, Class<T> responseType) {
+    // 🔹 Si es login o register → no requiere token
+    if (url.contains("/auth/register") || url.endsWith("/auth") || url.contains("/auth/login")) {
+      try {
+        return webClient
+            .post()
+            .uri(url)
+            .bodyValue(body)
+            .retrieve()
+            .bodyToMono(responseType)
+            .block();
+      } catch (WebClientResponseException e) {
+        throw new RuntimeException("Error HTTP en llamada pública: " + e.getMessage(), e);
+      } catch (Exception e) {
+        throw new RuntimeException("Error en llamada pública: " + e.getMessage(), e);
+      }
+    }
+
+    // 🔹 Si no es público → usar el flujo normal con token y refresh
     return executeWithTokenRetry(accessToken ->
         webClient
             .post()
@@ -123,6 +141,7 @@ public class WebApiCallerService {
             .block()
     );
   }
+
 
   /**
    * Ejecuta una llamada HTTP PUT

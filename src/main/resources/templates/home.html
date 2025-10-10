@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>MetaMapa - Tu voz en el mapa</title>
+
+  <link rel="stylesheet" th:href="@{/css/global.css}">
+  <link rel="stylesheet" th:href="@{/css/landing.css}">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700&display=swap" rel="stylesheet">
+</head>
+
+<body>
+<header class="header">
+  <div class="container">
+    <a th:href="@{/}" class="logo">MetaMapa</a>
+    <nav class="nav">
+      <a th:href="@{/mapa}" class="nav__link">Visualizar</a>
+      <a th:href="@{/admin/dashboard}" class="nav__link">Admin Dashboard</a>
+      <a th:href="@{/auth}" class="btn btn--secondary">Iniciar Sesión</a>
+      <a th:href="@{/auth?modoRegistro=true}" class="btn btn--primary">Registrarse</a>
+    </nav>
+  </div>
+</header>
+
+<main>
+  <section class="hero">
+    <div class="container">
+      <h1 class="hero__title">Construye la historia colectiva en el mapa.</h1>
+      <p class="hero__subtitle">
+        Tu aporte es clave para visibilizar la información. Explora hechos y contribuye con tus propios hallazgos.
+      </p>
+      <a th:href="@{/mapa}" class="btn btn--primary btn--large">Empezar a Explorar</a>
+    </div>
+  </section>
+
+  <section class="featured">
+    <div class="container">
+      <h2 class="featured__title">Colecciones Destacadas</h2>
+      <div class="card-grid">
+        <div class="card" th:each="coleccion : ${coleccionesDestacadas}">
+          <img th:src="${coleccion.imagenUrl}" alt="Imagen de Colección" class="card__img">
+          <div class="card__content">
+            <h3 class="card__title" th:text="${coleccion.titulo}">Título</h3>
+            <p class="card__description" th:text="${coleccion.descripcion}">Descripción</p>
+            <a th:href="@{'/colecciones/' + ${coleccion.id}}" class="card__link">Ver Colección</a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="featured-fact">
+    <div class="container">
+      <h2 class="featured__title">Hecho del Día</h2>
+      <div class="fact-card" th:if="${hechoDestacado != null}">
+        <img th:src="${hechoDestacado.imagenUrl}" alt="Imagen del hecho" class="fact-card__img">
+        <div class="fact-card__content">
+          <h3 class="fact-card__title" th:text="${hechoDestacado.titulo}">Título del hecho</h3>
+          <p class="fact-card__description" th:text="${hechoDestacado.descripcion}">
+            Descripción del hecho
+          </p>
+          <a th:href="@{'/hechos/' + ${hechoDestacado.id}}" class="btn btn--secondary">Ver en el Mapa</a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="call-to-contribute">
+    <div class="container">
+      <h2 class="section-title">Sé parte de la historia.</h2>
+      <p>
+        Tu aporte es clave para visibilizar la información. Regístrate y ayuda a construir un mapa más completo y veraz.
+      </p>
+      <a th:href="@{/auth?modoRegistro=true}" class="btn btn--primary btn--large">Regístrate Ahora</a>
+    </div>
+  </section>
+</main>
+
+<footer class="footer">
+  <div class="container">
+    <div class="footer__about">
+      <p>
+        MetaMapa es un sistema de código abierto de una ONG, diseñado para la recopilación y mapeo colaborativo
+        de información, protegiendo la identidad de sus usuarios.
+      </p>
+    </div>
+    <br>
+    <div class="footer__links">
+      <a href="#">Política de Privacidad</a>
+      <a href="#">Términos de Uso</a>
+      <a href="#">Contacto</a>
+    </div>
+  </div>
+</footer>
+</body>
+</html>

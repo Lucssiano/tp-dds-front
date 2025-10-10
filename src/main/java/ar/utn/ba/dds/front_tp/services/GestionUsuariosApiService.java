@@ -37,14 +37,14 @@ public class GestionUsuariosApiService {
     this.usuariosServiceUrl = usuariosServiceUrl;
   }
 
-  public AuthResponseDTO login(String username, String password){
+  public AuthResponseDTO login(String email, String password){
     try {
       AuthResponseDTO response = webClient
           .post()
           .uri(authServiceUrl + "/auth")
           .bodyValue(Map.of(
-              "username", username,
-              "password", password
+              "password", password,
+              "email", email
           ))
           .retrieve()
           .bodyToMono(AuthResponseDTO.class)

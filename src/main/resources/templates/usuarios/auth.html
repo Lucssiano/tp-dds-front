@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Acceso - MetaMapa</title>
+  <link rel="stylesheet" th:href="@{/css/global.css}">
+  <link rel="stylesheet" th:href="@{/css/auth.css}">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700&display=swap" rel="stylesheet">
+</head>
+
+<body>
+<header class="header header--auth">
+  <div class="container">
+    <a th:href="@{/}" class="logo">MetaMapa</a>
+    <nav class="nav"></nav>
+  </div>
+</header>
+
+<div class="auth-container" id="auth-page"
+     th:classappend="${modoRegistro} ? 'is-register' : ''">
+  <div class="auth-card">
+
+    <div class="auth-card__toggle">
+      <p>
+          <span id="toggle-text"
+                th:text="${modoRegistro} ? '¿Ya tienes una cuenta?' : '¿No tienes una cuenta?'">
+          </span>
+        <a href="#" id="toggle-link"
+           th:text="${modoRegistro} ? 'Inicia Sesión' : 'Regístrate'">
+        </a>
+      </p>
+    </div>
+
+    <!-- FORMULARIO DE LOGIN -->
+    <form id="login-form"
+          th:action="@{/auth/login}"
+          th:object="${usuarioLogin}"
+          method="post"
+          th:if="${!modoRegistro}">
+      <h2 class="auth-card__title">Iniciar Sesión</h2>
+
+      <div class="form-group">
+        <label for="login-email">Correo Electrónico</label>
+        <input type="email" id="login-email" class="form-control"
+               th:field="*{email}" placeholder="nombre@ejemplo.com" required>
+      </div>
+
+      <div class="form-group">
+        <label for="login-password">Contraseña</label>
+        <input type="password" id="login-password" class="form-control"
+               th:field="*{contrasena}" required>
+      </div>
+
+      <button type="submit" class="btn btn--primary btn--large">Entrar</button>
+
+      <div class="form-messages">
+        <p th:if="${errorLogin}" class="error-msg" th:text="${errorLogin}"></p>
+        <p th:if="${mensajeLogin}" class="success-msg" th:text="${mensajeLogin}"></p>
+      </div>
+    </form>
+
+    <!-- FORMULARIO DE REGISTRO -->
+    <form id="register-form"
+          th:action="@{/auth/registrar}"
+          th:object="${usuarioRegistro}"
+          method="post"
+          th:if="${modoRegistro}">
+      <h2 class="auth-card__title">Registrarse</h2>
+
+      <div class="form-group">
+        <label for="register-name">Nombre (obligatorio)</label>
+        <input type="text" id="register-name" class="form-control"
+               th:field="*{nombre}" required>
+      </div>
+
+      <div class="form-group">
+        <label for="register-email">Correo Electrónico</label>
+        <input type="email" id="register-email" class="form-control"
+               th:field="*{email}" required>
+      </div>
+
+      <div class="form-group">
+        <label for="register-password">Contraseña</label>
+        <input type="password" id="register-password" class="form-control"
+               th:field="*{contrasena}" required>
+      </div>
+
+      <button type="submit" class="btn btn--primary btn--large">Crear Cuenta</button>
+
+      <div class="form-messages">
+        <p th:if="${errorRegistro}" class="error-msg" th:text="${errorRegistro}"></p>
+        <p th:if="${mensajeRegistro}" class="success-msg" th:text="${mensajeRegistro}"></p>
+      </div>
+    </form>
+
+  </div>
+</div>
+
+<script>
+  const authPage = document.getElementById('auth-page');
+  const toggleLink = document.getElementById('toggle-link');
+  const toggleText = document.getElementById('toggle-text');
+
+  toggleLink.addEventListener('click', (e) => {
+    e.preventDefault();
+    authPage.classList.toggle('is-register');
+
+    const isRegister = authPage.classList.contains('is-register');
+    toggleText.textContent = isRegister
+      ? '¿Ya tienes una cuenta?'
+      : '¿No tienes una cuenta?';
+    toggleLink.textContent = isRegister
+      ? 'Inicia Sesión'
+      : 'Regístrate';
+  });
+</script>
+</body>
+
+</html>

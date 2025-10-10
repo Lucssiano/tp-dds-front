@@ -1,0 +1,135 @@
+/* Variables de Diseño */
+:root {
+	--primary-color: #2e86c1;
+	--secondary-color: #f1c40f;
+	--text-dark: #333333;
+	--text-medium: #666666;
+	--bg-light: #eeeeee;
+	--bg-white: #ffffff;
+	--border-color: #cccccc;
+	--radius: 4px;
+	--shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+/* Base */
+* {
+	box-sizing: border-box;
+	margin: 0;
+	padding: 0;
+}
+
+body {
+	font-family: 'Inter', sans-serif;
+	line-height: 1.6;
+	color: var(--text-dark);
+	background-color: var(--bg-light);
+}
+
+.container {
+	max-width: 1200px;
+	margin: 0 auto;
+	padding: 0 20px;
+}
+
+/* Header (Barra de Navegación Común) */
+.header {
+	background-color: var(--bg-white);
+	padding: 15px 0;
+	border-bottom: 1px solid var(--border-color);
+}
+
+.header .container {
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+}
+
+.logo {
+	font-size: 24px;
+	font-weight: bold;
+	color: var(--primary-color);
+	text-decoration: none;
+}
+
+.nav a {
+	text-decoration: none;
+	color: var(--text-dark);
+	margin-left: 20px;
+}
+
+/* Botones */
+.btn {
+	padding: 10px 20px;
+	border-radius: var(--radius);
+	text-decoration: none;
+	font-weight: bold;
+	transition: background-color 0.3s;
+	border: none;
+	cursor: pointer;
+	font-size: 16px;
+}
+
+.btn--primary {
+	background-color: var(--primary-color);
+	color: var(--bg-white);
+}
+
+.btn--primary:hover {
+	background-color: #2471a3;
+}
+
+.btn--secondary {
+	background-color: var(--bg-white);
+	color: var(--primary-color);
+	border: 1px solid var(--primary-color);
+}
+
+.btn--secondary:hover {
+	background-color: var(--bg-light);
+}
+
+.btn--large {
+	padding: 12px 30px;
+	font-size: 18px;
+}
+
+/* Formularios (Clases Comunes) */
+.form-group {
+	margin-bottom: 20px;
+	text-align: left;
+}
+
+.form-group label {
+	display: block;
+	font-weight: bold;
+	margin-bottom: 8px;
+	color: var(--text-dark);
+}
+
+.form-control {
+	width: 100%;
+	padding: 12px;
+	border: 1px solid var(--border-color);
+	border-radius: var(--radius);
+	font-size: 16px;
+	transition: border-color 0.3s, box-shadow 0.3s;
+}
+
+.form-control:focus {
+	border-color: var(--primary-color);
+	outline: none;
+	box-shadow: 0 0 0 2px rgba(46, 134, 193, 0.2);
+}
+
+.footer {
+	background-color: var(--text-dark);
+	color: var(--bg-white);
+	padding: 20px 0;
+	text-align: center;
+}
+
+.footer__links a {
+	color: var(--bg-white);
+	text-decoration: none;
+	margin: 0 10px;
+}
