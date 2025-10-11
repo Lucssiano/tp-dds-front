@@ -29,7 +29,7 @@ public class HechosApiService {
   }
 
   public List<HechoDTO> obtenerHechos() {
-    String url = hechosServiceUrl + "/hechos";
+    String url = hechosServiceUrl + "/hechos?page=0&size=100";
     try {
       List<HechoDTO> hechoDTOS = webApiCallerService.getList(url, HechoDTO.class);
       log.info("titulo primer hecho: " + hechoDTOS.stream().findFirst().get().getTitulo());
