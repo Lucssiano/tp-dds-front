@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mapa de Hechos - MetaMapa</title>
+    <link rel="stylesheet" th:href="@{/css/global.css}">
+    <link rel="stylesheet" th:href="@{/css/mapa.css}">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
+</head>
+
+<body>
+<header class="header header--map">
+    <div class="container">
+        <a th:href="@{/}" class="logo">MetaMapa</a>
+        <nav class="nav">
+            <a th:href="@{/colecciones}" class="nav__link">Mis Colecciones</a>
+            <a th:href="@{/subir-hecho}" class="btn btn--primary">Subir Hecho</a>
+        </nav>
+    </div>
+</header>
+
+<div class="map-layout">
+    <aside class="sidebar">
+        <div class="filter-panel">
+            <h3 class="filter-panel__title">Colecciones</h3>
+            <ul class="collection-list">
+                <li><a th:href="@{/mapa(collection=1)}">Rutas de la Revolución</a></li>
+                <li><a th:href="@{/mapa(collection=2)}">Eventos Naturales Históricos</a></li>
+                <li><a th:href="@{/mapa(collection=3)}">Monumentos de la República</a></li>
+            </ul>
+            <a th:href="@{/colecciones}" class="btn btn--secondary btn--small">Ver Todas las Colecciones</a>
+        </div>
+    </aside>
+
+    <div id="mapid" class="map-container"></div>
+</div>
+
+<!-- Modal -->
+<div id="fact-modal" class="modal">
+    <div class="modal__content">
+        <span class="modal__close">&times;</span>
+        <h2 id="modal-title">Título del Hecho</h2>
+        <div class="fact-details">
+            <p><span class="label">Fecha:</span> <span id="modal-date"></span></p>
+            <p><span class="label">Ubicación:</span> <span id="modal-location"></span></p>
+            <p><span class="label">Fuente:</span> <span id="modal-source"></span></p>
+        </div>
+        <p id="modal-description" class="fact-description"></p>
+    </div>
+</div>
+
+<script th:inline="javascript">
+    /*<![CDATA[*/
+    const hechos = /*[[${hechos}]]*/ [];
+
+    console.log("Hechos recibidos desde backend:", hechos);
+
+    const map = L.map('mapid').setView([-34.6, -58.38], 5);
+
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      attribution: '© OpenStreetMap contributors'
+    }).addTo(map);
+
+    if (hechos && hechos.length > 0) {
+      hechos.forEach(fact => {
+        const ubicacion = fact.ubicacionOutputDTO;
+
+        if (ubicacion && ubicacion.latitud && ubicacion.longitud) {
+          const lat = parseFloat(ubicacion.latitud);
+          const lon = parseFloat(ubicacion.longitud);
+
+          const marker = L.marker([lat, lon]).addTo(map);
+          marker.bindPopup(`
+            <b>${fact.titulo}</b><br>
+            ${fact.categoria || 'Sin categoría'}<br>
+            ${ubicacion.provincia || ''} - ${ubicacion.municipio || ''}
+          `);
+
+          marker.on('click', () => {
+            document.getElementById('modal-title').textContent = fact.titulo;
+            document.getElementById('modal-date').textContent = fact.fechaHecho || 'Sin fecha';
+            document.getElementById('modal-location').textContent = `${ubicacion.provincia || ''}, ${ubicacion.municipio || ''}`;
+            document.getElementById('modal-source').textContent = fact.fuente || 'Desconocida';
+            document.getElementById('modal-description').textContent = fact.descripcion || '';
+            document.getElementById('fact-modal').style.display = "block";
+          });
+        } else {
+          console.warn(`Hecho sin coordenadas: ${fact.titulo}`);
+        }
+      });
+    } else {
+      console.warn("No hay hechos para mostrar en el mapa");
+    }
+
+    document.querySelector('.modal__close').onclick = () => {
+      document.getElementById('fact-modal').style.display = "none";
+    };
+    /*]]>*/
+</script>
+
+</body>
+</html>
