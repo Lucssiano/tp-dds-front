@@ -5,6 +5,7 @@ import ar.utn.ba.dds.front_tp.dto.usuarios.AuthResponseDTO;
 import ar.utn.ba.dds.front_tp.exceptions.DuplicateTitleException;
 import ar.utn.ba.dds.front_tp.services.GestionUsuariosApiService;
 import ar.utn.ba.dds.front_tp.services.HechosApiService;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.servlet.http.HttpSession;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
@@ -29,7 +30,9 @@ import java.util.List;
 public class HechosController {
   private static final Logger log = LoggerFactory.getLogger(HechosController.class);
   private final HechosApiService hechosApiService;
-  @Autowired
+
+  // Inyectamos el conversor de JSON
+  private final ObjectMapper objectMapper;
   private HttpSession session;
 
   @GetMapping("/mapa")
@@ -38,10 +41,16 @@ public class HechosController {
     try {
       List<HechoDTO> hechos = hechosApiService.obtenerHechos();
       log.info("Cantidad de hechos recibidos: {}", hechos.size());
-      model.addAttribute("hechos", hechos);
+
+      // Convertimos la lista a un String JSON
+      String hechosJson = objectMapper.writeValueAsString(hechos);
+
+      // Pasamos el STRING JSON al modelo
+      model.addAttribute("hechosJson", hechosJson);
+
     } catch (Exception e) {
-      log.error("Error al obtener hechos", e);
-      model.addAttribute("error", "Error al obtener hechos: " + e.getMessage());
+      log.error("Error al obtener hechos o al convertirlos a JSON", e);
+      model.addAttribute("hechosJson", "[]"); // Pasamos un array vacío en caso de error
     }
     return "mapa";
   }
