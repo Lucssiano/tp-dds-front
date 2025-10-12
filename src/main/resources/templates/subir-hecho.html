@@ -40,7 +40,7 @@
 
             <form
                     id="upload-fact-form"
-                    th:action="@{/crear-hecho}"
+                    th:action="@{/hechos/crear-hecho}"
                     th:object="${hecho}"
                     method="post"
                     enctype="multipart/form-data"> <div class="form-group">
@@ -74,8 +74,8 @@
                     </div>
                     <div id="map-preview" style="height: 200px; border-radius: 4px; margin-top: 10px; margin-bottom: 10px;">
                     </div>
-                    <input type="hidden" id="lat-input" th:field="*{latitud}" name="latitud">
-                    <input type="hidden" id="lng-input" th:field="*{longitud}" name="longitud">
+                    <input type="hidden" id="lat-input" th:field="*{ubicacionOutputDTO.latitud}" name="latitud">
+                    <input type="hidden" id="lng-input" th:field="*{ubicacionOutputDTO.longitud}" name="longitud">
                 </div>
 
                 <div class="form-group">

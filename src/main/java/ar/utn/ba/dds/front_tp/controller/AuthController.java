@@ -43,6 +43,8 @@ public class AuthController {
   public String login(@ModelAttribute("usuarioLogin") UsuarioDTO usuarioDTO, Model model) {
     try {
       AuthResponseDTO token = gestionUsuariosApiService.login(usuarioDTO.getEmail(), usuarioDTO.getContrasena());
+      log.info("Token recibido del backend de usuarios: {}", token); // 👈
+      log.info("AccessToken: {}", token.getAccessToken()); // 👈
       session.setAttribute("AUTH_DATA", token);
       model.addAttribute("mensajeLogin", "Inicio de sesión exitoso");
       return "redirect:/";

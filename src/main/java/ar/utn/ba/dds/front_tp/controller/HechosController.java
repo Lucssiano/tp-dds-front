@@ -33,6 +33,7 @@ public class HechosController {
 
   // Inyectamos el conversor de JSON
   private final ObjectMapper objectMapper;
+  @Autowired
   private HttpSession session;
 
   @GetMapping("/mapa")
@@ -62,14 +63,16 @@ public class HechosController {
   }
 
   @PostMapping("/crear-hecho")
-  @PreAuthorize("hasAnyRole('ADMIN', 'CONTRIBUYENTE')")
+  //@PreAuthorize("hasAnyRole('ADMIN', 'CONTRIBUYENTE')")
   public String crearHecho(@ModelAttribute("hecho") HechoDTO hecho,
                            BindingResult bindingResult,
                            Model model,
                            RedirectAttributes redirectAttributes) {
 
     AuthResponseDTO token = (AuthResponseDTO) session.getAttribute("AUTH_DATA");
-
+    log.info("Token recibido del backend de usuarios: {}", token); // 👈
+    log.info("AccessToken: {}", token.getAccessToken()); // 👈
+    log.info("Llegue a crear hechos... creo: " + hecho.getTitulo());
     if (token == null) {
       redirectAttributes.addFlashAttribute("errorLogin", "Tu sesión ha expirado. Por favor, inicia sesión de nuevo.");
       return "redirect:/auth/login";
@@ -84,19 +87,19 @@ public class HechosController {
       bindingResult.rejectValue("titulo", "error.titulo.duplicado", ex.getMessage());
       model.addAttribute("hecho", hecho); // Vuelve a cargar el DTO para que el usuario no pierda los datos
       model.addAttribute("errorGlobal", "El título de Hecho ya existe. Por favor, elige otro.");
-      return "crear-hecho"; // Retorna a la vista del formulario
+      return "subir-hecho"; // Retorna a la vista del formulario
     } catch (RuntimeException e) {
       // Errores de API/Comunicación: Fallo al consumir el servicio REST o error 5xx del backend.
       log.error("Error al crear hecho por falla de servicio", e);
       model.addAttribute("errorGlobal", "No se pudo comunicar con el servicio. Inténtalo más tarde.");
       model.addAttribute("hecho", hecho);
-      return "crear-hecho";
+      return "subir-hecho";
     } catch (Exception e) {
       // Fallback: Error inesperado que no manejamos.
       log.error("Error inesperado al crear hecho", e);
       model.addAttribute("errorGlobal", "Ocurrió un error inesperado: " + e.getMessage());
       model.addAttribute("hecho", hecho);
-      return "crear-hecho";
+      return "subir-hecho";
     }
   }
 }
