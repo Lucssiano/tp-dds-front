@@ -1,7 +1,9 @@
 package ar.utn.ba.dds.front_tp.controller;
 
+import ar.utn.ba.dds.front_tp.dto.usuarios.AuthResponseDTO;
 import ar.utn.ba.dds.front_tp.dto.usuarios.UsuarioDTO;
 import ar.utn.ba.dds.front_tp.services.GestionUsuariosApiService;
+import jakarta.servlet.http.HttpSession;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -20,6 +22,8 @@ public class AuthController {
   private static final Logger log = LoggerFactory.getLogger(AuthController.class);
   @Autowired
   private final GestionUsuariosApiService gestionUsuariosApiService;
+  @Autowired
+  private HttpSession session;
 
   public AuthController(GestionUsuariosApiService gestionUsuariosApiService) {
     this.gestionUsuariosApiService = gestionUsuariosApiService;
@@ -38,7 +42,8 @@ public class AuthController {
   @PostMapping("/login")
   public String login(@ModelAttribute("usuarioLogin") UsuarioDTO usuarioDTO, Model model) {
     try {
-      gestionUsuariosApiService.login(usuarioDTO.getEmail(), usuarioDTO.getContrasena());
+      AuthResponseDTO token = gestionUsuariosApiService.login(usuarioDTO.getEmail(), usuarioDTO.getContrasena());
+      session.setAttribute("AUTH_DATA", token);
       model.addAttribute("mensajeLogin", "Inicio de sesión exitoso");
       return "redirect:/";
     } catch (Exception e) {

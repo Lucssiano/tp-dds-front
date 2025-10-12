@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Subir Hecho - MetaMapa</title>
+    <link rel="stylesheet" th:href="@{/css/global.css}">
+    <link rel="stylesheet" th:href="@{/css/contribuyente.css}">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
+</head>
+
+<body>
+<header class="header">
+    <div class="container">
+        <a th:href="@{/static}" class="logo">MetaMapa</a>
+        <nav class="nav">
+            <a th:href="@{/mis-hechos}" class="nav__link">Mis Hechos</a>
+            <a th:href="@{/auth/logout}" class="btn btn--secondary">Cerrar Sesión</a>
+        </nav>
+    </div>
+</header>
+
+<main class="main-content">
+    <div class="container">
+        <div class="form-card">
+            <h1 class="form-card__title">Subir Nuevo Hecho</h1>
+
+            <div th:if="${mensaje}"
+                 th:classappend="${tipoMensaje == 'success' ? 'alert--success' : 'alert--info'}"
+                 class="alert">
+                <p th:text="${mensaje}">Mensaje de éxito/información.</p>
+            </div>
+
+            <div th:if="${errorGlobal}" class="alert alert--danger">
+                <p th:text="${errorGlobal}">Error al crear el hecho.</p>
+            </div>
+
+            <form
+                    id="upload-fact-form"
+                    th:action="@{/crear-hecho}"
+                    th:object="${hecho}"
+                    method="post"
+                    enctype="multipart/form-data"> <div class="form-group">
+                <label for="fact-title">Título (obligatorio)</label>
+                <input type="text" id="fact-title" th:field="*{titulo}" class="form-control" placeholder="Ej: Terremoto de 1985" required>
+                <p th:if="${#fields.hasErrors('titulo')}" th:errors="*{titulo}" class="text-danger">Error de título</p>
+            </div>
+
+                <div class="form-group">
+                    <label for="fact-description">Descripción (obligatorio)</label>
+                    <textarea id="fact-description" th:field="*{descripcion}" class="form-control" rows="5"
+                              placeholder="Describe el hecho de forma detallada..." required></textarea>
+                    <p th:if="${#fields.hasErrors('descripcion')}" th:errors="*{descripcion}" class="text-danger">Error de descripción</p>
+                </div>
+
+                <div class="form-group">
+                    <label for="fact-category">Categoría</label>
+                    <select id="fact-category" th:field="*{categoria}" class="form-control">
+                        <option value="">Selecciona una categoría</option>
+                        <option value="natural">Hecho Natural</option>
+                        <option value="historico">Hecho Histórico</option>
+                        <option value="social">Hecho Social</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label>Ubicación</label>
+                    <div class="location-search-container">
+                        <input type="text" id="address-input" class="form-control" placeholder="Ej: Av. Rivadavia 1234, CABA">
+                        <button type="button" class="btn btn--secondary" id="geocode-btn">Buscar</button>
+                    </div>
+                    <div id="map-preview" style="height: 200px; border-radius: 4px; margin-top: 10px; margin-bottom: 10px;">
+                    </div>
+                    <input type="hidden" id="lat-input" th:field="*{latitud}" name="latitud">
+                    <input type="hidden" id="lng-input" th:field="*{longitud}" name="longitud">
+                </div>
+
+                <div class="form-group">
+                    <label for="fact-date">Fecha</label>
+                    <input type="date" id="fact-date" th:field="*{fechaHecho}" class="form-control">
+                </div>
+
+                <div class="form-group">
+                    <label for="fact-multimedia">Multimedia</label>
+                    <input type="file" id="fact-multimedia" name="multimediaFile" class="form-control" multiple>
+                </div>
+
+                <button type="submit" class="btn btn--primary btn--large">Enviar Hecho</button>
+            </form>
+        </div>
+    </div>
+</main>
+
+<script>
+    /* La lógica JavaScript de Leaflet (mapa) permanece intacta */
+    const map = L.map('map-preview').setView([-34.6037, -58.3816], 13);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
+
+    const latInput = document.getElementById('lat-input');
+    const lngInput = document.getElementById('lng-input');
+    const addressInput = document.getElementById('address-input');
+    const geocodeBtn = document.getElementById('geocode-btn');
+    let marker = null;
+
+    function updateMapAndInputs(lat, lng) {
+        if (marker) {
+            map.removeLayer(marker);
+        }
+        marker = L.marker([lat, lng]).addTo(map);
+        latInput.value = lat;
+        lngInput.value = lng;
+    }
+
+    map.on('click', (e) => {
+        const { lat, lng } = e.latlng;
+        updateMapAndInputs(lat, lng);
+    });
+
+    geocodeBtn.addEventListener('click', () => {
+        const address = addressInput.value.trim();
+        if (address) {
+            const url = `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(address)}&format=json&limit=1`;
+
+            fetch(url)
+                .then(response => response.json())
+                .then(data => {
+                    if (data && data.length > 0) {
+                        const firstResult = data[0];
+                        const lat = parseFloat(firstResult.lat);
+                        const lng = parseFloat(firstResult.lon);
+
+                        updateMapAndInputs(lat, lng);
+                        map.setView([lat, lng], 16);
+                    } else {
+                        alert('No se encontraron resultados para la dirección.');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error en la geocodificación:', error);
+                    alert('Hubo un error al buscar la dirección. Intenta de nuevo.');
+                });
+        } else {
+            alert('Por favor, ingresa una dirección.');
+        }
+    });
+</script>
+</body>
+
+</html>
