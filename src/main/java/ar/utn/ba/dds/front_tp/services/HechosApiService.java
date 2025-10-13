@@ -2,6 +2,7 @@ package ar.utn.ba.dds.front_tp.services;
 
 import ar.utn.ba.dds.front_tp.dto.hechos.CrearHechoDTO;
 import ar.utn.ba.dds.front_tp.dto.hechos.HechoDTO;
+import ar.utn.ba.dds.front_tp.dto.output.HechoOutputDTO;
 import ar.utn.ba.dds.front_tp.dto.usuarios.AuthResponseDTO;
 import ar.utn.ba.dds.front_tp.services.internal.WebApiCallerService;
 import jakarta.servlet.http.HttpSession;
@@ -56,19 +57,28 @@ public class HechosApiService {
       throw new RuntimeException("Error general al obtener hechos: " + e.getMessage());
     }
   }
-  public HechoDTO crearHecho(HechoDTO hecho, String token){
-    CrearHechoDTO crearHechoDTO = CrearHechoDTO.builder().hecho(hecho).accessToken(token).build();
-    HechoDTO response  = webClient
+  public HechoOutputDTO crearHecho(HechoOutputDTO hecho, String token) {
+
+    log.info("Lat: {}, Long: {}", hecho.getLatitud(), hecho.getLongitud());
+
+    CrearHechoDTO crearHechoDTO = CrearHechoDTO.builder()
+        .hecho(hecho)
+        .accessToken(token)
+        .build();
+    log.info("Fecha que se envía: {}", crearHechoDTO.getHecho().getFecha());
+    HechoOutputDTO response = webClient
         .post()
         .uri(hechosServiceUrl + "/hechos")
         .bodyValue(crearHechoDTO)
         .retrieve()
-        .bodyToMono(HechoDTO.class)
+        .bodyToMono(HechoOutputDTO.class)
         .block();
+
     if (response == null) {
       throw new RuntimeException("Error al crear el hecho en el servicio externo.");
     }
 
     return response;
   }
+
 }

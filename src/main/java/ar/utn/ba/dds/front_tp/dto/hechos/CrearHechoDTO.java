@@ -1,5 +1,6 @@
 package ar.utn.ba.dds.front_tp.dto.hechos;
 
+import ar.utn.ba.dds.front_tp.dto.output.HechoOutputDTO;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.Setter;
@@ -8,6 +9,6 @@ import lombok.Setter;
 @Getter
 @Setter
 public class CrearHechoDTO {
-  private HechoDTO hecho;
+  private HechoOutputDTO hecho;
   private String accessToken;
 }

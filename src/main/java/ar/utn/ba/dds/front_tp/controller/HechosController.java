@@ -1,6 +1,7 @@
 package ar.utn.ba.dds.front_tp.controller;
 
 import ar.utn.ba.dds.front_tp.dto.hechos.HechoDTO;
+import ar.utn.ba.dds.front_tp.dto.output.HechoOutputDTO;
 import ar.utn.ba.dds.front_tp.dto.usuarios.AuthResponseDTO;
 import ar.utn.ba.dds.front_tp.exceptions.DuplicateTitleException;
 import ar.utn.ba.dds.front_tp.services.GestionUsuariosApiService;
@@ -56,15 +57,15 @@ public class HechosController {
     return "mapa";
   }
   @GetMapping("/subir-hecho")
-  //@PreAuthorize("hasAnyRole('ADMIN', 'CONTRIBUYENTE')")
   public String subirHecho(Model model){
-    model.addAttribute("hecho", new HechoDTO());
+    model.addAttribute("hecho", new HechoOutputDTO());
     return "subir-hecho";
   }
 
+
   @PostMapping("/crear-hecho")
   //@PreAuthorize("hasAnyRole('ADMIN', 'CONTRIBUYENTE')")
-  public String crearHecho(@ModelAttribute("hecho") HechoDTO hecho,
+  public String crearHecho(@ModelAttribute("hecho") HechoOutputDTO  hecho,
                            BindingResult bindingResult,
                            Model model,
                            RedirectAttributes redirectAttributes) {
@@ -78,7 +79,7 @@ public class HechosController {
       return "redirect:/auth/login";
     }
     try {
-      HechoDTO hechoCreado = hechosApiService.crearHecho(hecho, token.getAccessToken());
+      HechoOutputDTO hechoCreado = hechosApiService.crearHecho(hecho, token.getAccessToken());
       redirectAttributes.addFlashAttribute("mensaje", "Hecho creado exitosamente");
       redirectAttributes.addFlashAttribute("tipoMensaje", "success");
       return "redirect:/hechos/" + hechoCreado.getTitulo();
