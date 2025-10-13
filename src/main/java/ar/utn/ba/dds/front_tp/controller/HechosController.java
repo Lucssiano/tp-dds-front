@@ -82,7 +82,7 @@ public class HechosController {
       HechoOutputDTO hechoCreado = hechosApiService.crearHecho(hecho, token.getAccessToken());
       redirectAttributes.addFlashAttribute("mensaje", "Hecho creado exitosamente");
       redirectAttributes.addFlashAttribute("tipoMensaje", "success");
-      return "redirect:/hechos/" + hechoCreado.getTitulo();
+      return "redirect:/home";
     } catch (DuplicateTitleException ex) {
       // Duplicidad: Para un campo de tu DTO (ej. si el título de un hecho debe ser único)
       bindingResult.rejectValue("titulo", "error.titulo.duplicado", ex.getMessage());

@@ -19,6 +19,7 @@ public class HechoOutputDTO {
   private String descripcion;
   private String categoria;
   private Path multimedia;
+  @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd")
   private LocalDate fecha;
   private BigDecimal latitud;
   private BigDecimal longitud;
