@@ -17,8 +17,6 @@ import org.springframework.web.reactive.function.client.WebClient;
 import org.springframework.web.reactive.function.client.WebClientResponseException;
 
 @Service
-@RequiredArgsConstructor
-@Slf4j
 public class WebApiCallerService {
   private final WebClient webClient;
   private final String authServiceUrl;

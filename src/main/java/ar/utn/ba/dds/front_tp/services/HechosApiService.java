@@ -2,6 +2,7 @@ package ar.utn.ba.dds.front_tp.services;
 
 import ar.utn.ba.dds.front_tp.dto.hechos.CrearHechoDTO;
 import ar.utn.ba.dds.front_tp.dto.hechos.HechoDTO;
+import ar.utn.ba.dds.front_tp.dto.usuarios.AuthResponseDTO;
 import ar.utn.ba.dds.front_tp.services.internal.WebApiCallerService;
 import jakarta.servlet.http.HttpSession;
 import lombok.RequiredArgsConstructor;
@@ -14,6 +15,7 @@ import org.springframework.web.reactive.function.client.WebClient;
 import org.springframework.web.reactive.function.client.WebClientResponseException;
 
 import java.util.List;
+import java.util.Map;
 
 @Service
 public class HechosApiService {
@@ -56,8 +58,13 @@ public class HechosApiService {
   }
   public HechoDTO crearHecho(HechoDTO hecho, String token){
     CrearHechoDTO crearHechoDTO = CrearHechoDTO.builder().hecho(hecho).accessToken(token).build();
-    HechoDTO response = webApiCallerService.post(hechosServiceUrl, crearHechoDTO, HechoDTO.class);
-
+    HechoDTO response  = webClient
+        .post()
+        .uri(hechosServiceUrl + "/hechos")
+        .bodyValue(crearHechoDTO)
+        .retrieve()
+        .bodyToMono(HechoDTO.class)
+        .block();
     if (response == null) {
       throw new RuntimeException("Error al crear el hecho en el servicio externo.");
     }
