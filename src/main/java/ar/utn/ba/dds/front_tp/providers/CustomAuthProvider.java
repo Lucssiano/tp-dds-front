@@ -2,9 +2,8 @@ package ar.utn.ba.dds.front_tp.providers;
 
 import ar.utn.ba.dds.front_tp.dto.hechos.RolesPermisosDTO;
 import ar.utn.ba.dds.front_tp.dto.usuarios.AuthResponseDTO;
-import ar.utn.ba.dds.front_tp.dto.usuarios.UsuarioDTO;
 import ar.utn.ba.dds.front_tp.services.GestionUsuariosApiService;
-import jakarta.servlet.http.HttpServletRequest;
+import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.security.authentication.AuthenticationProvider;
@@ -15,20 +14,15 @@ import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.stereotype.Component;
-import org.springframework.web.context.request.RequestContextHolder;
-import org.springframework.web.context.request.ServletRequestAttributes;
 
 import java.util.ArrayList;
 import java.util.List;
 
 @Component
+@RequiredArgsConstructor
 public class CustomAuthProvider implements AuthenticationProvider {
   private static final Logger log = LoggerFactory.getLogger(CustomAuthProvider.class);
   private final GestionUsuariosApiService externalAuthService;
-
-  public CustomAuthProvider(GestionUsuariosApiService externalAuthService) {
-    this.externalAuthService = externalAuthService;
-  }
 
   @Override
   public Authentication authenticate(Authentication authentication) throws AuthenticationException {
@@ -36,38 +30,38 @@ public class CustomAuthProvider implements AuthenticationProvider {
     String password = authentication.getCredentials().toString();
 
     try {
-      // llama al servicio externo de autenticación (backend gestion-usuarios)
+      // 1. Llama a los servicios del back-end
       AuthResponseDTO authResponse = externalAuthService.login(email, password);
-
-      if (authResponse == null) {
+      if (authResponse == null || authResponse.getAccessToken() == null) {
         throw new BadCredentialsException("Usuario o contraseña inválidos");
       }
 
-      log.info("Usuario logeado! Configurando variables de sesión");
-      ServletRequestAttributes attributes = (ServletRequestAttributes) RequestContextHolder.currentRequestAttributes();
-      HttpServletRequest request = attributes.getRequest();
-
-      request.getSession().setAttribute("accessToken", authResponse.getAccessToken());
-      request.getSession().setAttribute("refreshToken", authResponse.getRefreshToken());
-      request.getSession().setAttribute("email", email);
-
-      log.info("Buscando roles y permisos del usuario");
       RolesPermisosDTO rolesPermisos = externalAuthService.getRolesPermisos(authResponse.getAccessToken());
+      if (rolesPermisos == null || rolesPermisos.getRol() == null) {
+        throw new BadCredentialsException("No se pudieron obtener los roles del usuario.");
+      }
 
-      log.info("Cargando roles y permisos del usuario en sesión");
-      request.getSession().setAttribute("rol", rolesPermisos.getRol());
-      request.getSession().setAttribute("permisos", rolesPermisos.getPermisos());
-
+      // 2. Construye las authorities (rol + permisos)
       List<GrantedAuthority> authorities = new ArrayList<>();
-      rolesPermisos.getPermisos().forEach(permiso -> {
-        authorities.add(new SimpleGrantedAuthority(permiso.name()));
-      });
       authorities.add(new SimpleGrantedAuthority("ROLE_" + rolesPermisos.getRol().name()));
+      if (rolesPermisos.getPermisos() != null) {
+        rolesPermisos.getPermisos().forEach(permiso -> {
+          authorities.add(new SimpleGrantedAuthority(permiso.name()));
+        });
+      }
 
-      return new UsernamePasswordAuthenticationToken(email, password, authorities);
+      // 3. Crea el token de autenticación de Spring
+      UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(email, password, authorities);
+
+      // 4. ¡AQUÍ ESTÁ LA MAGIA! Adjuntamos nuestro DTO al token.
+      // Spring se encargará de guardar este objeto completo en la sesión.
+      authToken.setDetails(authResponse);
+
+      return authToken;
+
     } catch (Exception e) {
-      log.error("Error de autenticación: {}", e.getMessage());
-      throw new BadCredentialsException("Credenciales inválidas");
+      log.error("Error durante la autenticación para {}: {}", email, e.getMessage());
+      throw new BadCredentialsException("Error en el servicio de autenticación.");
     }
   }
 
@@ -75,7 +69,5 @@ public class CustomAuthProvider implements AuthenticationProvider {
   public boolean supports(Class<?> authentication) {
     return UsernamePasswordAuthenticationToken.class.isAssignableFrom(authentication);
   }
-
-
-
 }
+

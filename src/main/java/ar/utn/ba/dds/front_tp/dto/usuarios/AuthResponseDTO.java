@@ -13,4 +13,5 @@ import java.io.Serializable;
 public class AuthResponseDTO implements Serializable {
   private String accessToken;
   private String refreshToken;
+  private String rol;
 }
