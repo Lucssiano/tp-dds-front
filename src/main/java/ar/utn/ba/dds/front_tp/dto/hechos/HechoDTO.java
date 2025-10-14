@@ -23,5 +23,6 @@ public class HechoDTO {
   @JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss")
   private LocalDateTime fechaHecho;
   private UbicacionDTO ubicacionOutputDTO;
-  private List<String> etiquetas;
+  private List<String> etiquetas; // no me llegan parece
+  private List<String> fuentes; // no me llegan parece
 }

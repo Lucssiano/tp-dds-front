@@ -1,149 +1,88 @@
 .map-layout {
-	display: flex;
-	height: calc(100vh - 65px);
+    display: flex;
+    height: calc(100vh - 70px);
 }
-#mapid {
-  height: 600px; /* O la altura que prefieras */
-  width: 100%;
-}
+
+/* --- Barra Lateral (Sidebar) --- */
 .sidebar {
-	width: 300px;
-	background-color: var(--bg-white);
-	padding: 20px;
-	border-right: 1px solid var(--border-color);
-	overflow-y: auto;
+    width: 300px;
+    flex-shrink: 0;
+    background-color: var(--bg-white);
+    border-right: 1px solid var(--border-color);
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    /* QUITAMOS el padding de aquí para que no interfiera */
 }
 
-.map-container {
-	flex-grow: 1;
-}
-
-/* Estilos de los paneles de la barra lateral */
 .filter-panel {
-	margin-bottom: 30px;
+    padding: 20px; /* MANTENEMOS el padding aquí para el espacio interno */
+    border-bottom: 1px solid var(--border-color);
 }
+
+.filter-panel:last-child {
+    border-bottom: none;
+}
+/* --- Estilos para el panel de Colecciones (AQUÍ ESTÁ EL ARREGLO) --- */
 .filter-panel__title {
-	margin-bottom: 20px;
-	color: var(--primary-color);
+    margin-top: 0;
+    margin-bottom: 20px;
+    color: var(--primary-color);
+    font-size: 1.1rem;
 }
+
 .collection-list {
-	list-style: none;
-	margin-bottom: 10px;
+    list-style: none;
+    padding: 0;
+    margin: 0 0 15px 0;
 }
+
 .collection-list li a {
-	text-decoration: none;
-	color: var(--text-dark);
-	display: block;
-	padding: 10px 0;
-	transition: color 0.3s;
+    text-decoration: none;
+    color: var(--text-dark);
+    display: block;
+    padding: 8px 5px;
+    border-radius: var(--radius-small);
+    transition: color 0.2s, background-color 0.2s;
 }
+
 .collection-list li a:hover {
-	color: var(--primary-color);
+    color: var(--primary-color);
+    background-color: #f4f4f4;
 }
-.btn--small {
-	font-size: 14px;
-	padding: 8px 15px;
+/* --- Fin del Arreglo --- */
+
+
+/* --- Contenedor del Mapa --- */
+#mapid {
+    flex-grow: 1;
+    height: 100%;
 }
 
-/* Estilos del Modal */
-.modal {
-	display: none;
-	position: fixed;
-	z-index: 1000;
-	left: 0;
-	top: 0;
-	width: 100%;
-	height: 100%;
-	overflow: auto;
-	background-color: rgba(0, 0, 0, 0.4);
-}
-.modal__content {
-	background-color: var(--bg-white);
-	margin: 10% auto;
-	padding: 30px;
-	border-radius: var(--radius);
-	width: 90%;
-	max-width: 600px;
-	position: relative;
-	box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
-	text-align: center;
-}
-.modal__close {
-	color: var(--text-dark);
-	position: absolute;
-	top: 10px;
-	right: 25px;
-	font-size: 28px;
-	font-weight: bold;
-	cursor: pointer;
-}
-.modal__close:hover,
-.modal__close:focus {
-	color: var(--primary-color);
-	text-decoration: none;
-}
-.modal img {
-	max-width: 100%;
-	height: auto;
-	margin-bottom: 20px;
-	border-radius: var(--radius);
-}
-
-/* Estilos del Toggle Switch */
+/* --- Toggle Switch --- */
 .toggle-switch {
-	display: flex;
-	align-items: center;
-	justify-content: space-between;
-	margin-top: 30px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-top: 20px;
+    text-align: center;
 }
+
 .toggle-switch span {
-	font-size: 14px;
-	color: var(--text-medium);
+    font-size: 14px;
+    color: var(--text-medium);
+    padding: 0 10px;
 }
-.switch {
-	position: relative;
-	display: inline-block;
-	width: 60px;
-	height: 34px;
-	margin: 0 10px;
-}
-.switch input {
-	opacity: 0;
-	width: 0;
-	height: 0;
-}
-.slider {
-	position: absolute;
-	cursor: pointer;
-	top: 0;
-	left: 0;
-	right: 0;
-	bottom: 0;
-	background-color: #ccc;
-	-webkit-transition: 0.4s;
-	transition: 0.4s;
-	border-radius: 34px;
-}
-.slider:before {
-	position: absolute;
-	content: '';
-	height: 26px;
-	width: 26px;
-	left: 4px;
-	bottom: 4px;
-	background-color: white;
-	-webkit-transition: 0.4s;
-	transition: 0.4s;
-	border-radius: 50%;
-}
-input:checked + .slider {
-	background-color: var(--primary-color);
-}
-input:focus + .slider {
-	box-shadow: 0 0 1px var(--primary-color);
-}
-input:checked + .slider:before {
-	-webkit-transform: translateX(26px);
-	-ms-transform: translateX(26px);
-	transform: translateX(26px);
-}
+/* ... (el resto de tu CSS) ... */
+.switch { position: relative; display: inline-block; width: 60px; height: 34px; }
+.switch input { opacity: 0; width: 0; height: 0; }
+.slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #ccc; transition: .4s; border-radius: 34px; }
+.slider:before { position: absolute; content: ""; height: 26px; width: 26px; left: 4px; bottom: 4px; background-color: white; transition: .4s; border-radius: 50%; }
+input:checked + .slider { background-color: var(--primary-color); }
+input:checked + .slider:before { transform: translateX(26px); }
+
+
+
+
+
+

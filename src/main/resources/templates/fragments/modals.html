@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="es">
+<body>
+<div id="fact-modal" class="modal" th:fragment="fact-modal">
+    <div class="modal__content">
+        <span class="modal__close">&times;</span>
+        <h2 id="modal-title">Título del Hecho</h2>
+        <div class="fact-details">
+            <p><span class="label">Fecha:</span> <span id="modal-date"></span></p>
+            <p><span class="label">Ubicación:</span> <span id="modal-location"></span></p>
+            <p><span class="label">Fuente/s:</span> <span id="modal-source"></span></p>
+        </div>
+        <p id="modal-description" class="fact-description"></p>
+        <div class="actions">
+            <a id="ver-hecho-btn" href="#" class="btn btn--secondary">Ver Hecho</a>
+            <button id="report-button" class="btn btn--danger">Solicitar Eliminación</button>
+        </div>
+    </div>
+</div>
+
+<div id="report-modal" class="modal" th:fragment="report-modal">
+    <div class="modal__content">
+        <span class="modal__close-report">&times;</span>
+        <h2 class="modal__title">Solicitar Eliminación de Hecho</h2>
+        <p class="modal__subtitle">
+            Por favor, justifica tu solicitud con un mínimo de 500 caracteres.
+        </p>
+        <form id="report-form">
+            <div class="form-group">
+                <label for="report-reason">Justificación</label>
+                <textarea id="report-reason" class="form-control" rows="10" minlength="500" required></textarea>
+            </div>
+            <button type="submit" class="btn btn--danger">Enviar Solicitud</button>
+        </form>
+    </div>
+</div>
+</body>
+</html>

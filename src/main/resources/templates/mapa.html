@@ -6,13 +6,13 @@
     <title>Mapa de Hechos - MetaMapa</title>
     <link rel="stylesheet" th:href="@{/css/global.css}">
     <link rel="stylesheet" th:href="@{/css/mapa.css}">
-
+    <link rel="stylesheet" th:href="@{/css/modals.css}">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" />
-
 </head>
-
 <body>
+
 <header class="header header--map">
     <div class="container">
         <a th:href="@{/}" class="logo">MetaMapa</a>
@@ -34,29 +34,46 @@
             </ul>
             <a th:href="@{/colecciones}" class="btn btn--secondary btn--small">Ver Todas las Colecciones</a>
         </div>
+
+        <div class="filter-panel">
+            <h3 class="filter-panel__title">Filtros de Hechos</h3>
+            <div class="form-group">
+                <label for="category">Categoría</label>
+                <select id="category" class="form-control"><option value="">Todas</option></select>
+            </div>
+            <div class="form-group">
+                <label for="date-range">Rango de Fecha</label>
+                <input type="text" id="date-range" class="form-control" placeholder="Seleccionar rango...">
+            </div>
+            <div class="form-group">
+                <label for="source">Fuente</label>
+                <select id="source" class="form-control"><option value="">Todas</option></select>
+            </div>
+            <div class="toggle-switch">
+                <span>Modo Curado</span>
+                <label class="switch">
+                    <input type="checkbox" id="modo-navegacion-switch">
+                    <span class="slider"></span>
+                </label>
+                <span>Modo Irrestricto</span>
+            </div>
+        </div>
     </aside>
 
-    <div id="mapid" th:data-hechos="${hechosJson}"></div>
-
-</div>
-
-
-
-<!-- Modal -->
-<div id="fact-modal" class="modal">
-    <div class="modal__content">
-        <span class="modal__close">&times;</span>
-        <h2 id="modal-title">Título del Hecho</h2>
-        <div class="fact-details">
-            <p><span class="label">Fecha:</span> <span id="modal-date"></span></p>
-            <p><span class="label">Ubicación:</span> <span id="modal-location"></span></p>
-            <p><span class="label">Fuente:</span> <span id="modal-source"></span></p>
-        </div>
-        <p id="modal-description" class="fact-description"></p>
+    <div id="mapid"
+         th:data-hechos="${hechosJson}"
+         th:data-modo="${modoActual}"
+         th:data-fecha-desde="${fechaDesde}"
+         th:data-fecha-hasta="${fechaHasta}">
     </div>
 </div>
 
+<div th:replace="~{fragments/modals :: fact-modal}"></div>
+<div th:replace="~{fragments/modals :: report-modal}"></div>
+
 <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+<script src="https://npmcdn.com/flatpickr/dist/l10n/es.js"></script>
 <script th:src="@{/js/mapa.js}" defer></script>
 </body>
 </html>
