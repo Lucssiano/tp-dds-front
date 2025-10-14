@@ -3,7 +3,9 @@ package ar.utn.ba.dds.front_tp.controller;
 import ar.utn.ba.dds.front_tp.dto.colecciones.ColeccionDTO;
 import ar.utn.ba.dds.front_tp.dto.colecciones.ColeccionInputDTO;
 import ar.utn.ba.dds.front_tp.dto.usuarios.AuthResponseDTO;
+import ar.utn.ba.dds.front_tp.dto.admin.DashboardSummaryDTO;
 import ar.utn.ba.dds.front_tp.services.ColeccionesApiService;
+import ar.utn.ba.dds.front_tp.services.DashboardApiService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Controller;
@@ -23,6 +25,7 @@ import java.util.List;
 public class AdminController {
 
   private final ColeccionesApiService coleccionesApiService;
+  private final DashboardApiService dashboardApiService;
 
   // --- GET para la página de gestión de colecciones ---
   @GetMapping("/colecciones")
@@ -60,5 +63,22 @@ public class AdminController {
     }
 
     return "redirect:/admin/colecciones";
+  }
+
+  @GetMapping("/dashboard")
+  public String mostrarDashboard(Model model, HttpSession session, RedirectAttributes redirectAttributes) {
+    // Verifico la sesión y obtengo el token
+    AuthResponseDTO authData = (AuthResponseDTO) session.getAttribute("AUTH_DATA");
+    if (authData == null || authData.getAccessToken() == null) {
+      redirectAttributes.addFlashAttribute("error", "Tu sesión ha expirado.");
+      return "redirect:/auth/login";
+    }
+    // Llamo al servicio para obtener los datos del resumen
+    DashboardSummaryDTO summary = dashboardApiService.getSummary(authData.getAccessToken());
+
+    // Paso los datos al modelo
+    model.addAttribute("summary", summary);
+
+    return "admin-dashboard"; // Renderiza la vista admin-dashboard.html
   }
 }
