@@ -6,6 +6,8 @@ import ar.utn.ba.dds.front_tp.dto.output.HechoOutputDTO;
 import ar.utn.ba.dds.front_tp.dto.usuarios.AuthResponseDTO;
 import ar.utn.ba.dds.front_tp.services.internal.WebApiCallerService;
 import jakarta.servlet.http.HttpSession;
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.slf4j.Logger;
@@ -17,6 +19,7 @@ import org.springframework.web.reactive.function.client.WebClientResponseExcepti
 
 import java.util.List;
 import java.util.Map;
+import org.springframework.web.util.UriComponentsBuilder;
 
 @Service
 public class HechosApiService {
@@ -35,28 +38,52 @@ public class HechosApiService {
   @Autowired
   private HttpSession session;
 
-  public List<HechoDTO> obtenerHechos() {
-    String url = hechosServiceUrl + "/hechos?page=0&size=100";
+
+  /**
+   * Obtiene hechos, opcionalmente filtrados por modo y/o rango de fechas.
+   * @param modo Puede ser "CURADO", "IRRESTRICTO" o null.
+   * @param fechaDesde La fecha de inicio del rango.
+   * @param fechaHasta La fecha de fin del rango.
+   * @return Una lista de HechoDTO.
+   */
+  public List<HechoDTO> obtenerHechos(String modo, LocalDate fechaDesde, LocalDate fechaHasta) {
+    UriComponentsBuilder builder = UriComponentsBuilder.fromUriString(hechosServiceUrl + "/hechos")
+        .queryParam("page", 0)
+        .queryParam("size", 100);
+
+    if (modo != null && !modo.isEmpty()) {
+      builder.queryParam("modo", modo);
+    }
+
+    // --- AQUÍ ESTÁ EL CAMBIO ---
+    if (fechaDesde != null) {
+      // Usamos el nombre que el backend final espera
+      builder.queryParam("fechaAcontecimientoDesde", fechaDesde.format(DateTimeFormatter.ISO_LOCAL_DATE));
+    }
+    if (fechaHasta != null) {
+      // Usamos el nombre que el backend final espera
+      builder.queryParam("fechaAcontecimientoHasta", fechaHasta.format(DateTimeFormatter.ISO_LOCAL_DATE));
+    }
+
+    String urlFinal = builder.toUriString();
+    log.info("Llamando a la URL de hechos: {}", urlFinal);
+
     try {
-      List<HechoDTO> hechoDTOS = webApiCallerService.getList(url, HechoDTO.class);
-      log.info("titulo primer hecho: " + hechoDTOS.stream().findFirst().get().getTitulo());
-      return hechoDTOS;
-    }catch (RuntimeException e) {
+      return webApiCallerService.getList(urlFinal, HechoDTO.class);
+    } catch (RuntimeException e) {
       if (e.getMessage() != null && e.getMessage().contains("No hay token de acceso disponible")) {
         log.warn("No hay token: usando llamada pública sin autenticación");
-        // llamada pública sin header Authorization
         return webClient.get()
-            .uri(url)
+            .uri(urlFinal)
             .retrieve()
             .bodyToFlux(HechoDTO.class)
             .collectList()
             .block();
       }
       throw e;
-    } catch (Exception e){
-      throw new RuntimeException("Error general al obtener hechos: " + e.getMessage());
     }
   }
+
   public HechoOutputDTO crearHecho(HechoOutputDTO hecho, String token) {
 
     log.info("Lat: {}, Long: {}", hecho.getLatitud(), hecho.getLongitud());

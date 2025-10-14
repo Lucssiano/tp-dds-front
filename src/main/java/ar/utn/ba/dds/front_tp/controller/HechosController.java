@@ -8,10 +8,12 @@ import ar.utn.ba.dds.front_tp.services.GestionUsuariosApiService;
 import ar.utn.ba.dds.front_tp.services.HechosApiService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.servlet.http.HttpSession;
+import java.time.LocalDate;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -38,10 +40,13 @@ public class HechosController {
   private HttpSession session;
 
   @GetMapping("/mapa")
-  public String mostrarMapa(Model model) {
-    log.info(">>> Entrando a /hechos/mapa");
+  public String mostrarMapa(
+    @RequestParam(required = false, defaultValue = "CURADO") String modo,
+    @RequestParam(required = false, name = "fechaAcontecimientoDesde") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate fechaDesde,
+    @RequestParam(required = false, name = "fechaAcontecimientoHasta") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate fechaHasta,
+    Model model) {
     try {
-      List<HechoDTO> hechos = hechosApiService.obtenerHechos();
+      List<HechoDTO> hechos = hechosApiService.obtenerHechos(modo, fechaDesde, fechaHasta);
       log.info("Cantidad de hechos recibidos: {}", hechos.size());
 
       // Convertimos la lista a un String JSON
@@ -49,10 +54,13 @@ public class HechosController {
 
       // Pasamos el STRING JSON al modelo
       model.addAttribute("hechosJson", hechosJson);
-
+      model.addAttribute("modoActual", modo);
+      model.addAttribute("fechaDesde", fechaDesde != null ? fechaDesde.toString() : "");
+      model.addAttribute("fechaHasta", fechaHasta != null ? fechaHasta.toString() : "");
     } catch (Exception e) {
       log.error("Error al obtener hechos o al convertirlos a JSON", e);
       model.addAttribute("hechosJson", "[]"); // Pasamos un array vacío en caso de error
+      model.addAttribute("modoActual", modo); // Pasamos un array vacío en caso de error
     }
     return "mapa";
   }
