@@ -8,12 +8,14 @@ import jakarta.servlet.http.HttpSession;;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
 import org.springframework.web.reactive.function.client.WebClient;
 import org.springframework.web.reactive.function.client.WebClientResponseException;
+import reactor.core.publisher.Mono;
 import java.util.List;
 
 @Service
@@ -44,6 +46,28 @@ public class WebApiCallerService {
       return null; // O Collections.emptyList();
     }
   }
+
+  /**
+   * Realiza una petición POST a un endpoint protegido, incluyendo el token JWT.
+   * @param url La URL del endpoint.
+   * @param requestBody El objeto que se enviará en el cuerpo de la petición.
+   * @param responseType La clase del objeto que se espera como respuesta.
+   * @param token El token JWT para la autenticación.
+   * @param <T> El tipo del objeto de respuesta.
+   * @param <R> El tipo del objeto del cuerpo de la petición.
+   * @return El objeto de respuesta deserializado.
+   */
+  public <T, R> T postWithAuth(String url, R requestBody, Class<T> responseType, String token) {
+    log.info("Llamada POST AUTENTICADA a: {}", url);
+    return webClient.post()
+        .uri(url)
+        .header(HttpHeaders.AUTHORIZATION, "Bearer " + token) // Acá se añade el token
+        .body(Mono.just(requestBody), requestBody.getClass())
+        .retrieve()
+        .bodyToMono(responseType)
+        .block();
+  }
+
 
   /**
    * Ejecuta una llamada al API con manejo automático de refresh token

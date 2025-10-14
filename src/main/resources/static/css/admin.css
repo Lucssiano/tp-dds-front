@@ -1,0 +1,138 @@
+/* Estilos específicos para las vistas del Administrador */
+.admin-layout {
+    display: flex;
+    min-height: 100vh;
+}
+
+.sidebar {
+    width: 250px;
+    background-color: var(--bg-white);
+    padding: 20px;
+    border-right: 1px solid var(--border-color);
+    display: flex;
+    flex-direction: column;
+}
+
+.sidebar .logo {
+    font-size: 20px;
+    margin-bottom: 30px;
+    text-align: center;
+}
+
+.sidebar__nav {
+    display: flex;
+    flex-direction: column;
+    flex-grow: 1;
+}
+
+.sidebar__link {
+    text-decoration: none;
+    color: var(--text-dark);
+    padding: 12px 15px;
+    margin-bottom: 5px;
+    border-radius: var(--radius);
+    transition: background-color 0.3s;
+}
+
+.sidebar__link:hover,
+.sidebar__link--active {
+    background-color: var(--primary-color);
+    color: var(--bg-white);
+}
+
+.sidebar__logout {
+    margin-top: auto;
+}
+
+.main-content {
+    flex-grow: 1;
+    padding: 40px;
+}
+
+.page-title {
+    font-size: 32px;
+    margin-bottom: 30px;
+    color: var(--primary-color);
+}
+
+.dashboard-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 20px;
+    margin-bottom: 40px;
+}
+
+.stat-card {
+    background-color: var(--bg-white);
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: var(--shadow);
+}
+
+.stat-card__title {
+    font-size: 16px;
+    color: var(--text-medium);
+    margin-bottom: 10px;
+}
+
+.stat-card__number {
+    font-size: 40px;
+    font-weight: bold;
+    color: var(--primary-color);
+}
+
+.section-title {
+    font-size: 24px;
+    margin-bottom: 20px;
+}
+
+.table-container {
+    overflow-x: auto;
+}
+
+.data-table {
+    width: 100%;
+    border-collapse: collapse;
+    background-color: var(--bg-white);
+    border-radius: 8px;
+    overflow: hidden;
+}
+
+.data-table th,
+.data-table td {
+    padding: 15px;
+    text-align: left;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.data-table th {
+    background-color: var(--bg-light);
+    font-weight: bold;
+    color: var(--text-medium);
+}
+.tabs {
+    display: flex;
+    margin-bottom: 20px;
+}
+
+.tab-button {
+    padding: 10px 20px;
+    border: none;
+    background-color: transparent;
+    cursor: pointer;
+    font-size: 16px;
+    color: var(--text-medium);
+    border-bottom: 2px solid transparent;
+    transition: all 0.2s;
+    font-family: inherit; /* Para que use la misma fuente del body */
+}
+
+.tab-button:hover {
+    color: var(--text-dark);
+}
+
+.tab-button--active {
+    color: var(--primary-color);
+    border-bottom-color: var(--primary-color);
+    font-weight: bold;
+}

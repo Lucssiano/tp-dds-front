@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Colecciones - MetaMapa Admin</title>
+    <link rel="stylesheet" th:href="@{/css/global.css}">
+    <link rel="stylesheet" th:href="@{/css/admin.css}">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700&display=swap" rel="stylesheet">
+</head>
+
+<body>
+<div class="admin-layout">
+    <!-- Sidebar (menú lateral) -->
+    <aside class="sidebar">
+        <a th:href="@{/}" class="logo">MetaMapa Admin</a>
+        <nav class="sidebar__nav">
+            <a th:href="@{/admin/dashboard}" class="sidebar__link">Dashboard</a>
+            <a th:href="@{/admin/colecciones}" class="sidebar__link sidebar__link--active">Colecciones</a>
+            <a th:href="@{/admin/fuentes}" class="sidebar__link">Fuentes</a>
+            <a th:href="@{/admin/revisiones}" class="sidebar__link">Revisiones</a>
+        </nav>
+        <a th:href="@{/auth/logout}" class="btn btn--secondary sidebar__logout">Cerrar Sesión</a>
+    </aside>
+
+    <main class="main-content">
+        <h1 class="page-title">Gestión de Colecciones</h1>
+
+        <!-- Mensajes de feedback (éxito/error) -->
+        <div th:if="${mensaje}" class="alert alert--success" th:text="${mensaje}"></div>
+        <div th:if="${error}" class="alert alert--danger" th:text="${error}"></div>
+
+        <div class="content-header">
+            <!-- CAMBIO CLAVE: Este div solo será visible para usuarios con ROL 'ADMIN' -->
+            <div sec:authorize="hasRole('ADMIN')">
+                <button class="btn btn--primary" onclick="document.getElementById('modal-crear').style.display='block'">Crear Nueva Colección</button>
+            </div>
+        </div>
+
+        <!-- Tabla dinámica de colecciones -->
+        <div class="table-container">
+            <table class="data-table">
+                <thead>
+                <tr>
+                    <th>Nombre</th>
+                    <th>Descripción</th>
+                    <th>Acciones</th>
+                </tr>
+                </thead>
+                <tbody>
+                <!-- Bucle para mostrar cada colección -->
+                <tr th:each="coleccion : ${colecciones}">
+                    <td th:text="${coleccion.titulo}">Nombre de la Colección</td>
+                    <td th:text="${coleccion.descripcion}">Descripción...</td>
+                    <td>
+                        <a th:href="@{/admin/colecciones/editar/{id}(id=${coleccion.id})}" class="btn btn--small">Editar</a>
+                        <a th:href="@{/admin/colecciones/eliminar/{id}(id=${coleccion.id})}" class="btn btn--small btn--danger">Eliminar</a>
+                    </td>
+                </tr>
+                <tr th:if="${#lists.isEmpty(colecciones)}">
+                    <td colspan="3" style="text-align: center;">No hay colecciones para mostrar.</td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+    </main>
+</div>
+
+<!-- Modal para Crear Nueva Colección (inicialmente oculto) -->
+<div id="modal-crear" class="modal">
+    <div class="modal__content">
+        <span class="modal__close" onclick="document.getElementById('modal-crear').style.display='none'">&times;</span>
+        <h2>Crear Nueva Colección</h2>
+        <form th:action="@{/admin/colecciones/crear}" th:object="${coleccionNueva}" method="post">
+            <div class="form-group">
+                <label for="titulo">Título</label>
+                <input type="text" id="titulo" th:field="*{titulo}" class="form-control" required>
+            </div>
+            <div class="form-group">
+                <label for="descripcion">Descripción</label>
+                <textarea id="descripcion" th:field="*{descripcion}" class="form-control" rows="4" required></textarea>
+            </div>
+            <button type="submit" class="btn btn--primary">Guardar Colección</button>
+        </form>
+    </div>
+</div>
+</body>
+</html>
