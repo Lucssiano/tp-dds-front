@@ -4,10 +4,9 @@ import ar.utn.ba.dds.front_tp.dto.usuarios.AuthResponseDTO;
 import ar.utn.ba.dds.front_tp.dto.usuarios.RefreshTokenDTO;
 import ar.utn.ba.dds.front_tp.exceptions.NotFoundException;
 import jakarta.servlet.http.HttpServletRequest;
-import jakarta.servlet.http.HttpSession;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
+import jakarta.servlet.http.HttpSession;;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
@@ -15,18 +14,35 @@ import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
 import org.springframework.web.reactive.function.client.WebClient;
 import org.springframework.web.reactive.function.client.WebClientResponseException;
+import java.util.List;
 
 @Service
 public class WebApiCallerService {
   private final WebClient webClient;
   private final String authServiceUrl;
-  @Autowired
+  private static final Logger log = LoggerFactory. getLogger(WebApiCallerService.class);
   private HttpSession session;
 
 
   public WebApiCallerService(@Value("${auth.service.url}") String authServiceUrl) {
     this.webClient = WebClient.builder().build();
     this.authServiceUrl = authServiceUrl;
+  }
+
+  // Dentro de WebApiCallerService.java
+
+  public <T> List<T> getPublicList(String url, Class<T> responseType) {
+    try {
+      return webClient.get()
+          .uri(url)
+          .retrieve()
+          .bodyToFlux(responseType)
+          .collectList()
+          .block();
+    } catch (WebClientResponseException e) {
+      log.error("Error en la llamada pública a la API ({}): {}", url, e.getMessage());
+      return null; // O Collections.emptyList();
+    }
   }
 
   /**

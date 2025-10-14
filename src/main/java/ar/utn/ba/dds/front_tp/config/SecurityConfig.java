@@ -25,7 +25,7 @@ public class SecurityConfig {
         .csrf(csrf -> csrf.disable()) // ✅ desactiva CSRF para evitar bloqueos en formularios simples
         .authorizeHttpRequests(auth -> auth
             // ✅ rutas públicas
-            .requestMatchers("/","/hechos/**", "/hechos"  , "/home", "/auth", "/auth/**", "/css/**", "/js/**", "/images/**").permitAll()
+            .requestMatchers("/","/hechos/**", "/hechos"  , "/home", "/auth", "/auth/**", "/css/**", "/js/**", "/images/**", "/colecciones", "/colecciones/**").permitAll()
             // 🔒 el resto requiere autenticación
             //.anyRequest().authenticated()
         )

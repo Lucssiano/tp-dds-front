@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Colecciones - MetaMapa</title>
+    <link rel="stylesheet" th:href="@{/css/global.css}">
+    <link rel="stylesheet" th:href="@{/css/landing.css}">
+    <link rel="stylesheet" th:href="@{/css/colecciones.css}">
+</head>
+
+<body>
+<header class="header">
+    <div class="container">
+        <a th:href="@{/}" class="logo">MetaMapa</a>
+        <nav class="nav">
+            <a th:href="@{/hechos/mapa}" class="nav__link">Visualizar</a>
+            <a th:href="@{/auth/login}" class="btn btn--secondary">Iniciar Sesión</a>
+            <a th:href="@{/auth/registro}" class="btn btn--primary">Registrarse</a>
+        </nav>
+    </div>
+</header>
+
+<main>
+    <section class="all-collections">
+        <div class="container">
+            <h1 class="page-title">Explora todas las colecciones</h1>
+            <p class="page-subtitle">Navega a través de las diferentes temáticas y descubre los hechos organizados por nuestra comunidad.</p>
+
+            <div class="card-grid" th:if="${not #lists.isEmpty(colecciones)}">
+                <div class="card" th:each="coleccion : ${colecciones}">
+                    <img th:src="${coleccion.imagenUrl}" alt="Imagen de Colección" class="card__img">
+                    <div class="card__content">
+                        <h3 class="card__title" th:text="${coleccion.titulo}">Título de la Colección</h3>
+                        <p class="card__description" th:text="${coleccion.descripcion}">Descripción de la colección.</p>
+                        <a th:href="@{/hechos/mapa(coleccionId=${coleccion.id})}" class="card__link">Ver Hechos</a>
+                    </div>
+                </div>
+            </div>
+
+            <div th:if="${#lists.isEmpty(colecciones)}">
+                <p class="page-subtitle">No hay colecciones disponibles en este momento.</p>
+            </div>
+
+        </div>
+    </section>
+</main>
+
+<footer class="footer">
+</footer>
+</body>
+</html>
