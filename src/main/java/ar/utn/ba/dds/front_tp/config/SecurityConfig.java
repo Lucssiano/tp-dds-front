@@ -36,9 +36,12 @@ public class SecurityConfig {
             .anyRequest().authenticated()
         )
         .formLogin(form -> form
-            .loginPage("/auth")                     // tu template de login (auth.html)
+            .loginPage("/auth")
+            .loginProcessingUrl("/auth/login")
+            .usernameParameter("email")
+            .passwordParameter("password")
+            .defaultSuccessUrl("/", true)
             .permitAll()
-            .defaultSuccessUrl("/hechos", true)     // redirigir tras login exitoso
         )
         .logout(logout -> logout
             .logoutUrl("/auth/logout")

@@ -140,19 +140,19 @@ public class WebApiCallerService {
   /**
    * Ejecuta una llamada HTTP GET con un token específico (sin usar sesión)
    */
-  public <T> T getWithAuth(String url, String accessToken, Class<T> responseType) {
-    try {
-      return webClient
-          .get()
-          .uri(url)
-          .header("Authorization", "Bearer " + accessToken)
-          .retrieve()
-          .bodyToMono(responseType)
-          .block();
-    } catch (Exception e) {
-      throw new RuntimeException("Error en llamada al API: " + e.getMessage(), e);
+    public <T> T getWithAuth(String url, String accessToken, Class<T> responseType) {
+      try {
+        return webClient
+            .get()
+            .uri(url)
+            .header("Authorization", "Bearer " + accessToken)
+            .retrieve()
+            .bodyToMono(responseType)
+            .block();
+      } catch (Exception e) {
+        throw new RuntimeException("Error en llamada al API: " + e.getMessage(), e);
+      }
     }
-  }
 
   /**
    * Ejecuta una llamada HTTP POST

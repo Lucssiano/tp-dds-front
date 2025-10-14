@@ -34,32 +34,29 @@
     </div>
 
     <!-- FORMULARIO DE LOGIN -->
-    <form id="login-form"
-          th:action="@{/auth/login}"
-          th:object="${usuarioLogin}"
-          method="post"
-          th:if="${!modoRegistro}">
+    <form id="login-form" action="/auth/login" method="post" th:if="${!modoRegistro}">
       <h2 class="auth-card__title">Iniciar Sesión</h2>
 
       <div class="form-group">
         <label for="login-email">Correo Electrónico</label>
-        <input type="email" id="login-email" class="form-control"
-               th:field="*{email}" placeholder="nombre@ejemplo.com" required>
+        <input type="email" id="login-email" name="email" class="form-control"
+               placeholder="nombre@ejemplo.com" required>
       </div>
 
       <div class="form-group">
         <label for="login-password">Contraseña</label>
-        <input type="password" id="login-password" class="form-control"
-               th:field="*{contrasena}" required>
+        <input type="password" id="login-password" name="password" class="form-control"
+               placeholder="••••••" required>
       </div>
 
       <button type="submit" class="btn btn--primary btn--large">Entrar</button>
 
       <div class="form-messages">
-        <p th:if="${errorLogin}" class="error-msg" th:text="${errorLogin}"></p>
-        <p th:if="${mensajeLogin}" class="success-msg" th:text="${mensajeLogin}"></p>
+        <p th:if="${param.error}" class="error-msg">Usuario o contraseña incorrectos</p>
+        <p th:if="${param.logout}" class="success-msg">Sesión cerrada correctamente</p>
       </div>
     </form>
+
 
     <!-- FORMULARIO DE REGISTRO -->
     <form id="register-form"
