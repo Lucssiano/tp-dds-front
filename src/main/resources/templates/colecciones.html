@@ -16,8 +16,18 @@
         <a th:href="@{/}" class="logo">MetaMapa</a>
         <nav class="nav">
             <a th:href="@{/hechos/mapa}" class="nav__link">Visualizar</a>
-            <a th:href="@{/auth/login}" class="btn btn--secondary">Iniciar Sesión</a>
-            <a th:href="@{/auth/registro}" class="btn btn--primary">Registrarse</a>
+
+            <!-- Mostrar solo si NO está autenticado -->
+            <a th:if="${!#authorization.expression('isAuthenticated()')}"
+               th:href="@{/auth/login}" class="btn btn--secondary">Iniciar Sesión</a>
+            <a th:if="${!#authorization.expression('isAuthenticated()')}"
+               th:href="@{/auth/registro}" class="btn btn--primary">Registrarse</a>
+
+            <!-- Mostrar solo si SÍ está autenticado -->
+            <form th:if="${#authorization.expression('isAuthenticated()')}"
+                  th:action="@{/auth/logout}" method="post" style="display:inline;">
+                <button type="submit" class="btn btn--primary">Cerrar Sesión</button>
+            </form>
         </nav>
     </div>
 </header>
