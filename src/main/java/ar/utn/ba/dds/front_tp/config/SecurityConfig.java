@@ -19,34 +19,44 @@ public class SecurityConfig {
         .authenticationProvider(provider)
         .build();
   }
+
   @Bean
   public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
     http
-        .csrf(csrf -> csrf.disable()) // ✅ desactiva CSRF para evitar bloqueos en formularios simples
+        .csrf(csrf -> csrf.disable())
         .authorizeHttpRequests(auth -> auth
-            // ✅ rutas públicas
-            .requestMatchers("/","/hechos/**", "/hechos"  , "/home", "/auth", "/auth/**", "/css/**", "/js/**", "/images/**", "/colecciones", "/colecciones/**").permitAll()
-            // 🔒 el resto requiere autenticación
-            //.anyRequest().authenticated()
+            // ✅ Rutas públicas (no requieren login)
+            .requestMatchers(
+                "/", "/home", "/auth/**", "/hechos/**", "/colecciones/**",
+                "/css/**", "/js/**", "/images/**"
+            ).permitAll()
+            // 🔒 Rutas de Administrador (requieren rol ADMIN)
+            .requestMatchers("/admin/**").hasRole("ADMIN")
+            // 🔒 Cualquier otra ruta requiere que el usuario esté autenticado
+            .anyRequest().authenticated()
         )
         .formLogin(form -> form
-            .loginPage("/auth")                     // tu template de login (auth.html)
+            .loginPage("/auth")
+            .loginProcessingUrl("/auth/login")
+            .usernameParameter("email")
+            .passwordParameter("password")
+            .defaultSuccessUrl("/", true)
             .permitAll()
-            .defaultSuccessUrl("/hechos", true)     // redirigir tras login exitoso
         )
         .logout(logout -> logout
-            .logoutUrl("/logout")
-            .logoutSuccessUrl("/auth?logout")       // redirigir tras logout
+            .logoutUrl("/auth/logout")
+            .logoutSuccessUrl("/auth/login?logout=true")
+            .invalidateHttpSession(true)
+            .deleteCookies("JSESSIONID")
             .permitAll()
         )
         .exceptionHandling(ex -> ex
             .authenticationEntryPoint((request, response, authException) ->
-                // si intenta acceder a una ruta protegida sin login, redirige a /auth
                 response.sendRedirect("/auth")
             )
         );
 
     return http.build();
   }
-
 }
+

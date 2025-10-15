@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard - MetaMapa Admin</title>
+    <link rel="stylesheet" th:href="@{/css/global.css}">
+    <link rel="stylesheet" th:href="@{/css/admin.css}">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700&display=swap" rel="stylesheet">
+</head>
+
+<body>
+<div class="admin-layout">
+    <!-- Sidebar con enlaces dinámicos -->
+    <aside class="sidebar">
+        <a th:href="@{/}" class="logo">MetaMapa Admin</a>
+        <nav class="sidebar__nav">
+            <a th:href="@{/admin/dashboard}" class="sidebar__link sidebar__link--active">Dashboard</a>
+            <a th:href="@{/admin/colecciones}" class="sidebar__link">Colecciones</a>
+            <a th:href="@{/admin/fuentes}" class="sidebar__link">Fuentes</a>
+            <a th:href="@{/admin/revisiones}" class="sidebar__link">Revisiones</a>
+        </nav>
+        <a th:href="@{/auth/logout}" class="btn btn--secondary sidebar__logout">Cerrar Sesión</a>
+    </aside>
+
+    <main class="main-content">
+        <h1 class="page-title">Panel de Control</h1>
+
+        <!-- Tarjetas de estadísticas dinámicas -->
+        <div class="dashboard-grid">
+            <div class="stat-card">
+                <h3 class="stat-card__title">Hechos Pendientes</h3>
+                <p class="stat-card__number" th:text="${summary.hechosPendientes}">0</p>
+            </div>
+            <div class="stat-card">
+                <h3 class="stat-card__title">Solicitudes de Eliminación</h3>
+                <p class="stat-card__number" th:text="${summary.solicitudesEliminacion}">0</p>
+            </div>
+            <div class="stat-card">
+                <h3 class="stat-card__title">Colecciones Activas</h3>
+                <p class="stat-card__number" th:text="${summary.coleccionesActivas}">0</p>
+            </div>
+        </div>
+
+        <!-- Por ahora, la actividad reciente la dejamos estática hasta tener la API -->
+        <div class="recent-activity">
+            <h2 class="section-title">Actividad Reciente</h2>
+            <div class="table-container">
+                <table class="data-table">
+                    <thead>
+                    <tr>
+                        <th>Acción</th>
+                        <th>Usuario</th>
+                        <th>Hecho</th>
+                        <th>Fecha</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <tr>
+                        <td>Subió hecho</td>
+                        <td>Juan Pérez</td>
+                        <td>Terremoto de 1985</td>
+                        <td>11/08/2025</td>
+                    </tr>
+                    <tr>
+                        <td>Solicitó eliminación</td>
+                        <td>María López</td>
+                        <td>Ruinas de Teyuna</td>
+                        <td>10/08/2025</td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </main>
+</div>
+</body>
+
+</html>

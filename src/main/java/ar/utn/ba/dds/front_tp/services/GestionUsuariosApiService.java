@@ -64,11 +64,11 @@ public class GestionUsuariosApiService {
 
   }
 
-  public RolesPermisosDTO getRolesPermisos(String accessToken){
+  public RolesPermisosDTO getRolesPermisos(String accestoken){
     try {
       return webApiCallerService.getWithAuth(
           authServiceUrl + "/auth/user/roles-permisos",
-          accessToken,
+          accestoken,
           RolesPermisosDTO.class
       );
 

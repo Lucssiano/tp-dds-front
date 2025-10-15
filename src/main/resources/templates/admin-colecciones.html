@@ -32,11 +32,13 @@
         <div th:if="${error}" class="alert alert--danger" th:text="${error}"></div>
 
         <div class="content-header">
-            <!-- CAMBIO CLAVE: Este div solo será visible para usuarios con ROL 'ADMIN' -->
             <div sec:authorize="hasRole('ADMIN')">
-                <button class="btn btn--primary" onclick="document.getElementById('modal-crear').style.display='block'">Crear Nueva Colección</button>
+                <a th:href="@{/admin/colecciones/crear}" class="btn btn--primary">
+                    Crear Nueva Colección
+                </a>
             </div>
         </div>
+
 
         <!-- Tabla dinámica de colecciones -->
         <div class="table-container">
