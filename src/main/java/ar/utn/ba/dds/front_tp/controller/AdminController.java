@@ -40,6 +40,11 @@ public class AdminController {
     }
     return "admin-colecciones";
   }
+  @GetMapping("/colecciones/crear")
+  public String mostrarFormularioCreacion(Model model) {
+    model.addAttribute("coleccion", new ColeccionInputDTO());
+    return "admin-crear-coleccion";
+  }
 
   @PostMapping("/colecciones/crear")
   public String crearColeccion(@ModelAttribute("coleccionNueva") ColeccionInputDTO coleccionInput,
@@ -47,6 +52,7 @@ public class AdminController {
                                RedirectAttributes redirectAttributes) {
 
     // Obtenemos el DTO de los "detalles" del objeto Authentication
+    log.info("😎Llegamos as post de crear coleccion: "+ coleccionInput.getTitulo());
     AuthResponseDTO authData = (AuthResponseDTO) authentication.getDetails();
     if (authData == null || authData.getAccessToken() == null) {
       redirectAttributes.addFlashAttribute("error", "Tu sesión ha expirado.");

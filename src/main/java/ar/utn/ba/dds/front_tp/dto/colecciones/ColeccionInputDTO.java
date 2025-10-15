@@ -2,10 +2,13 @@ package ar.utn.ba.dds.front_tp.dto.colecciones;
 
 import lombok.Data;
 import java.io.Serializable;
+import java.util.List;
 
 @Data
-public class ColeccionInputDTO implements Serializable {
+public class ColeccionInputDTO {
   private String titulo;
   private String descripcion;
-  // TODO: incluiR los campos complejos como criterios, fuentes, etc.
+  private List<CriterioDePertenenciaInputDTO> criteriosDePertenencias;
+  private List<String> fuentes;
+  private TipoAlgoritmoConsenso algoritmoConsenso;
 }

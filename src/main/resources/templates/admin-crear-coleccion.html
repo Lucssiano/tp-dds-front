@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Crear Colección - MetaMapa Admin</title>
+  <link rel="stylesheet" th:href="@{/css/global.css}">
+  <link rel="stylesheet" th:href="@{/css/admin.css}">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700&display=swap" rel="stylesheet">
+</head>
+
+<body>
+<div class="admin-layout">
+  <aside class="sidebar">
+    <a th:href="@{/}" class="logo">MetaMapa Admin</a>
+    <nav class="sidebar__nav">
+      <a th:href="@{/admin/dashboard}" class="sidebar__link">Dashboard</a>
+      <a th:href="@{/admin/colecciones}" class="sidebar__link sidebar__link--active">Colecciones</a>
+      <a th:href="@{/admin/fuentes}" class="sidebar__link">Fuentes</a>
+      <a th:href="@{/admin/revisiones}" class="sidebar__link">Revisiones</a>
+    </nav>
+    <a th:href="@{/auth/logout}" class="btn btn--secondary sidebar__logout">Cerrar Sesión</a>
+  </aside>
+
+  <main class="main-content">
+    <h1 class="page-title">Crear Nueva Colección</h1>
+
+    <form th:action="@{/admin/colecciones/crear}" th:object="${coleccion}" method="post" class="form-card">
+      <div class="form-group">
+        <label for="titulo">Título</label>
+        <input type="text" id="titulo" th:field="*{titulo}" placeholder="Ej: Eventos Naturales de Argentina" required class="form-control">
+      </div>
+
+      <div class="form-group">
+        <label for="descripcion">Descripción</label>
+        <textarea id="descripcion" th:field="*{descripcion}" placeholder="Breve descripción de la colección" rows="4" required class="form-control"></textarea>
+      </div>
+
+      <div class="form-group">
+        <label for="fuentes">Fuentes Asociadas</label>
+        <input type="text" id="fuentes" th:field="*{fuentes}" placeholder="Ej: Fuente Proxy, Fuente Dinamica, Fuente Estatica" class="form-control">
+        <small class="form-hint">Separá las fuentes con comas.</small>
+      </div>
+
+      <div class="form-group">
+        <label for="algoritmoConsenso">Algoritmo de Consenso</label>
+        <select id="algoritmoConsenso" th:field="*{algoritmoConsenso}" class="form-control" required>
+          <option value="">Seleccioná un algoritmo</option>
+          <option th:value="MULTIPLES_MENCIONES">Múltiples menciones</option>
+          <option th:value="MAYORIA_SIMPLE">Mayoría simple</option>
+          <option th:value="ABSOLUTA">Absoluta</option>
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label>Criterios de Pertenencia</label>
+        <div id="criterios-container" class="criterios-container"></div>
+        <button type="button" class="btn btn--secondary btn--small" onclick="agregarCriterio()">+ Agregar Criterio</button>
+      </div>
+
+      <div class="form-actions">
+        <button type="submit" class="btn btn--primary">Crear Colección</button>
+        <a th:href="@{/admin/colecciones}" class="btn btn--secondary">Cancelar</a>
+      </div>
+    </form>
+  </main>
+</div>
+
+<script>
+  let criterioIndex = 0;
+
+  function agregarCriterio() {
+    const container = document.getElementById('criterios-container');
+
+    const wrapper = document.createElement('div');
+    wrapper.classList.add('criterio-item');
+    wrapper.innerHTML = `
+      <div class="form-subgroup">
+        <label>Nombre del Criterio</label>
+        <input type="text" name="criteriosDePertenencias[${criterioIndex}].nombreCriterio" placeholder="Ej: Fecha reciente" class="form-control" required>
+      </div>
+
+      <div class="form-subgroup">
+        <label>Tipo de Criterio</label>
+        <select name="criteriosDePertenencias[${criterioIndex}].tipoCriterio" class="form-control" required onchange="actualizarParametros(this, ${criterioIndex})">
+          <option value="">Seleccionar tipo</option>
+          <option value="FECHA">Fecha</option>
+          <option value="CATEGORIA">Categoría</option>
+        </select>
+      </div>
+
+      <div id="parametros-${criterioIndex}" class="form-subgroup"></div>
+
+      <button type="button" class="btn btn--danger btn--small" onclick="this.parentElement.remove()">Eliminar</button>
+      <hr>
+    `;
+    container.appendChild(wrapper);
+    criterioIndex++;
+  }
+
+  function actualizarParametros(select, index) {
+    const tipo = select.value;
+    const paramsContainer = document.getElementById(`parametros-${index}`);
+    paramsContainer.innerHTML = "";
+
+    if (tipo === "FECHA") {
+  paramsContainer.innerHTML = `
+    <label>Fecha mínima</label>
+    <input type="date" name="criteriosDePertenencias[${index}].parametros[fechaInicio]" class="form-control">
+    <label>Fecha máxima</label>
+    <input type="date" name="criteriosDePertenencias[${index}].parametros[fechaFinal]" class="form-control">
+  `;
+  } else if (tipo === "CATEGORIA") {
+      paramsContainer.innerHTML = `
+        <label>Categoría</label>
+        <input type="text" name="criteriosDePertenencias[${index}].parametros[categoria]" placeholder="Ej: Ambiental, Histórico..." class="form-control">
+      `;
+    }
+  }
+</script>
+</body>
+</html>
