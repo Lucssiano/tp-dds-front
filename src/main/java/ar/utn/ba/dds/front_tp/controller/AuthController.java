@@ -56,5 +56,4 @@ public class AuthController {
       return mostrarAuth(model, true);
     }
   }
-
 }

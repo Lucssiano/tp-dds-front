@@ -41,11 +41,12 @@ public class SecurityConfig {
             .usernameParameter("email")
             .passwordParameter("password")
             .defaultSuccessUrl("/", true)
+            .failureUrl("/auth?error=true")
             .permitAll()
         )
         .logout(logout -> logout
             .logoutUrl("/auth/logout")
-            .logoutSuccessUrl("/auth/login?logout=true")
+            .logoutSuccessUrl("/") // volvemos al home tras logout
             .invalidateHttpSession(true)
             .deleteCookies("JSESSIONID")
             .permitAll()
