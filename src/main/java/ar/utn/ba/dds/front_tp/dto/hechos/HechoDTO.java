@@ -16,9 +16,11 @@ import java.util.List;
 @NoArgsConstructor
 @AllArgsConstructor
 public class HechoDTO {
+  private Long id;
   private String titulo;
   private String descripcion;
   private String categoria;
+  private String origen;
   private Path multimedia;
   @JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss")
   private LocalDateTime fechaHecho;

@@ -57,28 +57,15 @@ public class HechosApiService {
       throw new RuntimeException("Error general al obtener hechos: " + e.getMessage());
     }
   }
-  public HechoOutputDTO crearHecho(HechoOutputDTO hecho, String token) {
+  // CAMBIO 1: El parámetro ahora es CrearHechoDTO (el wrapper que manda el controller)
+  public HechoOutputDTO crearHecho(CrearHechoDTO payload, String token) {
 
-    log.info("Lat: {}, Long: {}", hecho.getLatitud(), hecho.getLongitud());
+    log.info("Enviando hecho. Título: {}", payload.getHecho().getTitulo());
+    log.info("Lat: {}, Long: {}", payload.getHecho().getLatitud(), payload.getHecho().getLongitud());
+    log.info("Token incluido en body: {}", payload.getAccessToken() != null ? "SI" : "NO");
 
-    CrearHechoDTO crearHechoDTO = CrearHechoDTO.builder()
-        .hecho(hecho)
-        .accessToken(token)
-        .build();
-    log.info("Fecha que se envía: {}", crearHechoDTO.getHecho().getFecha());
-    HechoOutputDTO response = webClient
-        .post()
-        .uri(hechosServiceUrl + "/hechos")
-        .bodyValue(crearHechoDTO)
-        .retrieve()
-        .bodyToMono(HechoOutputDTO.class)
-        .block();
+    String url = hechosServiceUrl + "/hechos";
 
-    if (response == null) {
-      throw new RuntimeException("Error al crear el hecho en el servicio externo.");
-    }
-
-    return response;
+    return webApiCallerService.postWithAuth(url, payload, HechoOutputDTO.class, token);
   }
-
 }

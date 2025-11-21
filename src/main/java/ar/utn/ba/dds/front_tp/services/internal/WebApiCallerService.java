@@ -17,6 +17,7 @@ import org.springframework.web.reactive.function.client.WebClient;
 import org.springframework.web.reactive.function.client.WebClientResponseException;
 import reactor.core.publisher.Mono;
 import java.util.List;
+import org.springframework.web.reactive.function.client.ExchangeStrategies;
 
 @Service
 public class WebApiCallerService {
@@ -27,7 +28,15 @@ public class WebApiCallerService {
 
 
   public WebApiCallerService(@Value("${auth.service.url}") String authServiceUrl) {
-    this.webClient = WebClient.builder().build();
+    final int size = 16 * 1024 * 1024;
+    final ExchangeStrategies strategies = ExchangeStrategies.builder()
+        .codecs(codecs -> codecs.defaultCodecs().maxInMemorySize(size))
+        .build();
+
+    this.webClient = WebClient.builder()
+        .exchangeStrategies(strategies)
+        .build();
+
     this.authServiceUrl = authServiceUrl;
   }
 
@@ -153,6 +162,25 @@ public class WebApiCallerService {
         throw new RuntimeException("Error en llamada al API: " + e.getMessage(), e);
       }
     }
+
+  /**
+   * Ejecuta una llamada HTTP GET con un token específico y retorna una lista.
+   */
+  public <T> List<T> getListWithAuth(String url, String accessToken, Class<T> responseType) {
+    try {
+      return webClient
+          .get()
+          .uri(url)
+          .header(HttpHeaders.AUTHORIZATION, "Bearer " + accessToken)
+          .retrieve()
+          .bodyToFlux(responseType)
+          .collectList()
+          .block();
+    } catch (Exception e) {
+      log.error("Error en getListWithAuth: " + e.getMessage());
+      throw new RuntimeException("Error en llamada al API: " + e.getMessage(), e);
+    }
+  }
 
   /**
    * Ejecuta una llamada HTTP POST

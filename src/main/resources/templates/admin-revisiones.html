@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Revisiones - MetaMapa Admin</title>
+    <link rel="stylesheet" th:href="@{/css/global.css}">
+    <link rel="stylesheet" th:href="@{/css/admin.css}">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        /* Pequeño ajuste para las pestañas (opcional si ya lo tienes en admin.css) */
+        .tab-content { display: none; }
+        .tab-content.active { display: block; }
+    </style>
+</head>
+
+<body>
+<div class="admin-layout">
+    <aside class="sidebar">
+        <a th:href="@{/}" class="logo">MetaMapa Admin</a>
+        <nav class="sidebar__nav">
+            <a th:href="@{/admin/dashboard}" class="sidebar__link">Dashboard</a>
+            <a th:href="@{/admin/colecciones}" class="sidebar__link">Colecciones</a>
+            <a th:href="@{/admin/fuentes}" class="sidebar__link">Fuentes</a>
+            <a th:href="@{/admin/revisiones}" class="sidebar__link sidebar__link--active">Revisiones</a>
+        </nav>
+        <a th:href="@{/auth/logout}" class="btn btn--secondary sidebar__logout">Cerrar Sesión</a>
+    </aside>
+
+    <main class="main-content">
+        <h1 class="page-title">Revisiones y Moderación</h1>
+
+        <!-- Mensajes de feedback -->
+        <div th:if="${mensaje}" class="alert alert--success" th:text="${mensaje}"></div>
+        <div th:if="${error}" class="alert alert--danger" th:text="${error}"></div>
+
+        <!-- Pestañas de navegación (Lógica JS simple al final) -->
+        <div class="tabs">
+            <button class="tab-button tab-button--active" onclick="openTab(event, 'hechos')">
+                Hechos Pendientes (<span th:text="${#lists.size(hechosPendientes)}">0</span>)
+            </button>
+            <button class="tab-button" onclick="openTab(event, 'solicitudes')">
+                Solicitudes de Eliminación (<span th:text="${#lists.size(solicitudesPendientes)}">0</span>)
+            </button>
+        </div>
+
+        <!-- TABLA 1: HECHOS PENDIENTES -->
+        <div id="hechos" class="table-container tab-content active">
+            <table class="data-table">
+                <thead>
+                <tr>
+                    <th>Hecho</th>
+                    <th>Descripción</th>
+                    <th>Subido por</th>
+                    <th>Acciones</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr th:each="hecho : ${hechosPendientes}">
+                    <td th:text="${hecho.titulo}">Título del Hecho</td>
+                    <!-- Truncamos la descripción si es muy larga -->
+                    <td th:text="${#strings.abbreviate(hecho.descripcion, 50)}">Descripción...</td>
+                    <td th:text="${hecho.origen != null ? hecho.origen : 'Anónimo'}">Origen</td>
+                    <td>
+                        <!-- Botones de Acción (Formularios para POST) -->
+                        <div style="display: flex; gap: 5px;">
+                            <!-- APROBAR -->
+                            <form th:action="@{/admin/revisiones/hechos/{id}/aprobar(id=${hecho.id})}" method="post">
+                                <button type="submit" class="btn btn--small btn--primary">Aprobar</button>
+                            </form>
+
+                            <!-- MODIFICAR (Lleva a vista de edición) -->
+                            <a th:href="@{/admin/revisiones/hechos/{id}/editar(id=${hecho.id})}" class="btn btn--small btn--secondary">Modificar</a>
+
+                            <!-- RECHAZAR -->
+                            <form th:action="@{/admin/revisiones/hechos/{id}/rechazar(id=${hecho.id})}" method="post">
+                                <button type="submit" class="btn btn--small btn--danger" onclick="return confirm('¿Rechazar este hecho?')">Rechazar</button>
+                            </form>
+                        </div>
+                    </td>
+                </tr>
+                <tr th:if="${#lists.isEmpty(hechosPendientes)}">
+                    <td colspan="4" style="text-align: center;">No hay hechos pendientes de revisión.</td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- TABLA 2: SOLICITUDES DE ELIMINACIÓN (Opcional, para completar la vista) -->
+        <div id="solicitudes" class="table-container tab-content">
+            <table class="data-table">
+                <thead>
+                <tr>
+                    <th>Hecho Reportado</th>
+                    <th>Motivo</th>
+                    <th>Usuario</th>
+                    <th>Acciones</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr th:each="solicitud : ${solicitudesPendientes}">
+                    <td th:text="${solicitud.tituloHecho}">Título</td>
+                    <td th:text="${solicitud.motivo}">Motivo</td>
+                    <td th:text="${solicitud.usuario}">Usuario</td>
+                    <td>
+                        <div style="display: flex; gap: 5px;">
+                            <form th:action="@{/admin/revisiones/solicitudes/{id}/aceptar(id=${solicitud.id})}" method="post">
+                                <button type="submit" class="btn btn--small btn--danger">Eliminar Hecho</button>
+                            </form>
+                            <form th:action="@{/admin/revisiones/solicitudes/{id}/rechazar(id=${solicitud.id})}" method="post">
+                                <button type="submit" class="btn btn--small btn--secondary">Descartar</button>
+                            </form>
+                        </div>
+                    </td>
+                </tr>
+                <tr th:if="${#lists.isEmpty(solicitudesPendientes)}">
+                    <td colspan="4" style="text-align: center;">No hay solicitudes pendientes.</td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+
+    </main>
+</div>
+
+<script>
+    function openTab(evt, tabName) {
+        var i, tabcontent, tablinks;
+
+        // Ocultar todo el contenido
+        tabcontent = document.getElementsByClassName("tab-content");
+        for (i = 0; i < tabcontent.length; i++) {
+            tabcontent[i].style.display = "none";
+            tabcontent[i].classList.remove("active");
+        }
+
+        // Quitar clase active de los botones
+        tablinks = document.getElementsByClassName("tab-button");
+        for (i = 0; i < tablinks.length; i++) {
+            tablinks[i].className = tablinks[i].className.replace(" tab-button--active", "");
+        }
+
+        // Mostrar la pestaña actual y activar el botón
+        document.getElementById(tabName).style.display = "block";
+        evt.currentTarget.className += " tab-button--active";
+    }
+</script>
+</body>
+</html>

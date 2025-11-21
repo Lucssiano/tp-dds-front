@@ -6,6 +6,7 @@ import ar.utn.ba.dds.front_tp.dto.usuarios.AuthResponseDTO;
 import ar.utn.ba.dds.front_tp.dto.admin.DashboardSummaryDTO;
 import ar.utn.ba.dds.front_tp.services.ColeccionesApiService;
 import ar.utn.ba.dds.front_tp.services.DashboardApiService;
+import ar.utn.ba.dds.front_tp.services.RevisionesApiService;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -15,6 +16,7 @@ import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
@@ -29,6 +31,7 @@ public class AdminController {
 
   private final ColeccionesApiService coleccionesApiService;
   private final DashboardApiService dashboardApiService;
+  private final RevisionesApiService revisionesApiService;
   private static final Logger log = LoggerFactory.getLogger(AdminController.class);
 
   @GetMapping("/colecciones")
@@ -82,5 +85,71 @@ public class AdminController {
 
     return "admin-dashboard";
   }
+
+  @GetMapping("/revisiones")
+  public String gestionarRevisiones(Model model, Authentication authentication) {
+    AuthResponseDTO authData = (AuthResponseDTO) authentication.getDetails();
+    String token = authData.getAccessToken();
+
+    // Cargar listas
+    var hechos = revisionesApiService.obtenerHechosPendientes(token);
+    var solicitudes = revisionesApiService.obtenerSolicitudesPendientes(token);
+
+    model.addAttribute("hechosPendientes", hechos);
+    model.addAttribute("solicitudesPendientes", solicitudes);
+
+    return "admin-revisiones"; // Asegúrate de que el archivo HTML se llame así
+  }
+  // Acciones sobre Hechos (Aprobar/Rechazar)
+  @PostMapping("/revisiones/hechos/{id}/{accion}")
+  public String accionesHecho(@PathVariable Long id,
+                              @PathVariable String accion,
+                              Authentication authentication,
+                              RedirectAttributes redirectAttributes) {
+    AuthResponseDTO authData = (AuthResponseDTO) authentication.getDetails();
+
+    try {
+      if ("aprobar".equals(accion)) {
+        revisionesApiService.aprobarHecho(id, authData.getAccessToken());
+        redirectAttributes.addFlashAttribute("mensaje", "Hecho aprobado correctamente.");
+      } else if ("rechazar".equals(accion)) {
+        revisionesApiService.rechazarHecho(id, authData.getAccessToken());
+        redirectAttributes.addFlashAttribute("mensaje", "Hecho rechazado correctamente.");
+      }
+    } catch (Exception e) {
+      redirectAttributes.addFlashAttribute("error", "Error al procesar el hecho: " + e.getMessage());
+    }
+    return "redirect:/admin/revisiones";
+  }
+  // TODO: no funcionan los botones aeptar y rechazar, queda pendiente de solucionar.
+  // Acciones sobre Solicitudes (Aceptar eliminación / Rechazar solicitud)
+  @PostMapping("/revisiones/solicitudes/{id}/{accion}")
+  public String accionesSolicitud(@PathVariable Long id,
+                                  @PathVariable String accion,
+                                  Authentication authentication,
+                                  RedirectAttributes redirectAttributes) {
+    AuthResponseDTO authData = (AuthResponseDTO) authentication.getDetails();
+
+    try {
+      if ("aceptar".equals(accion)) { // Eliminar el hecho reportado
+        revisionesApiService.aceptarSolicitud(id, authData.getAccessToken());
+        redirectAttributes.addFlashAttribute("mensaje", "Solicitud aceptada y hecho eliminado.");
+      } else if ("rechazar".equals(accion)) { // Descartar la solicitud
+        revisionesApiService.rechazarSolicitud(id, authData.getAccessToken());
+        redirectAttributes.addFlashAttribute("mensaje", "Solicitud descartada.");
+      }
+    } catch (Exception e) {
+      redirectAttributes.addFlashAttribute("error", "Error al procesar la solicitud: " + e.getMessage());
+    }
+    return "redirect:/admin/revisiones";
+  }
+
+  // TODO: Falta el método de editar (GET) mencionado en el HTML, necesitarías una vista nueva para editar el hecho.
+  @GetMapping("/revisiones/hechos/{id}/editar")
+  public String editarHecho(@PathVariable Long id, Model model) {
+    // Lógica para buscar el hecho individual y mostrar formulario de edición
+    return "admin-editar-hecho"; // Placeholder
+  }
+
 }
 

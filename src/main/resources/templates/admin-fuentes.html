@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fuentes - MetaMapa Admin</title>
+    <link rel="stylesheet" th:href="@{/css/global.css}">
+    <link rel="stylesheet" th:href="@{/css/admin.css}">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700&display=swap" rel="stylesheet">
+</head>
+
+<body>
+<div class="admin-layout">
+    <aside class="sidebar">
+        <a th:href="@{/static}" class="logo">MetaMapa Admin</a>
+        <nav class="sidebar__nav">
+            <a th:href="@{/admin/dashboard}" class="sidebar__link">Dashboard</a>
+            <a th:href="@{/admin/colecciones}" class="sidebar__link">Colecciones</a>
+            <a th:href="@{/admin/fuentes}" class="sidebar__link sidebar__link--active">Fuentes</a>
+            <a th:href="@{/admin/revisiones}" class="sidebar__link">Revisiones</a>
+        </nav>
+        <a th:href="@{/auth/logout}" class="btn btn--secondary sidebar__logout">Cerrar Sesión</a>
+    </aside>
+
+    <main class="main-content">
+        <h1 class="page-title">Gestión de Fuentes</h1>
+
+        <!-- Mensajes de feedback -->
+        <div th:if="${mensaje}" class="alert alert--success" th:text="${mensaje}"></div>
+        <div th:if="${error}" class="alert alert--danger" th:text="${error}"></div>
+
+        <div class="content-header">
+            <!-- Botón que lleva a la página de creación -->
+            <a th:href="@{/admin/fuentes/crear}" class="btn btn--primary">Crear Nueva Fuente</a>
+        </div>
+
+        <div class="table-container">
+            <table class="data-table">
+                <thead>
+                <tr>
+                    <th>Nombre</th>
+                    <th>Tipo</th>
+                    <!-- Asumo que 'Colección Asociada' es un dato que viene en el DTO -->
+                    <!-- <th>Colección Asociada</th> -->
+                    <th>URL/Datos</th>
+                    <th>Acciones</th>
+                </tr>
+                </thead>
+                <tbody>
+                <!-- Bucle Thymeleaf: Itera sobre la lista 'fuentes' -->
+                <tr th:each="fuente : ${fuentes}">
+                    <td th:text="${fuente.nombre}">Nombre Fuente</td>
+                    <td th:text="${fuente.tipo}">Tipo</td>
+                    <!-- <td th:text="${fuente.coleccionNombre}">Nombre Colección</td> -->
+                    <td th:text="${fuente.url != null ? fuente.url : 'N/A'}">URL</td>
+                    <td>
+                        <!-- Enlaces dinámicos con el ID de la fuente -->
+                        <a th:href="@{/admin/fuentes/editar/{id}(id=${fuente.id})}" class="btn btn--small">Editar</a>
+                        <a th:href="@{/admin/fuentes/eliminar/{id}(id=${fuente.id})}" class="btn btn--small btn--danger"
+                           onclick="return confirm('¿Estás seguro de eliminar esta fuente?');">Eliminar</a>
+                    </td>
+                </tr>
+
+                <!-- Mensaje si la lista está vacía -->
+                <tr th:if="${#lists.isEmpty(fuentes)}">
+                    <td colspan="5" style="text-align: center;">No hay fuentes registradas.</td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+    </main>
+</div>
+</body>
+</html>

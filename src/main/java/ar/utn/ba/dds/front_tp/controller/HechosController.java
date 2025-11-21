@@ -1,5 +1,6 @@
 package ar.utn.ba.dds.front_tp.controller;
 
+import ar.utn.ba.dds.front_tp.dto.hechos.CrearHechoDTO;
 import ar.utn.ba.dds.front_tp.dto.hechos.HechoDTO;
 import ar.utn.ba.dds.front_tp.dto.output.HechoOutputDTO;
 import ar.utn.ba.dds.front_tp.dto.usuarios.AuthResponseDTO;
@@ -71,15 +72,23 @@ public class HechosController {
                            RedirectAttributes redirectAttributes) {
 
     AuthResponseDTO token = (AuthResponseDTO) session.getAttribute("AUTH_DATA");
-    log.info("Token recibido del backend de usuarios: {}", token); // 👈
-    log.info("AccessToken: {}", token.getAccessToken()); // 👈
-    log.info("Llegue a crear hechos... creo: " + hecho.getTitulo());
+
     if (token == null) {
       redirectAttributes.addFlashAttribute("errorLogin", "Tu sesión ha expirado. Por favor, inicia sesión de nuevo.");
       return "redirect:/auth/login";
     }
+    log.info("Token recibido del backend de usuarios: {}", token); // 👈
+    log.info("AccessToken: {}", token.getAccessToken()); // 👈
+    log.info("Llegue a crear hechos... creo: " + hecho.getTitulo());
     try {
-      HechoOutputDTO hechoCreado = hechosApiService.crearHecho(hecho, token.getAccessToken());
+      CrearHechoDTO payload = new CrearHechoDTO();
+      payload.setHecho(hecho);                // Metemos los datos del formulario
+      payload.setAccessToken(token.getAccessToken()); // <--- ESTO ES LO QUE FALTABA
+
+      // 3. Llamamos al servicio enviando el PAYLOAD (que tiene token adentro),
+      //    y también pasamos el token aparte para el Header HTTP.
+      hechosApiService.crearHecho(payload, token.getAccessToken());
+
       redirectAttributes.addFlashAttribute("mensaje", "Hecho creado exitosamente");
       redirectAttributes.addFlashAttribute("tipoMensaje", "success");
       return "redirect:/home";
