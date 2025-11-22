@@ -233,6 +233,22 @@ public class WebApiCallerService {
     );
   }
 
+  // En WebApiCallerService.java
+
+  public <T, R> void putWithAuth(String url, R requestBody, Class<T> responseType, String token) {
+    try {
+      webClient.put()
+          .uri(url)
+          .header(org.springframework.http.HttpHeaders.AUTHORIZATION, "Bearer " + token)
+          .bodyValue(requestBody)
+          .retrieve()
+          .bodyToMono(responseType)
+          .block();
+    } catch (Exception e) {
+      throw new RuntimeException("Error en PUT con Auth: " + e.getMessage(), e);
+    }
+  }
+
   /**
    * Ejecuta una llamada HTTP DELETE
    */

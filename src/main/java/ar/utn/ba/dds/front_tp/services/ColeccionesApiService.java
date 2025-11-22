@@ -71,4 +71,30 @@ public class ColeccionesApiService {
       throw new RuntimeException("Error al eliminar la colección: " + e.getMessage());
     }
   }
+
+
+  public ColeccionDTO obtenerColeccionPorId(Long id) {
+    try {
+      String url = coleccionesServiceUrl + "/colecciones?ids=" + id;
+      List<ColeccionDTO> lista = webApiCallerService.getPublicList(url, ColeccionDTO.class);
+
+      if (lista != null && !lista.isEmpty()) {
+        return lista.get(0);
+      }
+      throw new RuntimeException("Colección no encontrada");
+    } catch (Exception e) {
+      throw new RuntimeException("Error al obtener la colección: " + e.getMessage());
+    }
+  }
+
+
+  public void modificarColeccion(Long id, ColeccionInputDTO coleccionInput, String token) {
+    try {
+      String url = coleccionesServiceUrl + "/colecciones?id=" + id;
+      // Usamos el nuevo método que acepta el token explícito
+      webApiCallerService.putWithAuth(url, coleccionInput, Void.class, token);
+    } catch (Exception e) {
+      throw new RuntimeException("Error al modificar la colección: " + e.getMessage());
+    }
+  }
 }

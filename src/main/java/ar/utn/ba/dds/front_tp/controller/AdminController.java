@@ -95,6 +95,48 @@ public class AdminController {
     return "redirect:/admin/colecciones";
   }
 
+  // GET: Mostrar el formulario de "crear" coleccion lleno para modificar una colección.
+  @GetMapping("/colecciones/editar/{id}")
+  public String mostrarFormularioEdicion(@PathVariable Long id, Model model, RedirectAttributes redirectAttributes) {
+    try {
+      ColeccionDTO existente = coleccionesApiService.obtenerColeccionPorId(id);
+
+      ColeccionInputDTO form = new ColeccionInputDTO();
+      form.setTitulo(existente.getTitulo());
+      form.setDescripcion(existente.getDescripcion());
+      form.setAlgoritmoConsenso(existente.getAlgoritmoConsenso());
+      form.setFuentes(existente.getFuentes());
+      form.setCriteriosDePertenencias(existente.getCriteriosDePertenencias());
+
+      model.addAttribute("coleccion", form);
+      model.addAttribute("idColeccion", id);
+
+      return "admin-editar-coleccion";
+    } catch (Exception e) {
+      redirectAttributes.addFlashAttribute("error", "Error: " + e.getMessage());
+      return "redirect:/admin/colecciones";
+    }
+  }
+
+  // POST: Guardar los cambios luego de modificar una colección.
+  @PostMapping("/colecciones/editar/{id}")
+  public String procesarEdicion(@PathVariable Long id,
+                                @ModelAttribute("coleccion") ColeccionInputDTO coleccionInput,
+                                Authentication authentication,
+                                RedirectAttributes redirectAttributes) {
+
+    AuthResponseDTO authData = (AuthResponseDTO) authentication.getDetails();
+
+    try {
+      coleccionesApiService.modificarColeccion(id, coleccionInput, authData.getAccessToken());
+      redirectAttributes.addFlashAttribute("mensaje", "Colección modificada con éxito.");
+    } catch (Exception e) {
+      redirectAttributes.addFlashAttribute("error", "Error al modificar: " + e.getMessage());
+      // Si falla, podríamos volver al formulario, pero por simpleza redirigimos a la lista
+    }
+    return "redirect:/admin/colecciones";
+  }
+
   @GetMapping("/dashboard")
   public String mostrarDashboard(Model model, Authentication authentication) { // Ya no necesitamos HttpSession
     log.info("Entre a mostrar dashboard" + authentication.getCredentials());
