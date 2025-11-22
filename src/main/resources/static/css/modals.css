@@ -1,0 +1,44 @@
+.modal {
+    display: none; /* Mantiene los modales ocultos por defecto */
+    position: fixed;
+    z-index: 1000;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    overflow: auto;
+    background-color: rgba(0, 0, 0, 0.5);
+}
+
+.modal__content {
+    background-color: var(--bg-white);
+    margin: 15vh auto;
+    padding: 30px;
+    border-radius: var(--radius);
+    width: 90%;
+    max-width: 600px;
+    position: relative;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+    text-align: center;
+}
+.modal__content .fact-details, .fact-description {
+    padding: 10px 0;
+}
+
+.modal__close, .modal__close-report {
+    color: var(--text-dark);
+    position: absolute;
+    top: 0;
+    left: 15px;
+    font-size: 28px;
+    font-weight: bold;
+    cursor: pointer;
+}
+
+.modal__close:hover,
+.modal__close:focus,
+.modal__close-report:hover,
+.modal__close-report:focus {
+    color: var(--primary-color);
+    text-decoration: none;
+}
