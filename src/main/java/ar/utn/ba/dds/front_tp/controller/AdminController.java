@@ -71,6 +71,30 @@ public class AdminController {
     return "redirect:/admin/colecciones";
   }
 
+  @GetMapping("/colecciones/eliminar/{id}")
+  public String eliminarColeccion(@PathVariable Long id,
+                                  Authentication authentication,
+                                  RedirectAttributes redirectAttributes) {
+
+    // 1. Obtener token de sesión
+    AuthResponseDTO authData = (AuthResponseDTO) authentication.getDetails();
+    if (authData == null || authData.getAccessToken() == null) {
+      return "redirect:/auth/login";
+    }
+
+    try {
+      // 2. Llamar al servicio para borrar
+      coleccionesApiService.eliminarColeccion(id, authData.getAccessToken());
+      redirectAttributes.addFlashAttribute("mensaje", "Colección eliminada correctamente.");
+
+    } catch (Exception e) {
+      redirectAttributes.addFlashAttribute("error", "No se pudo eliminar la colección: " + e.getMessage());
+    }
+
+    // 3. Redirigir a la lista
+    return "redirect:/admin/colecciones";
+  }
+
   @GetMapping("/dashboard")
   public String mostrarDashboard(Model model, Authentication authentication) { // Ya no necesitamos HttpSession
     log.info("Entre a mostrar dashboard" + authentication.getCredentials());
@@ -98,7 +122,7 @@ public class AdminController {
     model.addAttribute("hechosPendientes", hechos);
     model.addAttribute("solicitudesPendientes", solicitudes);
 
-    return "admin-revisiones"; // Asegúrate de que el archivo HTML se llame así
+    return "admin-revisiones";
   }
   // Acciones sobre Hechos (Aprobar/Rechazar)
   @PostMapping("/revisiones/hechos/{id}/{accion}")

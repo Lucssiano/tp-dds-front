@@ -248,6 +248,22 @@ public class WebApiCallerService {
       return null;
     });
   }
+  /**
+   * Ejecuta una llamada HTTP DELETE con un token específico.
+   */
+  public void delete(String url, String token) {
+    try {
+      webClient
+          .delete()
+          .uri(url)
+          .header("Authorization", "Bearer " + token)
+          .retrieve()
+          .bodyToMono(Void.class)
+          .block();
+    } catch (Exception e) {
+      throw new RuntimeException("Error en llamada DELETE al API: " + e.getMessage(), e);
+    }
+  }
 
   /**
    * Refresca el access token usando el refresh token

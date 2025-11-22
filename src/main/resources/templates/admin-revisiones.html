@@ -52,7 +52,7 @@
                 <tr>
                     <th>Hecho</th>
                     <th>Descripción</th>
-                    <th>Subido por</th>
+                    <th>Fuente</th>
                     <th>Acciones</th>
                 </tr>
                 </thead>
@@ -61,7 +61,7 @@
                     <td th:text="${hecho.titulo}">Título del Hecho</td>
                     <!-- Truncamos la descripción si es muy larga -->
                     <td th:text="${#strings.abbreviate(hecho.descripcion, 50)}">Descripción...</td>
-                    <td th:text="${hecho.origen != null ? hecho.origen : 'Anónimo'}">Origen</td>
+                    <td th:text="${hecho.fuente != null ? hecho.fuente : 'Anónimo'}">Fuente</td>
                     <td>
                         <!-- Botones de Acción (Formularios para POST) -->
                         <div style="display: flex; gap: 5px;">

@@ -56,4 +56,19 @@ public class ColeccionesApiService {
       throw new RuntimeException("No se pudo crear la colección. Causa: " + e.getMessage(), e);
     }
   }
+
+  public void eliminarColeccion(Long id, String token) {
+    try {
+      // El backend espera: DELETE /metamapa/colecciones?id=123
+      // Asumo que 'coleccionesServiceUrl' apunta a '.../metamapa/colecciones'
+      // Si no, ajusta la URL.
+      String url = coleccionesServiceUrl + "/colecciones?id=" + id;
+
+      // Usamos el webApiCallerService (asegúrate de tener el método delete implementado ahí)
+      webApiCallerService.delete(url, token);
+
+    } catch (Exception e) {
+      throw new RuntimeException("Error al eliminar la colección: " + e.getMessage());
+    }
+  }
 }
