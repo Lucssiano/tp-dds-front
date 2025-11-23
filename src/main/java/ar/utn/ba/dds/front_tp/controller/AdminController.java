@@ -6,6 +6,7 @@ import ar.utn.ba.dds.front_tp.dto.usuarios.AuthResponseDTO;
 import ar.utn.ba.dds.front_tp.dto.admin.DashboardSummaryDTO;
 import ar.utn.ba.dds.front_tp.services.ColeccionesApiService;
 import ar.utn.ba.dds.front_tp.services.DashboardApiService;
+import ar.utn.ba.dds.front_tp.services.FuentesApiService;
 import ar.utn.ba.dds.front_tp.services.RevisionesApiService;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
@@ -28,7 +29,7 @@ import java.util.List;
 @PreAuthorize("hasRole('ADMIN')")
 @RequiredArgsConstructor
 public class AdminController {
-
+  private final FuentesApiService fuentesApiService;
   private final ColeccionesApiService coleccionesApiService;
   private final DashboardApiService dashboardApiService;
   private final RevisionesApiService revisionesApiService;
@@ -46,6 +47,9 @@ public class AdminController {
   @GetMapping("/colecciones/crear")
   public String mostrarFormularioCreacion(Model model) {
     model.addAttribute("coleccion", new ColeccionInputDTO());
+    List<String> fuentesDisponibles = fuentesApiService.obtenerFuentes().getFuentes();
+    model.addAttribute("fuentesDisponibles", fuentesDisponibles);
+    log.info("fuentes: " + fuentesDisponibles.get(0));
     return "admin-crear-coleccion";
   }
 
@@ -110,6 +114,9 @@ public class AdminController {
 
       model.addAttribute("coleccion", form);
       model.addAttribute("idColeccion", id);
+
+      List<String> fuentesDisponibles = fuentesApiService.obtenerFuentes().getFuentes();
+      model.addAttribute("fuentesDisponibles", fuentesDisponibles);
 
       return "admin-editar-coleccion";
     } catch (Exception e) {
@@ -217,5 +224,13 @@ public class AdminController {
     return "admin-editar-hecho"; // Placeholder
   }
 
+  @GetMapping("/fuentes")
+  public String mostrarFuentes(Model model, Authentication authentication) {
+
+    List<String> fuentesDisponibles = fuentesApiService.obtenerFuentes().getFuentes();
+    model.addAttribute("fuentesDisponibles", fuentesDisponibles);
+
+    return "admin-fuentes";
+  }
 }
 

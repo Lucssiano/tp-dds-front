@@ -30,45 +30,30 @@
         <div th:if="${mensaje}" class="alert alert--success" th:text="${mensaje}"></div>
         <div th:if="${error}" class="alert alert--danger" th:text="${error}"></div>
 
-        <div class="content-header">
-            <!-- Botón que lleva a la página de creación -->
-            <a th:href="@{/admin/fuentes/crear}" class="btn btn--primary">Crear Nueva Fuente</a>
-        </div>
+<!--        <div class="content-header">-->
+<!--            &lt;!&ndash; Botón que lleva a la página de creación &ndash;&gt;-->
+<!--            <a th:href="@{/admin/fuentes/crear}" class="btn btn&#45;&#45;primary">Crear Nueva Fuente</a>-->
+<!--        </div>-->
 
         <div class="table-container">
             <table class="data-table">
                 <thead>
                 <tr>
-                    <th>Nombre</th>
-                    <th>Tipo</th>
-                    <!-- Asumo que 'Colección Asociada' es un dato que viene en el DTO -->
-                    <!-- <th>Colección Asociada</th> -->
-                    <th>URL/Datos</th>
-                    <th>Acciones</th>
+                    <th>Nombre de la fuente</th>
                 </tr>
                 </thead>
                 <tbody>
-                <!-- Bucle Thymeleaf: Itera sobre la lista 'fuentes' -->
-                <tr th:each="fuente : ${fuentes}">
-                    <td th:text="${fuente.nombre}">Nombre Fuente</td>
-                    <td th:text="${fuente.tipo}">Tipo</td>
-                    <!-- <td th:text="${fuente.coleccionNombre}">Nombre Colección</td> -->
-                    <td th:text="${fuente.url != null ? fuente.url : 'N/A'}">URL</td>
-                    <td>
-                        <!-- Enlaces dinámicos con el ID de la fuente -->
-                        <a th:href="@{/admin/fuentes/editar/{id}(id=${fuente.id})}" class="btn btn--small">Editar</a>
-                        <a th:href="@{/admin/fuentes/eliminar/{id}(id=${fuente.id})}" class="btn btn--small btn--danger"
-                           onclick="return confirm('¿Estás seguro de eliminar esta fuente?');">Eliminar</a>
-                    </td>
+                <tr th:each="fuente : ${fuentesDisponibles}">
+                    <td th:text="${fuente}">Nombre Fuente</td>
                 </tr>
 
-                <!-- Mensaje si la lista está vacía -->
-                <tr th:if="${#lists.isEmpty(fuentes)}">
-                    <td colspan="5" style="text-align: center;">No hay fuentes registradas.</td>
+                <tr th:if="${#lists.isEmpty(fuentesDisponibles)}">
+                    <td colspan="1" style="text-align: center;">No hay fuentes registradas.</td>
                 </tr>
                 </tbody>
             </table>
         </div>
+
     </main>
 </div>
 </body>

@@ -57,6 +57,17 @@ body {
 	margin-left: 20px;
 }
 
+.nav {
+  display: flex;
+  align-items: center;
+  gap: 20px;      /* separa los ítems del menú */
+}
+
+.nav__logout-form {
+  margin: 0;      /* para que el form no meta espacio raro */
+}
+
+
 /* Botones */
 .btn {
 	padding: 10px 20px;
@@ -104,6 +115,10 @@ body {
 	font-weight: bold;
 	margin-bottom: 8px;
 	color: var(--text-dark);
+}
+
+.form-group label span{
+	color: #666;
 }
 
 .form-control {

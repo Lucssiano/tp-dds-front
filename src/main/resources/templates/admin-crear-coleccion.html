@@ -37,10 +37,21 @@
       </div>
 
       <div class="form-group">
-        <label for="fuentes">Fuentes Asociadas</label>
-        <input type="text" id="fuentes" th:field="*{fuentes}" placeholder="Ej: Fuente Proxy, Fuente Dinamica, Fuente Estatica" class="form-control">
-        <small class="form-hint">Separá las fuentes con comas.</small>
+        <label>Fuentes Asociadas</label>
+
+        <div class="checkbox-group"
+             th:each="fuente : ${fuentesDisponibles}">
+          <label>
+            <input type="checkbox"
+                   th:field="*{fuentes}"
+                   th:value="${fuente}">
+            <span th:text="${fuente}">Nombre de fuente</span>
+          </label>
+        </div>
+
+        <small class="form-hint">Podés seleccionar varias fuentes.</small>
       </div>
+
 
       <div class="form-group">
         <label for="algoritmoConsenso">Algoritmo de Consenso</label>

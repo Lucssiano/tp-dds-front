@@ -2,7 +2,9 @@ package ar.utn.ba.dds.front_tp.controller;
 
 import ar.utn.ba.dds.front_tp.dto.colecciones.ColeccionDTO;
 import ar.utn.ba.dds.front_tp.services.ColeccionesApiService;
+import ar.utn.ba.dds.front_tp.services.FuentesApiService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
