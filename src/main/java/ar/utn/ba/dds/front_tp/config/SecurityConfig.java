@@ -32,6 +32,7 @@ public class SecurityConfig {
             ).permitAll()
             // 🔒 Rutas de Administrador (requieren rol ADMIN)
             .requestMatchers("/admin/**").hasRole("ADMIN")
+            .requestMatchers("/hechos/subir-hecho", "/hechos/crear-hecho").hasRole("CONTRIBUYENTE")
             // 🔒 Cualquier otra ruta requiere que el usuario esté autenticado
             .anyRequest().authenticated()
         )
@@ -41,12 +42,11 @@ public class SecurityConfig {
             .usernameParameter("email")
             .passwordParameter("password")
             .defaultSuccessUrl("/", true)
-            .failureUrl("/auth?error=true")
             .permitAll()
         )
         .logout(logout -> logout
             .logoutUrl("/auth/logout")
-            .logoutSuccessUrl("/") // volvemos al home tras logout
+            .logoutSuccessUrl("/auth/login?logout=true") //si no redireccionar a home
             .invalidateHttpSession(true)
             .deleteCookies("JSESSIONID")
             .permitAll()
@@ -60,4 +60,3 @@ public class SecurityConfig {
     return http.build();
   }
 }
-

@@ -77,17 +77,18 @@ public class HechosController {
   public String crearHecho(@ModelAttribute("hecho") HechoOutputDTO  hecho,
                            BindingResult bindingResult,
                            Model model,
-                           RedirectAttributes redirectAttributes) {
+                           RedirectAttributes redirectAttributes,
+                           Authentication authentication) {
 
-    AuthResponseDTO token = (AuthResponseDTO) session.getAttribute("AUTH_DATA");
-
+    AuthResponseDTO token = (AuthResponseDTO) authentication.getDetails();
     if (token == null) {
       redirectAttributes.addFlashAttribute("errorLogin", "Tu sesión ha expirado. Por favor, inicia sesión de nuevo.");
-      return "redirect:/auth/login";
+      return "redirect:/auth";
     }
     log.info("Token recibido del backend de usuarios: {}", token); // 👈
     log.info("AccessToken: {}", token.getAccessToken()); // 👈
     log.info("Llegue a crear hechos... creo: " + hecho.getTitulo());
+
     try {
       CrearHechoDTO payload = new CrearHechoDTO();
       payload.setHecho(hecho);                // Metemos los datos del formulario
@@ -96,7 +97,6 @@ public class HechosController {
       // 3. Llamamos al servicio enviando el PAYLOAD (que tiene token adentro),
       //    y también pasamos el token aparte para el Header HTTP.
       hechosApiService.crearHecho(payload, token.getAccessToken());
-
       redirectAttributes.addFlashAttribute("mensaje", "Hecho creado exitosamente");
       redirectAttributes.addFlashAttribute("tipoMensaje", "success");
       return "redirect:/home";
@@ -120,4 +120,5 @@ public class HechosController {
       return "subir-hecho";
     }
   }
+
 }
