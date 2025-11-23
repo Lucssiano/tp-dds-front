@@ -51,37 +51,30 @@
                 <thead>
                 <tr>
                     <th>Hecho</th>
-                    <th>Descripción</th>
-                    <th>Fuente</th>
-                    <th>Acciones</th>
+                    <th>Acción</th>
                 </tr>
                 </thead>
+
                 <tbody>
                 <tr th:each="hecho : ${hechosPendientes}">
+                    <!-- Título -->
                     <td th:text="${hecho.titulo}">Título del Hecho</td>
-                    <!-- Truncamos la descripción si es muy larga -->
-                    <td th:text="${#strings.abbreviate(hecho.descripcion, 50)}">Descripción...</td>
-                    <td th:text="${hecho.fuente != null ? hecho.fuente : 'Anónimo'}">Fuente</td>
+
+                    <!-- Botón gestionar -->
                     <td>
-                        <!-- Botones de Acción (Formularios para POST) -->
                         <div style="display: flex; gap: 5px;">
-                            <!-- APROBAR -->
-                            <form th:action="@{/admin/revisiones/hechos/{id}/aprobar(id=${hecho.id})}" method="post">
-                                <button type="submit" class="btn btn--small btn--primary">Aprobar</button>
-                            </form>
-
-                            <!-- MODIFICAR (Lleva a vista de edición) -->
-                            <a th:href="@{/admin/revisiones/hechos/{id}/editar(id=${hecho.id})}" class="btn btn--small btn--secondary">Modificar</a>
-
-                            <!-- RECHAZAR -->
-                            <form th:action="@{/admin/revisiones/hechos/{id}/rechazar(id=${hecho.id})}" method="post">
-                                <button type="submit" class="btn btn--small btn--danger" onclick="return confirm('¿Rechazar este hecho?')">Rechazar</button>
-                            </form>
+                            <a th:href="@{/admin/revisiones/hechos/{id}/detalle(id=${hecho.id})}"
+                               class="btn btn--small btn--primary">
+                                Gestionar
+                            </a>
                         </div>
                     </td>
                 </tr>
+
                 <tr th:if="${#lists.isEmpty(hechosPendientes)}">
-                    <td colspan="4" style="text-align: center;">No hay hechos pendientes de revisión.</td>
+                    <td colspan="2" style="text-align: center;">
+                        No hay hechos pendientes de revisión.
+                    </td>
                 </tr>
                 </tbody>
             </table>

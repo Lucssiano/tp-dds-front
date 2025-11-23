@@ -6,6 +6,8 @@ import ar.utn.ba.dds.front_tp.dto.output.HechoOutputDTO;
 import ar.utn.ba.dds.front_tp.dto.usuarios.AuthResponseDTO;
 import ar.utn.ba.dds.front_tp.services.internal.WebApiCallerService;
 import jakarta.servlet.http.HttpSession;
+
+import java.net.URI;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import lombok.RequiredArgsConstructor;
@@ -82,6 +84,15 @@ public class HechosApiService {
       throw e;
     }
   }
+
+  public HechoDTO obtenerHecho(Long id){
+    return webClient.get()
+        .uri(hechosServiceUrl + "/hechos/" + id)
+        .retrieve()
+        .bodyToMono(HechoDTO.class)
+        .block();
+  }
+
   // CAMBIO 1: El parámetro ahora es CrearHechoDTO (el wrapper que manda el controller)
   public HechoOutputDTO crearHecho(CrearHechoDTO payload, String token) {
 

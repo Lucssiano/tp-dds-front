@@ -7,6 +7,7 @@ import ar.utn.ba.dds.front_tp.dto.admin.DashboardSummaryDTO;
 import ar.utn.ba.dds.front_tp.services.ColeccionesApiService;
 import ar.utn.ba.dds.front_tp.services.DashboardApiService;
 import ar.utn.ba.dds.front_tp.services.FuentesApiService;
+import ar.utn.ba.dds.front_tp.services.HechosApiService;
 import ar.utn.ba.dds.front_tp.services.RevisionesApiService;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
@@ -33,6 +34,7 @@ public class AdminController {
   private final ColeccionesApiService coleccionesApiService;
   private final DashboardApiService dashboardApiService;
   private final RevisionesApiService revisionesApiService;
+  private final HechosApiService hechosApiService;
   private static final Logger log = LoggerFactory.getLogger(AdminController.class);
 
   @GetMapping("/colecciones")
@@ -173,6 +175,24 @@ public class AdminController {
 
     return "admin-revisiones";
   }
+
+  @GetMapping("/revisiones/hechos/{id}/detalle")
+  public String verDetalleHecho(@PathVariable Long id,
+                                Model model,
+                                RedirectAttributes redirectAttributes) {
+    try {
+      // Traer el hecho individual
+      var hecho = hechosApiService.obtenerHecho(id);
+
+      model.addAttribute("hecho", hecho);
+      return "admin-detalle-hecho";
+
+    } catch (Exception e) {
+      redirectAttributes.addFlashAttribute("error", "No se pudo cargar el hecho.");
+      return "redirect:/admin/revisiones";
+    }
+  }
+
   // Acciones sobre Hechos (Aprobar/Rechazar)
   @PostMapping("/revisiones/hechos/{id}/{accion}")
   public String accionesHecho(@PathVariable Long id,

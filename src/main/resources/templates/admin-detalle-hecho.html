@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Detalle del Hecho</title>
+    <link rel="stylesheet" th:href="@{/css/global.css}">
+    <link rel="stylesheet" th:href="@{/css/admin.css}">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700&display=swap" rel="stylesheet">
+</head>
+
+<body>
+    <div class="admin-layout">
+        <aside class="sidebar">
+            <a th:href="@{/}" class="logo">MetaMapa Admin</a>
+            <nav class="sidebar__nav">
+                <a th:href="@{/admin/dashboard}" class="sidebar__link">Dashboard</a>
+                <a th:href="@{/admin/colecciones}" class="sidebar__link">Colecciones</a>
+                <a th:href="@{/admin/fuentes}" class="sidebar__link">Fuentes</a>
+                <a th:href="@{/admin/revisiones}" class="sidebar__link sidebar__link--active">Revisiones</a>
+            </nav>
+            <a th:href="@{/auth/logout}" class="btn btn--secondary sidebar__logout">Cerrar Sesión</a>
+        </aside>
+
+        <div class="main-content">
+
+            <h1 class="page-title">Detalle del Hecho</h1>
+
+            <!-- CARD PRINCIPAL -->
+            <div class="stat-card" style="padding: 30px;">
+
+                <!-- TÍTULO -->
+                <h2 class="section-title" th:text="${hecho.titulo}">
+                    Título del Hecho
+                </h2>
+
+                <!-- DESCRIPCIÓN -->
+                <div class="content-block">
+                    <h3 class="content-title">Descripción</h3>
+                    <p th:text="${hecho.descripcion}">Descripción...</p>
+                </div>
+
+                <!-- CATEGORÍA -->
+                <div class="content-block">
+                    <h3 class="content-title">Categoría</h3>
+                    <p th:text="${hecho.categoria}">Categoría...</p>
+                </div>
+
+                <!-- FUENTES -->
+                <div class="content-block">
+                    <h3 class="content-title">Fuente Primaria</h3>
+                    <p th:text="${hecho.fuente}">Fuente</p>
+
+                    <div th:if="${hecho.fuentes != null}">
+                        <h3 class="content-title">Otras Fuentes</h3>
+                        <ul>
+                            <li th:each="f : ${hecho.fuentes}" th:text="${f}">Fuente extra</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- ETIQUETAS -->
+                <div class="content-block" th:if="${hecho.etiquetas != null}">
+                    <h3 class="content-title">Etiquetas</h3>
+
+                    <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+                    <span class="tag"
+                          th:each="e : ${hecho.etiquetas}"
+                          th:text="${e}"
+                          style="background: var(--bg-light); padding: 6px 12px; border-radius: 6px;">
+                    </span>
+                    </div>
+                </div>
+
+                <!-- FECHA -->
+                <div class="content-block">
+                    <h3 class="content-title">Fecha del Hecho</h3>
+                    <p th:text="${#temporals.format(hecho.fechaHecho, 'dd/MM/yyyy HH:mm')}">10/10/2027</p>
+                </div>
+
+                <!-- UBICACIÓN (TABLA) -->
+                <div class="content-block">
+                    <h3 class="content-title">Ubicación</h3>
+
+                    <table class="data-table" style="max-width: 700px;  justify-content: left ">
+                        <tbody>
+                        <tr>
+                            <th>Provincia</th>
+                            <td th:text="${hecho.ubicacionOutputDTO.provincia}">La Rioja</td>
+                        </tr>
+                        <tr>
+                            <th>Municipio</th>
+                            <td th:text="${hecho.ubicacionOutputDTO.municipio}">Chilecito</td>
+                        </tr>
+                        <tr>
+                            <th>Departamento</th>
+                            <td th:text="${hecho.ubicacionOutputDTO.departamento}">Chilecito</td>
+                        </tr>
+                        <tr>
+                            <th>Latitud</th>
+                            <td th:text="${hecho.ubicacionOutputDTO.latitud}">-29.2</td>
+                        </tr>
+                        <tr>
+                            <th>Longitud</th>
+                            <td th:text="${hecho.ubicacionOutputDTO.longitud}">-67.53</td>
+                        </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- BOTONES -->
+                <div style="margin-top: 30px; display: flex; gap: 10px; justify-content: center">
+                    <form th:action="@{/admin/revisiones/hechos/{id}/aprobar(id=${hecho.id})}" method="post">
+                        <button class="btn btn--primary">Aprobar</button>
+                    </form>
+
+                    <form th:href="@{/admin/revisiones/hechos/{id}/editar(id=${hecho.id})}" method="get">
+                        <button class="btn btn--secondary">Modificar</button>
+                    </form>
+
+                    <form th:action="@{/admin/revisiones/hechos/{id}/rechazar(id=${hecho.id})}" method="post">
+                        <button class="btn btn--third" onclick="return confirm('¿Rechazar este hecho?')">
+                            Rechazar
+                        </button>
+                    </form>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+</body>
+</html>

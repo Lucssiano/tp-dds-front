@@ -2,6 +2,7 @@
 :root {
 	--primary-color: #2e86c1;
 	--secondary-color: #f1c40f;
+	--third-color: #c0392b;
 	--text-dark: #333333;
 	--text-medium: #666666;
 	--bg-light: #eeeeee;
@@ -83,10 +84,12 @@ body {
 .btn--primary {
 	background-color: var(--primary-color);
 	color: var(--bg-white);
+	border: 1px solid var(--primary-color);
 }
 
 .btn--primary:hover {
 	background-color: #2471a3;
+	border-color: #2471a3;
 }
 
 .btn--secondary {
@@ -97,6 +100,17 @@ body {
 
 .btn--secondary:hover {
 	background-color: var(--bg-light);
+}
+
+.btn--third {
+	background-color: var(--third-color);
+	color: var(--bg-white);
+	border: 1px solid var(--third-color);
+}
+
+.btn--third:hover {
+	border-color: #a93226;
+	background-color: #a93226;
 }
 
 .btn--large {
