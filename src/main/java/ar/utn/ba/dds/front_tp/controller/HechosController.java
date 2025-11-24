@@ -131,18 +131,29 @@ public class HechosController {
   }
 
   @GetMapping("/{id}/detalle")
-  public String verDetalleHecho(@PathVariable Long id, Model model) {
+  public String verDetalleHecho(@PathVariable Long id,
+                                Model model,
+                                Authentication authentication) {
     try {
       var hecho = hechosApiService.obtenerHecho(id);
-
       model.addAttribute("hecho", hecho);
 
-      return "hecho-detalle";
-    } catch (Exception e){
-      log.error(e.getMessage());
-      model.addAttribute("errorGlobal", "Ocurrió un error inesperado: " + e.getMessage());
-      return "redirect:/home";
+      boolean esPropietario = false;
 
+      if (authentication != null && authentication.getDetails() instanceof AuthResponseDTO token) {
+        String email = JwtUtils.validarToken(token.getAccessToken());
+        if (email != null && hecho.getUsuario() != null) {
+          esPropietario = email.equalsIgnoreCase(hecho.getUsuario());
+        }
+      }
+
+      model.addAttribute("esPropietario", esPropietario);
+
+      return "hecho-detalle";
+    } catch (Exception e) {
+      log.error(e.getMessage(), e);
+      model.addAttribute("errorGlobal", "Ocurrió un error inesperado: " + e.getMessage());
+      return "home"; // o la vista que uses para el home
     }
   }
 
@@ -263,4 +274,16 @@ public class HechosController {
     }
   }
 
-}
+  @GetMapping("/{id}/editar")
+  public String editarHecho(@PathVariable Long id, Model model, Authentication authentication) {
+
+    HechoDTO hecho = hechosApiService.obtenerHecho(id);
+
+    model.addAttribute("hecho", hecho);
+    return "editar-hecho";
+  }
+  @PostMapping("/{id}/editar")
+  public String subirHechoEditado(@PathVariable Long id, Model model, Authentication authentication) {
+
+
+  }

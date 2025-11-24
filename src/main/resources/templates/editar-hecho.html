@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Editar Hecho - MetaMapa Admin</title>
+
+    <link rel="stylesheet" th:href="@{/css/global.css}">
+    <link rel="stylesheet" th:href="@{/css/admin.css}">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700&display=swap" rel="stylesheet">
+
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" />
+
+    <style>
+        /* Estilos específicos para el mapa en el formulario */
+        .map-container {
+            position: relative;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            overflow: hidden;
+        }
+        #map-preview {
+            height: 400px;
+            width: 100%;
+            z-index: 1;
+        }
+        .search-bar {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+    </style>
+</head>
+
+<body>
+<div class="admin-layout">
+    <aside class="sidebar">
+        <a th:href="@{/}" class="logo">MetaMapa Admin</a>
+        <nav class="sidebar__nav">
+            <a th:href="@{/admin/dashboard}" class="sidebar__link">Dashboard</a>
+            <a th:href="@{/admin/colecciones}" class="sidebar__link">Colecciones</a>
+            <a th:href="@{/admin/revisiones}" class="sidebar__link sidebar__link--active">Revisiones</a>
+        </nav>
+        <a th:href="@{/auth/logout}" class="btn btn--secondary sidebar__logout">Cerrar Sesión</a>
+    </aside>
+
+    <main class="main-content">
+        <h1 class="page-title">Editar Hecho</h1>
+
+        <div th:if="${error}" class="alert alert--danger" th:text="${error}"></div>
+
+        <div class="form-card" style="max-width: 900px; margin: 0 auto; padding: 30px; background: white; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.05);">
+
+            <form th:action="@{/admin/revisiones/hechos/{id}/editar(id=${hecho.id})}"
+                  th:object="${hecho}"
+                  method="post">
+
+                <div class="form-group">
+                    <label for="titulo">Título</label>
+                    <input type="text" id="titulo" th:field="*{titulo}" class="form-control" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="descripcion">Descripción</label>
+                    <textarea id="descripcion" th:field="*{descripcion}" rows="5" class="form-control" required></textarea>
+                </div>
+
+                <div class="form-group">
+                    <label for="categoria">Categoría</label>
+                    <input type="text" id="categoria" th:field="*{categoria}" class="form-control" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="fechaHecho">Fecha del Acontecimiento</label>
+                    <input type="datetime-local"
+                           id="fechaHecho"
+                           name="fechaHecho"
+                           th:value="${#temporals.format(hecho.fechaHecho, 'yyyy-MM-dd''T''HH:mm')}"
+                           class="form-control"
+                           required>
+                </div>
+
+                <div class="form-group" style="margin-top: 30px;">
+                    <label>Ubicación Geográfica</label>
+
+                    <div class="search-bar">
+                        <input type="text" id="address-input" class="form-control" placeholder="Buscar dirección (Ej: Obelisco, Buenos Aires)">
+                        <button type="button" class="btn btn--secondary" id="geocode-btn">Buscar en Mapa</button>
+                    </div>
+
+                    <div class="map-container">
+                        <div id="map-preview"></div>
+                    </div>
+                    <p class="form-hint">Hacé clic en el mapa para ajustar la posición exacta.</p>
+
+                    <input type="hidden" id="lat-input" th:field="*{ubicacionOutputDTO.latitud}">
+                    <input type="hidden" id="lng-input" th:field="*{ubicacionOutputDTO.longitud}">
+                </div>
+
+                <div class="form-actions" style="display: flex; justify-content: flex-end; gap: 15px; margin-top: 30px;">
+                    <a th:href="@{/admin/revisiones}" class="btn btn--secondary">Cancelar</a>
+                    <button type="submit" class="btn btn--primary">Guardar Cambios</button>
+                </div>
+
+            </form>
+        </div>
+    </main>
+</div>
+
+<script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
+
+<script th:inline="javascript">
+    // 1. Obtener coordenadas iniciales del objeto Java
+    // Si vienen nulas, usamos coordenadas por defecto (Buenos Aires)
+    let latInicial = /*[[${hecho.ubicacionOutputDTO.latitud}]]*/ -34.6037;
+    let lngInicial = /*[[${hecho.ubicacionOutputDTO.longitud}]]*/ -58.3816;
+
+    if (!latInicial) latInicial = -34.6037;
+    if (!lngInicial) lngInicial = -58.3816;
+
+    // 2. Inicializar Mapa
+    const map = L.map('map-preview').setView([latInicial, lngInicial], 13);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '© OpenStreetMap contributors'
+    }).addTo(map);
+
+    // 3. Inicializar Marcador
+    let marker = L.marker([latInicial, lngInicial], {draggable: true}).addTo(map);
+
+    // Elementos del DOM
+    const latInput = document.getElementById('lat-input');
+    const lngInput = document.getElementById('lng-input');
+    const addressInput = document.getElementById('address-input');
+    const geocodeBtn = document.getElementById('geocode-btn');
+
+    // Función para actualizar inputs y marcador
+    function updateLocation(lat, lng) {
+        marker.setLatLng([lat, lng]);
+        map.panTo([lat, lng]);
+        latInput.value = lat;
+        lngInput.value = lng;
+    }
+
+    // Evento: Clic en el mapa
+    map.on('click', (e) => {
+        updateLocation(e.latlng.lat, e.latlng.lng);
+    });
+
+    // Evento: Arrastrar marcador
+    marker.on('dragend', (e) => {
+        const position = marker.getLatLng();
+        updateLocation(position.lat, position.lng);
+    });
+
+    // Evento: Buscar dirección (Nominatim API)
+    geocodeBtn.addEventListener('click', () => {
+        const address = addressInput.value.trim();
+        if (!address) return;
+
+        const url = `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(address)}&format=json&limit=1`;
+
+        fetch(url)
+            .then(response => response.json())
+            .then(data => {
+                if (data && data.length > 0) {
+                    const lat = parseFloat(data[0].lat);
+                    const lon = parseFloat(data[0].lon);
+                    updateLocation(lat, lon);
+                    map.setView([lat, lon], 15);
+                } else {
+                    alert("No se encontraron resultados para esa dirección.");
+                }
+            })
+            .catch(err => {
+                console.error(err);
+                alert("Error al conectar con el servicio de mapas.");
+            });
+    });
+</script>
+
+</body>
+</html>
