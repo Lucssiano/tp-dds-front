@@ -42,9 +42,6 @@ public class AdminController {
   public String gestionarColecciones(Model model) {
     List<ColeccionDTO> colecciones = coleccionesApiService.obtenerColecciones();
     model.addAttribute("colecciones", colecciones);
-    if (!model.containsAttribute("coleccionNueva")) {
-      model.addAttribute("coleccionNueva", new ColeccionInputDTO());
-    }
     return "admin-colecciones";
   }
   @GetMapping("/colecciones/crear")

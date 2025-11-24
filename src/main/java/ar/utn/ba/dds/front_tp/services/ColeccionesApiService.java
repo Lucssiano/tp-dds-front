@@ -97,4 +97,25 @@ public class ColeccionesApiService {
       throw new RuntimeException("Error al modificar la colección: " + e.getMessage());
     }
   }
+
+  public List<ColeccionDTO> obtenerUltimasColecciones(int cantidad) {
+    try {
+      // 1. Traemos todas (endpoint público)
+      List<ColeccionDTO> todas = obtenerColecciones();
+
+      if (todas == null || todas.isEmpty()) {
+        return List.of();
+      }
+
+      // 2. Ordenamos por ID descendente (lo más nuevo primero) y limitamos
+      return todas.stream()
+          .sorted((c1, c2) -> c2.getId().compareTo(c1.getId())) // Descendente
+          .limit(cantidad)
+          .toList();
+
+    } catch (Exception e) {
+      // Si falla, devolvemos lista vacía para no romper el Home
+      return List.of();
+    }
+  }
 }
