@@ -68,11 +68,23 @@ public class WebApiCallerService {
    */
   public <T, R> T postWithAuth(String url, R requestBody, Class<T> responseType, String token) {
     log.info("Llamada POST AUTENTICADA a: {}", url);
-    return webClient.post()
+
+    var requestSpec = webClient.post()
         .uri(url)
-        .header(HttpHeaders.AUTHORIZATION, "Bearer " + token) // Acá se añade el token
-        .body(Mono.just(requestBody), requestBody.getClass())
-        .retrieve()
+        .header(HttpHeaders.AUTHORIZATION, "Bearer " + token);
+
+    // CORRECCIÓN: Solo agregamos el body si NO es null
+    if (requestBody != null) {
+      requestSpec.bodyValue(requestBody);
+    }
+
+    // Si esperamos Void (respuesta vacía), usamos toBodilessEntity para evitar errores de parsing
+    if (responseType.equals(Void.class)) {
+      requestSpec.retrieve().toBodilessEntity().block();
+      return null;
+    }
+
+    return requestSpec.retrieve()
         .bodyToMono(responseType)
         .block();
   }
@@ -215,7 +227,6 @@ public class WebApiCallerService {
             .block()
     );
   }
-
 
   /**
    * Ejecuta una llamada HTTP PUT
