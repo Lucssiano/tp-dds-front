@@ -1,9 +1,11 @@
 package ar.utn.ba.dds.front_tp.services;
 
 import ar.utn.ba.dds.front_tp.dto.hechos.CrearHechoDTO;
+import ar.utn.ba.dds.front_tp.dto.hechos.EditarHechoDTO;
 import ar.utn.ba.dds.front_tp.dto.hechos.HechoDTO;
 import ar.utn.ba.dds.front_tp.dto.output.HechoOutputDTO;
 import ar.utn.ba.dds.front_tp.dto.usuarios.AuthResponseDTO;
+import ar.utn.ba.dds.front_tp.mappers.HechoMapper;
 import ar.utn.ba.dds.front_tp.services.internal.WebApiCallerService;
 import jakarta.servlet.http.HttpSession;
 
@@ -28,14 +30,15 @@ public class HechosApiService {
   private static final Logger log = LoggerFactory.getLogger(HechosApiService.class);
   private final WebClient webClient;
   private final WebApiCallerService webApiCallerService;
-  private final String hechosServiceUrl;
+  private final String hechosServiceUrl = "http://localhost:8081/metamapa";
+  private final HechoMapper hechoMapper;
 
   @Autowired
   public HechosApiService(WebApiCallerService webApiCallerService,
-            @Value("${hechos.service.url}") String hechosServiceUrl) {
+            HechoMapper hechoMapper) {
     this.webClient = WebClient.builder().build();
     this.webApiCallerService = webApiCallerService;
-    this.hechosServiceUrl = hechosServiceUrl;
+    this.hechoMapper = hechoMapper;
   }
   @Autowired
   private HttpSession session;
@@ -103,5 +106,17 @@ public class HechosApiService {
     String url = hechosServiceUrl + "/hechos";
 
     return webApiCallerService.postWithAuth(url, payload, HechoOutputDTO.class, token);
+  }
+
+  public Void editarHecho(Long id, HechoDTO hechoDTO) {
+
+    EditarHechoDTO editarHechoDTO = hechoMapper.toEditarHechoDTO(hechoDTO);
+
+    return webClient.post()
+        .uri(hechosServiceUrl + "/hechos/" + id + "/editar")
+        .bodyValue(editarHechoDTO)
+        .retrieve()
+        .bodyToMono(Void.class)
+        .block();
   }
 }

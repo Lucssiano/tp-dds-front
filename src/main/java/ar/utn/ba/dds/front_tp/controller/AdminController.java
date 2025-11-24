@@ -2,6 +2,7 @@ package ar.utn.ba.dds.front_tp.controller;
 
 import ar.utn.ba.dds.front_tp.dto.colecciones.ColeccionDTO;
 import ar.utn.ba.dds.front_tp.dto.colecciones.ColeccionInputDTO;
+import ar.utn.ba.dds.front_tp.dto.hechos.HechoDTO;
 import ar.utn.ba.dds.front_tp.dto.usuarios.AuthResponseDTO;
 import ar.utn.ba.dds.front_tp.dto.admin.DashboardSummaryDTO;
 import ar.utn.ba.dds.front_tp.services.ColeccionesApiService;
@@ -185,12 +186,46 @@ public class AdminController {
       var hecho = hechosApiService.obtenerHecho(id);
 
       model.addAttribute("hecho", hecho);
+      model.addAttribute("modoEdicion", false);
+
       return "admin-detalle-hecho";
 
     } catch (Exception e) {
       redirectAttributes.addFlashAttribute("error", "No se pudo cargar el hecho.");
       return "redirect:/admin/revisiones";
     }
+  }
+
+  @GetMapping("/revisiones/hechos/{id}/editar")
+  public String editarHecho(@PathVariable Long id,
+                            Model model,
+                            RedirectAttributes redirectAttributes) {
+    try {
+      // Traer el hecho individual
+      var hecho = hechosApiService.obtenerHecho(id);
+
+      model.addAttribute("hecho", hecho);
+      model.addAttribute("modoEdicion", true);
+
+      return "admin-detalle-hecho";
+
+    } catch (Exception e) {
+      redirectAttributes.addFlashAttribute("error", "No se pudo cargar el hecho.");
+      return "redirect:/admin/revisiones";
+    }
+  }
+
+  @PostMapping("/revisiones/hechos/{id}/editar")
+  public String editarHecho(@PathVariable Long id,
+                            @ModelAttribute("hecho") HechoDTO hechoDTO,
+                            RedirectAttributes redirectAttributes) {
+    try {
+      hechosApiService.editarHecho(id, hechoDTO);
+      redirectAttributes.addFlashAttribute("mensaje", "Hecho editado con éxito.");
+    } catch (Exception e) {
+      redirectAttributes.addFlashAttribute("error", "Error al editar: " + e.getMessage());
+    }
+    return "redirect:/admin/revisiones";
   }
 
   // Acciones sobre Hechos (Aprobar/Rechazar)
@@ -235,13 +270,6 @@ public class AdminController {
       redirectAttributes.addFlashAttribute("error", "Error al procesar la solicitud: " + e.getMessage());
     }
     return "redirect:/admin/revisiones";
-  }
-
-  // TODO: Falta el método de editar (GET) mencionado en el HTML, necesitarías una vista nueva para editar el hecho.
-  @GetMapping("/revisiones/hechos/{id}/editar")
-  public String editarHecho(@PathVariable Long id, Model model) {
-    // Lógica para buscar el hecho individual y mostrar formulario de edición
-    return "admin-editar-hecho"; // Placeholder
   }
 
   @GetMapping("/fuentes")

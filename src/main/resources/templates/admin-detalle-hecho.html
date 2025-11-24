@@ -10,124 +10,239 @@
 </head>
 
 <body>
-    <div class="admin-layout">
-        <aside class="sidebar">
-            <a th:href="@{/}" class="logo">MetaMapa Admin</a>
-            <nav class="sidebar__nav">
-                <a th:href="@{/admin/dashboard}" class="sidebar__link">Dashboard</a>
-                <a th:href="@{/admin/colecciones}" class="sidebar__link">Colecciones</a>
-                <a th:href="@{/admin/fuentes}" class="sidebar__link">Fuentes</a>
-                <a th:href="@{/admin/revisiones}" class="sidebar__link sidebar__link--active">Revisiones</a>
-            </nav>
-            <a th:href="@{/auth/logout}" class="btn btn--secondary sidebar__logout">Cerrar Sesión</a>
-        </aside>
+<div class="admin-layout">
+    <aside class="sidebar">
+        <a th:href="@{/}" class="logo">MetaMapa Admin</a>
+        <nav class="sidebar__nav">
+            <a th:href="@{/admin/dashboard}" class="sidebar__link">Dashboard</a>
+            <a th:href="@{/admin/colecciones}" class="sidebar__link">Colecciones</a>
+            <a th:href="@{/admin/fuentes}" class="sidebar__link">Fuentes</a>
+            <a th:href="@{/admin/revisiones}" class="sidebar__link sidebar__link--active">Revisiones</a>
+        </nav>
+        <a th:href="@{/auth/logout}" class="btn btn--secondary sidebar__logout">Cerrar Sesión</a>
+    </aside>
 
-        <div class="main-content">
+    <div class="main-content">
 
-            <h1 class="page-title">Detalle del Hecho</h1>
+        <h1 class="page-title">Detalle del Hecho</h1>
 
-            <!-- CARD PRINCIPAL -->
-            <div class="stat-card" style="padding: 30px;">
+        <div class="stat-card" style="padding: 30px;">
+
+            <!-- FORMULARIO SOLO EN MODO EDICIÓN -->
+            <form th:if="${modoEdicion}"
+                  th:action="@{/admin/revisiones/hechos/{id}/editar(id=${hecho.id})}"
+                  method="post"
+                  style="display: flex; flex-direction: column; gap: 20px;">
 
                 <!-- TÍTULO -->
-                <h2 class="section-title" th:text="${hecho.titulo}">
-                    Título del Hecho
-                </h2>
+                <div>
+                    <h3 class="content-title">Título</h3>
+                    <input class="input"
+                           type="text"
+                           th:field="*{hecho.titulo}"
+                           style="width: 100%; padding: 10px;">
+                </div>
 
                 <!-- DESCRIPCIÓN -->
                 <div class="content-block">
                     <h3 class="content-title">Descripción</h3>
-                    <p th:text="${hecho.descripcion}">Descripción...</p>
+                    <textarea class="input"
+                              th:field="*{hecho.descripcion}"
+                              rows="4"
+                              style="width: 100%; padding: 10px;"></textarea>
                 </div>
 
                 <!-- CATEGORÍA -->
                 <div class="content-block">
                     <h3 class="content-title">Categoría</h3>
-                    <p th:text="${hecho.categoria}">Categoría...</p>
+                    <input class="input"
+                           type="text"
+                           th:field="*{hecho.categoria}"
+                           style="width: 100%; padding: 10px;">
+                </div>
+
+                <!-- FECHA -->
+                <div class="content-block">
+                    <h3 class="content-title">Fecha del Hecho</h3>
+                    <input class="input"
+                           type="datetime-local"
+                           name="fechaHecho"
+                           th:value="${#temporals.format(hecho.fechaHecho, 'yyyy-MM-dd''T''HH:mm:ss')}"
+                           step="1"
+                           style="padding: 10px;">
+                </div>
+
+                <!-- UBICACIÓN -->
+                <div class="content-block">
+                    <h3 class="content-title">Ubicación</h3>
+
+                    <!-- BUSCADOR DE DIRECCIÓN -->
+                    <div class="location-search-container" style="margin-bottom: 15px;">
+                        <input type="text" id="address-input" class="form-control" style="margin-bottom: 20px"
+                               placeholder="Ej: Av. Rivadavia 1234, CABA">
+                        <button type="button" class="btn btn--secondary" id="geocode-btn">Buscar</button>
+                    </div>
+
+                    <!-- MAPA -->
+                    <div id="map-preview" style="height: 400px; border-radius: 4px; margin-bottom: 10px; max-width: 1000px"></div>
+
+                    <!-- CAMPOS OCULTOS LAT/LNG -->
+                    <input type="hidden" id="lat-input" th:field="*{hecho.ubicacionOutputDTO.latitud}">
+                    <input type="hidden" id="lng-input" th:field="*{hecho.ubicacionOutputDTO.longitud}">
+                </div>
+
+                <!-- BOTONES -->
+                <div style="margin-top: 30px; display: flex; gap: 10px; justify-content: center;">
+                    <button class="btn btn--primary" type="submit">Guardar Cambios</button>
+                    <a th:href="@{/admin/revisiones/hechos/{id}/detalle(id=${hecho.id})}"
+                       class="btn btn--secondary">Cancelar</a>
+                </div>
+
+            </form>
+
+            <!-- ============================= -->
+            <!--   MODO LECTURA (NO EDICIÓN)   -->
+            <!-- ============================= -->
+            <div th:unless="${modoEdicion}">
+
+                <!-- TÍTULO -->
+                <h2 class="section-title" th:text="${hecho.titulo}"></h2>
+
+                <!-- DESCRIPCIÓN -->
+                <div class="content-block">
+                    <h3 class="content-title">Descripción</h3>
+                    <p th:text="${hecho.descripcion}"></p>
+                </div>
+
+                <!-- CATEGORÍA -->
+                <div class="content-block">
+                    <h3 class="content-title">Categoría</h3>
+                    <p th:text="${hecho.categoria}"></p>
                 </div>
 
                 <!-- FUENTES -->
                 <div class="content-block">
                     <h3 class="content-title">Fuente Primaria</h3>
-                    <p th:text="${hecho.fuente}">Fuente</p>
+                    <p th:text="${hecho.fuente}"></p>
 
                     <div th:if="${hecho.fuentes != null}">
                         <h3 class="content-title">Otras Fuentes</h3>
                         <ul>
-                            <li th:each="f : ${hecho.fuentes}" th:text="${f}">Fuente extra</li>
+                            <li th:each="f : ${hecho.fuentes}" th:text="${f}"></li>
                         </ul>
-                    </div>
-                </div>
-
-                <!-- ETIQUETAS -->
-                <div class="content-block" th:if="${hecho.etiquetas != null}">
-                    <h3 class="content-title">Etiquetas</h3>
-
-                    <div style="display: flex; gap: 8px; flex-wrap: wrap;">
-                    <span class="tag"
-                          th:each="e : ${hecho.etiquetas}"
-                          th:text="${e}"
-                          style="background: var(--bg-light); padding: 6px 12px; border-radius: 6px;">
-                    </span>
                     </div>
                 </div>
 
                 <!-- FECHA -->
                 <div class="content-block">
                     <h3 class="content-title">Fecha del Hecho</h3>
-                    <p th:text="${#temporals.format(hecho.fechaHecho, 'dd/MM/yyyy HH:mm')}">10/10/2027</p>
+                    <p th:text="${#temporals.format(hecho.fechaHecho, 'yyyy-MM-dd HH:mm:ss')}"></p>
                 </div>
 
-                <!-- UBICACIÓN (TABLA) -->
+                <!-- UBICACIÓN -->
                 <div class="content-block">
                     <h3 class="content-title">Ubicación</h3>
-
-                    <table class="data-table" style="max-width: 700px;  justify-content: left ">
+                    <table class="data-table" style="max-width: 700px;">
                         <tbody>
                         <tr>
                             <th>Provincia</th>
-                            <td th:text="${hecho.ubicacionOutputDTO.provincia}">La Rioja</td>
+                            <td th:text="${hecho.ubicacionOutputDTO.provincia}"></td>
                         </tr>
                         <tr>
                             <th>Municipio</th>
-                            <td th:text="${hecho.ubicacionOutputDTO.municipio}">Chilecito</td>
+                            <td th:text="${hecho.ubicacionOutputDTO.municipio}"></td>
                         </tr>
                         <tr>
                             <th>Departamento</th>
-                            <td th:text="${hecho.ubicacionOutputDTO.departamento}">Chilecito</td>
+                            <td th:text="${hecho.ubicacionOutputDTO.departamento}"></td>
                         </tr>
                         <tr>
                             <th>Latitud</th>
-                            <td th:text="${hecho.ubicacionOutputDTO.latitud}">-29.2</td>
+                            <td th:text="${hecho.ubicacionOutputDTO.latitud}"></td>
                         </tr>
                         <tr>
                             <th>Longitud</th>
-                            <td th:text="${hecho.ubicacionOutputDTO.longitud}">-67.53</td>
+                            <td th:text="${hecho.ubicacionOutputDTO.longitud}"></td>
                         </tr>
                         </tbody>
                     </table>
                 </div>
 
                 <!-- BOTONES -->
-                <div style="margin-top: 30px; display: flex; gap: 10px; justify-content: center">
+                <div style="margin-top: 30px; display: flex; gap: 10px; justify-content: center;">
                     <form th:action="@{/admin/revisiones/hechos/{id}/aprobar(id=${hecho.id})}" method="post">
                         <button class="btn btn--primary">Aprobar</button>
                     </form>
 
-                    <form th:href="@{/admin/revisiones/hechos/{id}/editar(id=${hecho.id})}" method="get">
+                    <form th:action="@{/admin/revisiones/hechos/{id}/editar(id=${hecho.id})}" method="get">
                         <button class="btn btn--secondary">Modificar</button>
                     </form>
 
                     <form th:action="@{/admin/revisiones/hechos/{id}/rechazar(id=${hecho.id})}" method="post">
-                        <button class="btn btn--third" onclick="return confirm('¿Rechazar este hecho?')">
-                            Rechazar
-                        </button>
+                        <button class="btn btn--third" onclick="return confirm('¿Rechazar este hecho?')">Rechazar</button>
                     </form>
                 </div>
 
             </div>
+
         </div>
     </div>
+</div>
+
+<!-- SCRIPTS LEAFLET -->
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" />
+<script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
+
+<script>
+    /* Mapa inicial centrado en la ubicación actual del hecho */
+    const latInicial = /*[[${hecho.ubicacionOutputDTO.latitud}]]*/ -34.6037;
+    const lngInicial = /*[[${hecho.ubicacionOutputDTO.longitud}]]*/ -58.3816;
+
+    const map = L.map('map-preview').setView([latInicial, lngInicial], 13);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
+
+    const latInput = document.getElementById('lat-input');
+    const lngInput = document.getElementById('lng-input');
+    const addressInput = document.getElementById('address-input');
+    const geocodeBtn = document.getElementById('geocode-btn');
+
+    let marker = L.marker([latInicial, lngInicial]).addTo(map);
+
+    function updateMapAndInputs(lat, lng) {
+        if (marker) map.removeLayer(marker);
+        marker = L.marker([lat, lng]).addTo(map);
+        latInput.value = lat;
+        lngInput.value = lng;
+    }
+
+    map.on('click', (e) => {
+        const { lat, lng } = e.latlng;
+        updateMapAndInputs(lat, lng);
+    });
+
+    geocodeBtn.addEventListener('click', () => {
+        const address = addressInput.value.trim();
+        if (!address) {
+            alert("Ingresá una dirección.");
+            return;
+        }
+
+        const url = `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(address)}&format=json&limit=1`;
+
+        fetch(url)
+            .then(r => r.json())
+            .then(data => {
+                if (data && data.length > 0) {
+                    const { lat, lon } = data[0];
+                    updateMapAndInputs(parseFloat(lat), parseFloat(lon));
+                    map.setView([lat, lon], 16);
+                } else {
+                    alert("No se encontraron resultados.");
+                }
+            })
+            .catch(() => alert("Error buscando dirección."));
+    });
+</script>
 
 </body>
 </html>

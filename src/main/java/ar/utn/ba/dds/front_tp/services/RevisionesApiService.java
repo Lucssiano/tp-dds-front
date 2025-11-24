@@ -8,19 +8,22 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
+import org.springframework.web.reactive.function.client.WebClient;
 
 import java.util.Collections;
 import java.util.List;
 
 @Service
-@RequiredArgsConstructor
 public class RevisionesApiService {
 
   private static final Logger log = LoggerFactory.getLogger(RevisionesApiService.class);
   private final WebApiCallerService webApiCallerService;
-
-  @Value("${dashboard.service.url}") // O usa una propiedad específica si la tienes
-  private String baseUrl;
+  private String baseUrl = "http://localhost:8081/metamapa";
+  private final WebClient webClient;
+  public RevisionesApiService(WebApiCallerService webApiCallerService){
+    this.webClient = WebClient.builder().baseUrl(baseUrl).build();
+    this.webApiCallerService = webApiCallerService;
+  }
 
   public List<HechoDTO> obtenerHechosPendientes(String token) {
     try {
@@ -64,8 +67,12 @@ public class RevisionesApiService {
 
   private void enviarAccionHecho(Long id, String accion, String token) {
     try {
-      String url = baseUrl + "/hechos/" + id + "/" + accion;
-      webApiCallerService.postWithAuth(url, null, Void.class, token);
+      log.info("ID: " + id + " - Accion: " + accion);
+      webClient.post()
+          .uri("/hechos/" + id + "/" + accion)
+          .retrieve()
+          .bodyToMono(Void.class)
+          .block();
     } catch (Exception e) {
       throw new RuntimeException("Error al " + accion + " el hecho: " + e.getMessage());
     }

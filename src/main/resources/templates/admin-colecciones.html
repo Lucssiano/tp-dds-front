@@ -31,7 +31,7 @@
         <div th:if="${mensaje}" class="alert alert--success" th:text="${mensaje}"></div>
         <div th:if="${error}" class="alert alert--danger" th:text="${error}"></div>
 
-        <div class="content-header">
+        <div class="content-header" style="padding-bottom: 40px">
             <div sec:authorize="hasRole('ADMIN')">
                 <a th:href="@{/admin/colecciones/crear}" class="btn btn--primary">
                     Crear Nueva Colección
