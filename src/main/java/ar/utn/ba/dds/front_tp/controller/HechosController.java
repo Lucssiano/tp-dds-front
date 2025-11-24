@@ -1,5 +1,6 @@
 package ar.utn.ba.dds.front_tp.controller;
 
+import ar.utn.ba.dds.front_tp.Utils.JwtUtils;
 import ar.utn.ba.dds.front_tp.dto.hechos.CrearHechoDTO;
 import ar.utn.ba.dds.front_tp.dto.hechos.HechoDTO;
 import ar.utn.ba.dds.front_tp.dto.hechos.input.SolicitudEliminacionInputDTO;
@@ -151,6 +152,15 @@ public class HechosController {
 
       SolicitudEliminacionInputDTO solicitud = new SolicitudEliminacionInputDTO();
       solicitud.setTituloHecho(hecho.getTitulo());
+      if (authentication != null){
+        AuthResponseDTO token = (AuthResponseDTO) authentication.getDetails();
+        var email = JwtUtils.validarToken(token.getAccessToken());
+        solicitud.setUsuario(email);
+      } else {
+        solicitud.setUsuario("VISUALIZADOR");
+      }
+
+      log.info("USUARIO"+ solicitud.getUsuario());
 
       boolean esAnonimo = (authentication == null || !authentication.isAuthenticated());
 
@@ -195,6 +205,16 @@ public class HechosController {
     }
 
     try {
+      if (authentication != null){
+        AuthResponseDTO token = (AuthResponseDTO) authentication.getDetails();
+        var email = JwtUtils.validarToken(token.getAccessToken());
+        solicitud.setUsuario(email);
+      } else {
+        solicitud.setUsuario("VISUALIZADOR");
+      }
+
+      log.info("USUARIO justito antes de mandar"+ solicitud.getUsuario());
+
       SoliOutputDTO respuesta = solicitudesApiService.crearSolicitudEliminacion(solicitud);
 
       redirectAttributes.addFlashAttribute("mensaje",

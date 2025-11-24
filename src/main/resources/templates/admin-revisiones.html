@@ -93,8 +93,8 @@
                 </thead>
                 <tbody>
                 <tr th:each="solicitud : ${solicitudesPendientes}">
-                    <td th:text="${solicitud.tituloHecho}">Título</td>
-                    <td th:text="${solicitud.motivo}">Motivo</td>
+                    <td th:text="${solicitud.hechoTitulo}">Título</td>
+                    <td th:text="${solicitud.justificacion}">justificacion</td>
                     <td th:text="${solicitud.usuario}">Usuario</td>
                     <td>
                         <div style="display: flex; gap: 5px;">

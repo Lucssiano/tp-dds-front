@@ -6,4 +6,5 @@ import lombok.Data;
 public class SolicitudEliminacionInputDTO {
   private String tituloHecho;
   private String justificacion;
+  private String usuario;
 }

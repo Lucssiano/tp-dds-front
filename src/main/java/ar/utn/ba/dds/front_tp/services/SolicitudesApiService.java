@@ -19,6 +19,7 @@ public class SolicitudesApiService {
   }
 
   public SoliOutputDTO crearSolicitudEliminacion(SolicitudEliminacionInputDTO soli){
+    log.info("usuario en service solicitud: "+ soli.getUsuario());
     return webClient.post()
         .bodyValue(soli)
         .retrieve()

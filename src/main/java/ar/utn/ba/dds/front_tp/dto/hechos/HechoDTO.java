@@ -26,4 +26,5 @@ public class HechoDTO {
   private LocalDateTime fechaHecho;
   private UbicacionDTO ubicacionOutputDTO;
   private List<String> etiquetas; // no me llegan parece
+  private String fuentes;
 }

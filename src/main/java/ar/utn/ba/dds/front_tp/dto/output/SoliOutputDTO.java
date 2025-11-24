@@ -12,4 +12,5 @@ public class SoliOutputDTO {
   private String hechoTitulo;
   private String justificacion;
   private EstadoSolicitud estado;
+  private String usuario;
 }
