@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mis Hechos - MetaMapa</title>
+
+    <link rel="stylesheet" th:href="@{/css/global.css}">
+    <link rel="stylesheet" th:href="@{/css/landing.css}">
+    <!-- Si querés, podés crear un mis-hechos.css y agregarlo acá -->
+</head>
+
+<body>
+<header class="header">
+    <div class="container">
+        <a th:href="@{/}" class="logo">MetaMapa</a>
+        <nav class="nav">
+            <a th:href="@{/hechos/mapa}" class="nav__link">Visualizar</a>
+            <a th:href="@{/hechos/subir-hecho}" class="nav__link">Subir Hecho</a>
+
+            <!-- Mostrar solo si NO está autenticado -->
+            <a th:if="${!#authorization.expression('isAuthenticated()')}"
+               th:href="@{/auth}" class="btn btn--secondary">Iniciar Sesión</a>
+            <a th:if="${!#authorization.expression('isAuthenticated()')}"
+               th:href="@{/auth?modoRegistro=true}" class="btn btn--primary">Registrarse</a>
+
+            <!-- Mostrar solo si SÍ está autenticado -->
+            <form th:if="${#authorization.expression('isAuthenticated()')}"
+                  th:action="@{/auth/logout}" method="post" style="display:inline;">
+                <button type="submit" class="btn btn--primary">Cerrar Sesión</button>
+            </form>
+        </nav>
+    </div>
+</header>
+
+<main>
+    <section class="all-collections">
+        <div class="container">
+            <h1 class="page-title">Mis Hechos</h1>
+            <p class="page-subtitle"
+               th:text="${usuarioEmail != null} ?
+                        'Estos son los hechos que has subido con el usuario ' + ${usuarioEmail} :
+                        'Hechos asociados a tu cuenta.'">
+                Estos son los hechos que has subido.
+            </p>
+
+            <!-- Mensaje de error global -->
+            <div th:if="${errorGlobal}" class="alert alert--error">
+                <p th:text="${errorGlobal}"></p>
+            </div>
+
+            <!-- Grid de hechos -->
+            <div class="card-grid" th:if="${not #lists.isEmpty(hechos)}">
+                <div class="card" th:each="hecho : ${hechos}">
+                    <div class="card__content">
+                        <h3 class="card__title" th:text="${hecho.titulo}">Título del hecho</h3>
+
+                        <p class="card__description"
+                           th:text="${hecho.descripcion}">
+                            Descripción del hecho.
+                        </p>
+
+                        <p class="card__meta">
+                            <span th:if="${hecho.fechaHecho != null}">
+                                <strong>Fecha: </strong>
+                                <span th:text="${#temporals.format(hecho.fechaHecho, 'dd/MM/yyyy')}">01/01/2024</span>
+                            </span>
+                            <br/>
+                            <span th:if="${hecho.categoria != null}">
+                                <strong>Categoría: </strong>
+                                <span th:text="${hecho.categoria}">Categoría</span>
+                            </span>
+                        </p>
+
+                        <div style="margin-top: 10px; display: flex; gap: 8px; flex-wrap: wrap;">
+                            <a th:href="@{|/hechos/${hecho.id}/detalle|}" class="card__link">
+                                Ver Detalle
+                            </a>
+                            <!-- Si quisieras agregar algo como “Ver en el mapa”:
+                            <a th:href="@{|/hechos/mapa?hechoId=${hecho.id}|}" class="card__link">
+                                Ver en el mapa
+                            </a>
+                            -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Si no hay hechos -->
+            <div th:if="${#lists.isEmpty(hechos)}">
+                <p class="page-subtitle">
+                    Aún no has subido ningún hecho. Puedes empezar desde
+                    <a th:href="@{/hechos/subir-hecho}">Subir Hecho</a>.
+                </p>
+            </div>
+        </div>
+    </section>
+</main>
+
+<footer class="footer">
+    <div class="container">
+        <div class="footer__about">
+            <p>
+                MetaMapa es un sistema de código abierto de una ONG, diseñado para la recopilación y mapeo colaborativo
+                de información, protegiendo la identidad de sus usuarios.
+            </p>
+        </div>
+    </div>
+</footer>
+</body>
+</html>

@@ -85,15 +85,18 @@ public class HechosController {
                            Model model,
                            RedirectAttributes redirectAttributes,
                            Authentication authentication) {
-
     AuthResponseDTO token = (AuthResponseDTO) authentication.getDetails();
-    if (token == null) {
-      redirectAttributes.addFlashAttribute("errorLogin", "Tu sesión ha expirado. Por favor, inicia sesión de nuevo.");
-      return "redirect:/auth";
+
+    if (authentication != null){
+      var email = JwtUtils.validarToken(token.getAccessToken());
+      hecho.setUsuario(email);
+    } else {
+      hecho.setUsuario("VISUALIZADOR");
     }
-    log.info("Token recibido del backend de usuarios: {}", token); // 👈
-    log.info("AccessToken: {}", token.getAccessToken()); // 👈
-    log.info("Llegue a crear hechos... creo: " + hecho.getTitulo());
+    log.info("usuario en crear hecho: "+ hecho.getUsuario());
+    //    log.info("Token recibido del backend de usuarios: {}", token); // 👈
+//    log.info("AccessToken: {}", token.getAccessToken()); // 👈
+//    log.info("Llegue a crear hechos... creo: " + hecho.getTitulo());
 
     try {
       CrearHechoDTO payload = new CrearHechoDTO();
@@ -232,5 +235,32 @@ public class HechosController {
     }
   }
 
+  @GetMapping("/mis-hechos")
+  public String verMisHechos(Model model,
+                             Authentication authentication,
+                             RedirectAttributes redirectAttributes) {
+    if (authentication == null || !(authentication.getDetails() instanceof AuthResponseDTO token)) {
+      redirectAttributes.addFlashAttribute("errorLogin",
+          "Para ver tus hechos debes iniciar sesión.");
+      return "redirect:/auth";
+    }
+
+    try {
+      // Email del usuario desde el token JWT
+      String email = JwtUtils.validarToken(token.getAccessToken());
+
+      // Llamamos al backend para traer los hechos del usuario
+      var hechosUsuario = hechosApiService.obtenerHechosUsuario(email);
+
+      model.addAttribute("hechos", hechosUsuario);
+      model.addAttribute("usuarioEmail", email);
+
+      return "mis-hechos";  // => templates/mis-hechos.html
+    } catch (Exception e) {
+      log.error("Error al obtener hechos del usuario", e);
+      model.addAttribute("errorGlobal", "Ocurrió un error al obtener tus hechos. Intenta más tarde.");
+      return "mis-hechos"; // Mostramos la vista igual pero vacía
+    }
+  }
 
 }

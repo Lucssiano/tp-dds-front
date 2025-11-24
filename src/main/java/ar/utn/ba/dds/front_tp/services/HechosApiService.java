@@ -146,4 +146,20 @@ public class HechosApiService {
       return null;
     }
   }
+
+  public List<HechoDTO> obtenerHechosUsuario(String usuario){
+    UriComponentsBuilder builder = UriComponentsBuilder.fromUriString(hechosServiceUrl + "/hechos")
+        .queryParam("usuario", usuario);
+    try {
+      return webClient.get()
+          .uri(builder.toUriString())
+          .retrieve()
+          .bodyToFlux(HechoDTO.class)
+          .collectList()
+          .block();
+    }catch (Exception e){
+      log.error("No se pudieron obtener los hechos del usuario: "+ usuario + " con error: " + e.getMessage());
+      return null;
+    }
+  }
 }

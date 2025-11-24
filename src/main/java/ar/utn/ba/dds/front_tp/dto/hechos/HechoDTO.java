@@ -27,4 +27,5 @@ public class HechoDTO {
   private UbicacionDTO ubicacionOutputDTO;
   private List<String> etiquetas; // no me llegan parece
   private String fuentes;
+  private String usuario;
 }

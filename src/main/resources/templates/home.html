@@ -30,6 +30,7 @@
       <a th:href="@{/auth?modoRegistro=true}" class="btn btn--primary" sec:authorize="isAnonymous()">Registrarse</a>
 
       <!-- Solo visible si está logueado -->
+      <a th:href="@{/hechos/mis-hechos}" class="nav__link"  sec:authorize="isAuthenticated()">Mis Hechos</a>
       <form th:action="@{/auth/logout}" method="post"
             sec:authorize="isAuthenticated()"
             class="nav__logout-form">

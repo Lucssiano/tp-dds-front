@@ -26,4 +26,5 @@ public class HechoOutputDTO {
   private BigDecimal longitud;
   @JsonIgnore
   private List<String> etiquetas;
+  private String usuario;
 }
