@@ -21,6 +21,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;
 import org.springframework.web.reactive.function.client.WebClientResponseException;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import org.springframework.web.util.UriComponentsBuilder;
@@ -122,24 +123,22 @@ public class HechosApiService {
   }
 
   public HechoDTO obtenerUltimoHecho() {
+
     try {
-      String url = hechosServiceUrl + "/hechos?page=0&size=10";
+      String url = hechosServiceUrl + "/hechos/ultimo";
 
-      List<HechoDTO> hechos = webApiCallerService.getList(url, HechoDTO.class);
+      HechoDTO hecho = webClient.get()
+          .uri(url)
+          .retrieve()
+          .bodyToMono(HechoDTO.class)
+          .block();
 
-      if (hechos == null || hechos.isEmpty()) {
-        return null;
-      }
+
+      log.info("primer hecho: " + hecho);
+
 
       // Buscamos el ID más alto (el último creado)
-      return hechos.stream()
-          .max((h1, h2) -> {
-            // Protección extra por si algún ID viene nulo
-            if (h1.getId() == null) return -1;
-            if (h2.getId() == null) return 1;
-            return h1.getId().compareTo(h2.getId());
-          })
-          .orElse(null);
+      return hecho;
 
     } catch (Exception e) {
       // Logueamos pero no rompemos la app, devolvemos null y el Home no mostrará nada
