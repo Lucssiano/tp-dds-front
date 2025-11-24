@@ -149,7 +149,8 @@ public class HechosApiService {
 
   public List<HechoDTO> obtenerHechosUsuario(String usuario){
     UriComponentsBuilder builder = UriComponentsBuilder.fromUriString(hechosServiceUrl + "/hechos")
-        .queryParam("usuario", usuario);
+        .queryParam("usuario", usuario)
+        .queryParam("actualizarProxy", false);
     try {
       return webClient.get()
           .uri(builder.toUriString())
