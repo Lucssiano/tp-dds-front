@@ -82,7 +82,7 @@ public class HechosApiService {
       throw e;
     }
   }
-  // CAMBIO 1: El parámetro ahora es CrearHechoDTO (el wrapper que manda el controller)
+
   public HechoOutputDTO crearHecho(CrearHechoDTO payload, String token) {
 
     log.info("Enviando hecho. Título: {}", payload.getHecho().getTitulo());
@@ -92,5 +92,32 @@ public class HechosApiService {
     String url = hechosServiceUrl + "/hechos";
 
     return webApiCallerService.postWithAuth(url, payload, HechoOutputDTO.class, token);
+  }
+
+  public HechoDTO obtenerUltimoHecho() {
+    try {
+      String url = hechosServiceUrl + "/hechos?page=0&size=10";
+
+      List<HechoDTO> hechos = webApiCallerService.getList(url, HechoDTO.class);
+
+      if (hechos == null || hechos.isEmpty()) {
+        return null;
+      }
+
+      // Buscamos el ID más alto (el último creado)
+      return hechos.stream()
+          .max((h1, h2) -> {
+            // Protección extra por si algún ID viene nulo
+            if (h1.getId() == null) return -1;
+            if (h2.getId() == null) return 1;
+            return h1.getId().compareTo(h2.getId());
+          })
+          .orElse(null);
+
+    } catch (Exception e) {
+      // Logueamos pero no rompemos la app, devolvemos null y el Home no mostrará nada
+      log.error("No se pudo obtener el hecho del día: {}", e.getMessage());
+      return null;
+    }
   }
 }
