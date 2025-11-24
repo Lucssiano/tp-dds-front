@@ -137,8 +137,18 @@ document.addEventListener('DOMContentLoaded', () => {
                     document.getElementById('modal-source').textContent = fuentesTexto;
                     document.getElementById('modal-description').textContent = fact.descripcion || '';
 
+                    // 👉 Setear link "Ver Hecho"
+                    const verHechoBtn = document.getElementById('ver-hecho-btn');
+                    verHechoBtn.href = `/hechos/${fact.id}/detalle`;
+
+                    // 👉 Guardar el id para el botón "Solicitar eliminación"
+                        if (reportButton) {
+                            reportButton.dataset.hechoId = fact.id;
+                        }
+
                     document.getElementById('fact-modal').style.display = "block";
                 });
+
             }
         });
     } else {
@@ -153,8 +163,10 @@ document.addEventListener('DOMContentLoaded', () => {
     // Validamos que los botones existan antes de asignar onclick para evitar errores
     if (reportButton) {
         reportButton.addEventListener('click', () => {
-            if(factModal) factModal.style.display = 'none';
-            if(reportModal) reportModal.style.display = 'block';
+            const hechoId = reportButton.dataset.hechoId;
+            if (hechoId) {
+                window.location.href = `/hechos/${hechoId}/solicitud-eliminacion`;
+            }
         });
     }
 

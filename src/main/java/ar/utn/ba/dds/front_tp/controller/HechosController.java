@@ -2,11 +2,14 @@ package ar.utn.ba.dds.front_tp.controller;
 
 import ar.utn.ba.dds.front_tp.dto.hechos.CrearHechoDTO;
 import ar.utn.ba.dds.front_tp.dto.hechos.HechoDTO;
+import ar.utn.ba.dds.front_tp.dto.hechos.input.SolicitudEliminacionInputDTO;
 import ar.utn.ba.dds.front_tp.dto.output.HechoOutputDTO;
+import ar.utn.ba.dds.front_tp.dto.output.SoliOutputDTO;
 import ar.utn.ba.dds.front_tp.dto.usuarios.AuthResponseDTO;
 import ar.utn.ba.dds.front_tp.exceptions.DuplicateTitleException;
 import ar.utn.ba.dds.front_tp.services.GestionUsuariosApiService;
 import ar.utn.ba.dds.front_tp.services.HechosApiService;
+import ar.utn.ba.dds.front_tp.services.SolicitudesApiService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.servlet.http.HttpSession;
 import java.time.LocalDate;
@@ -35,6 +38,7 @@ import java.util.List;
 public class HechosController {
   private static final Logger log = LoggerFactory.getLogger(HechosController.class);
   private final HechosApiService hechosApiService;
+  private final SolicitudesApiService solicitudesApiService;
 
   // Inyectamos el conversor de JSON
   private final ObjectMapper objectMapper;
@@ -121,5 +125,92 @@ public class HechosController {
       return "subir-hecho";
     }
   }
+
+  @GetMapping("/{id}/detalle")
+  public String verDetalleHecho(@PathVariable Long id, Model model) {
+    try {
+      var hecho = hechosApiService.obtenerHecho(id);
+
+      model.addAttribute("hecho", hecho);
+
+      return "hecho-detalle";
+    } catch (Exception e){
+      log.error(e.getMessage());
+      model.addAttribute("errorGlobal", "Ocurrió un error inesperado: " + e.getMessage());
+      return "redirect:/home";
+
+    }
+  }
+
+  @GetMapping("/{id}/solicitud-eliminacion")
+  public String mostrarFormularioSolicitudEliminacion(@PathVariable Long id,
+                                                      Model model,
+                                                      Authentication authentication) {
+    try {
+      var hecho = hechosApiService.obtenerHecho(id);
+
+      SolicitudEliminacionInputDTO solicitud = new SolicitudEliminacionInputDTO();
+      solicitud.setTituloHecho(hecho.getTitulo());
+
+      boolean esAnonimo = (authentication == null || !authentication.isAuthenticated());
+
+      model.addAttribute("hecho", hecho);
+      model.addAttribute("solicitud", solicitud);
+      model.addAttribute("esAnonimo", esAnonimo);
+
+      return "solicitud-eliminacion";
+    } catch (Exception e) {
+      log.error("Error al cargar formulario de solicitud de eliminación para hecho {}: {}", id, e.getMessage(), e);
+      model.addAttribute("errorGlobal", "Ocurrió un error al cargar la solicitud de eliminación.");
+      return "home";
+    }
+  }
+
+  @PostMapping("/{id}/solicitud-eliminacion")
+  public String enviarSolicitudEliminacion(@PathVariable Long id,
+                                           @ModelAttribute("solicitud") SolicitudEliminacionInputDTO solicitud,
+                                           BindingResult bindingResult,
+                                           Model model,
+                                           RedirectAttributes redirectAttributes,
+                                           Authentication authentication) {
+
+    boolean esAnonimo = (authentication == null || !authentication.isAuthenticated());
+
+    // Regla: si NO está logueado, justificación mínimo 500 caracteres
+    String just = solicitud.getJustificacion() != null ? solicitud.getJustificacion().trim() : "";
+    if (esAnonimo && just.length() < 500) {
+      bindingResult.rejectValue(
+          "justificacion",
+          "justificacion.corta",
+          "Si no estás logueado, la justificación debe tener al menos 500 caracteres."
+      );
+    }
+
+    if (bindingResult.hasErrors()) {
+      // Volvemos a cargar el hecho para la vista
+      var hecho = hechosApiService.obtenerHecho(id);
+      model.addAttribute("hecho", hecho);
+      model.addAttribute("esAnonimo", esAnonimo);
+      return "solicitud-eliminacion";
+    }
+
+    try {
+      SoliOutputDTO respuesta = solicitudesApiService.crearSolicitudEliminacion(solicitud);
+
+      redirectAttributes.addFlashAttribute("mensaje",
+          "Solicitud enviada correctamente. Código: " + respuesta.getId());
+      redirectAttributes.addFlashAttribute("tipoMensaje", "success");
+
+      return "redirect:/hechos/" + id + "/detalle";
+    } catch (Exception e) {
+      log.error("Error al enviar solicitud de eliminación para hecho {}: {}", id, e.getMessage(), e);
+      var hecho = hechosApiService.obtenerHecho(id);
+      model.addAttribute("hecho", hecho);
+      model.addAttribute("esAnonimo", esAnonimo);
+      model.addAttribute("errorGlobal", "Ocurrió un error al enviar la solicitud. Intenta nuevamente.");
+      return "solicitud-eliminacion";
+    }
+  }
+
 
 }

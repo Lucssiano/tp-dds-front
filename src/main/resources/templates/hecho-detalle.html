@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title th:text="${hecho.titulo} ?: 'Detalle del Hecho'">MetaMapa - Detalle del Hecho</title>
+
+  <link rel="stylesheet" th:href="@{/css/global.css}">
+  <link rel="stylesheet" th:href="@{/css/landing.css}">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700&display=swap" rel="stylesheet">
+  <!-- Leaflet CSS -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" />
+</head>
+
+<body>
+<header class="header">
+  <div class="container">
+    <a th:href="@{/}" class="logo">MetaMapa</a>
+    <nav class="nav">
+      <a th:href="@{/hechos/mapa}" class="nav__link">Visualizar</a>
+
+      <!-- Solo visible para admin -->
+      <a th:href="@{/admin/dashboard}" class="nav__link" sec:authorize="hasRole('ADMIN')">
+        Admin Dashboard
+      </a>
+
+      <!-- Solo visible si NO está logueado -->
+      <a th:href="@{/auth}" class="btn btn--secondary" sec:authorize="isAnonymous()">Iniciar Sesión</a>
+      <a th:href="@{/auth?modoRegistro=true}" class="btn btn--primary" sec:authorize="isAnonymous()">Registrarse</a>
+
+      <!-- Solo visible si está logueado -->
+      <form th:action="@{/auth/logout}" method="post"
+            sec:authorize="isAuthenticated()"
+            class="nav__logout-form">
+        <button type="submit" class="btn btn--secondary">Cerrar Sesión</button>
+      </form>
+    </nav>
+  </div>
+</header>
+
+<main>
+  <section class="featured-fact">
+    <div class="container">
+      <h1 class="featured__title">Detalle del Hecho</h1>
+
+      <div class="fact-card">
+<!--        &lt;!&ndash; Imagen opcional del hecho &ndash;&gt;-->
+<!--        <img th:if="${hecho.imagenUrl != null}"-->
+<!--             th:src="${hecho.imagenUrl}"-->
+<!--             alt="Imagen del hecho"-->
+<!--             class="fact-card__img">-->
+
+        <div class="fact-card__content">
+          <!-- TÍTULO -->
+          <h2 class="fact-card__title" th:text="${hecho.titulo}">Título del hecho</h2>
+
+          <!-- DESCRIPCIÓN -->
+          <div class="content-block">
+            <h3 class="content-title">Descripción</h3>
+            <p th:text="${hecho.descripcion}">
+              Descripción del hecho.
+            </p>
+          </div>
+
+          <!-- CATEGORÍA -->
+          <div class="content-block">
+            <h3 class="content-title">Categoría</h3>
+            <p th:text="${hecho.categoria}">Categoría</p>
+          </div>
+
+          <!-- FUENTES -->
+          <div class="content-block">
+            <h3 class="content-title">Fuente</h3>
+            <p th:text="${hecho.fuente}">Fuente del hecho</p>
+          </div>
+
+          <!-- FECHA -->
+          <div class="content-block">
+            <h3 class="content-title">Fecha del Hecho</h3>
+            <p th:text="${#temporals.format(hecho.fechaHecho, 'dd/MM/yyyy HH:mm')}">
+              01/01/2024 12:00
+            </p>
+          </div>
+
+          <!-- UBICACIÓN (TABLA) -->
+          <div class="content-block">
+            <h3 class="content-title">Ubicación</h3>
+            <table class="data-table" style="max-width: 700px;">
+              <tbody>
+              <tr>
+                <th>Provincia</th>
+                <td th:text="${hecho.ubicacionOutputDTO.provincia}">Provincia</td>
+              </tr>
+              <tr>
+                <th>Municipio</th>
+                <td th:text="${hecho.ubicacionOutputDTO.municipio}">Municipio</td>
+              </tr>
+              <tr>
+                <th>Departamento</th>
+                <td th:text="${hecho.ubicacionOutputDTO.departamento}">Departamento</td>
+              </tr>
+              <tr>
+                <th>Latitud</th>
+                <td th:text="${hecho.ubicacionOutputDTO.latitud}">-34.6037</td>
+              </tr>
+              <tr>
+                <th>Longitud</th>
+                <td th:text="${hecho.ubicacionOutputDTO.longitud}">-58.3816</td>
+              </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- MAPA -->
+      <div class="content-block" style="margin-top: 30px;">
+        <h3 class="content-title">Mapa</h3>
+        <div id="map-preview"
+             style="height: 400px; border-radius: 8px; margin-bottom: 10px; max-width: 1000px;"></div>
+        <p style="font-size: 0.9rem; color: #666;">
+          El marcador indica la ubicación aproximada del hecho en el mapa.
+        </p>
+      </div>
+
+      <!-- BOTONES DE ACCIÓN -->
+      <div style="margin-top: 30px; display: flex; gap: 12px; flex-wrap: wrap;">
+        <a th:href="@{/hechos/mapa}" class="btn btn--secondary">
+          Volver al mapa
+        </a>
+      </div>
+
+    </div>
+  </section>
+</main>
+
+<footer class="footer">
+  <div class="container">
+    <div class="footer__about">
+      <p>
+        MetaMapa es un sistema de código abierto de una ONG, diseñado para la recopilación y mapeo colaborativo
+        de información, protegiendo la identidad de sus usuarios.
+      </p>
+    </div>
+    <br>
+    <div class="footer__links">
+      <a href="#">Política de Privacidad</a>
+      <a href="#">Términos de Uso</a>
+      <a href="#">Contacto</a>
+    </div>
+  </div>
+</footer>
+
+<!-- Leaflet JS -->
+<script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
+
+<script th:inline="javascript">
+  /* Mapa centrado en la ubicación del hecho */
+  const latInicial = /*[[${hecho.ubicacionOutputDTO.latitud}]]*/ -34.6037;
+  const lngInicial = /*[[${hecho.ubicacionOutputDTO.longitud}]]*/ -58.3816;
+
+  const map = L.map('map-preview').setView([latInicial, lngInicial], 13);
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
+
+  L.marker([latInicial, lngInicial]).addTo(map);
+</script>
+
+</body>
+</html>
