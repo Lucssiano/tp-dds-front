@@ -13,6 +13,13 @@
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" />
 
     <style>
+        /* --- AGREGADO: Centrar el título --- */
+        .page-title {
+            text-align: center;
+            margin-top: 20px;
+            margin-bottom: 30px;
+        }
+
         /* Estilos específicos para el mapa en el formulario */
         .map-container {
             position: relative;
@@ -40,16 +47,13 @@
         <nav class="nav">
             <a th:href="@{/hechos/mapa}" class="nav__link">Visualizar</a>
 
-            <!-- Solo visible para admin -->
             <a th:href="@{/admin/dashboard}" class="nav__link" sec:authorize="hasRole('ADMIN')">
                 Admin Dashboard
             </a>
 
-            <!-- Solo visible si NO está autenticado -->
             <a th:href="@{/auth}" class="btn btn--secondary" sec:authorize="isAnonymous()">Iniciar Sesión</a>
             <a th:href="@{/auth?modoRegistro=true}" class="btn btn--primary" sec:authorize="isAnonymous()">Registrarse</a>
 
-            <!-- Solo visible si sí está autenticado -->
             <a th:href="@{/hechos/mis-hechos}" class="nav__link" sec:authorize="isAuthenticated()">Mis Hechos</a>
             <form th:action="@{/auth/logout}" method="post"
                   sec:authorize="isAuthenticated()"
@@ -119,7 +123,6 @@
                     <button type="submit" class="btn btn--primary">Guardar Cambios</button>
                 </div>
 
-                <!-- Hidden fields para preservar valores no editables -->
                 <input type="hidden" th:field="*{usuario}">
             </form>
         </div>
