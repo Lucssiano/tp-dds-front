@@ -25,49 +25,65 @@
     <h1 class="page-title">Crear Nueva Colección</h1>
 
     <form th:action="@{/admin/colecciones/crear}" th:object="${coleccion}" method="post" class="form-card">
+
+      <!-- Título -->
       <div class="form-group">
         <label for="titulo">Título</label>
         <input type="text" id="titulo" th:field="*{titulo}" placeholder="Ej: Eventos Naturales de Argentina" required class="form-control">
       </div>
 
+      <!-- Descripción -->
       <div class="form-group">
         <label for="descripcion">Descripción</label>
         <textarea id="descripcion" th:field="*{descripcion}" placeholder="Breve descripción de la colección" rows="4" required class="form-control"></textarea>
       </div>
 
+      <!-- Fuentes -->
       <div class="form-group">
         <label>Fuentes Asociadas</label>
 
-        <div class="checkbox-group"
-             th:each="fuente : ${fuentesDisponibles}">
-          <label>
-            <input type="checkbox"
-                   th:field="*{fuentes}"
-                   th:value="${fuente}">
-            <span th:text="${fuente}">Nombre de fuente</span>
-          </label>
+        <!-- Si NO hay fuentes -->
+        <div th:if="${#lists.isEmpty(fuentesDisponibles)}" class="no-fuentes-msg">
+          <p>No hay fuentes disponibles actualmente.</p>
         </div>
 
-        <small class="form-hint">Podés seleccionar varias fuentes.</small>
+        <!-- Si hay fuentes -->
+        <div th:unless="${#lists.isEmpty(fuentesDisponibles)}">
+          <div class="checkbox-group" th:each="fuente : ${fuentesDisponibles}">
+            <label>
+              <input type="checkbox" th:field="*{fuentes}" th:value="${fuente}">
+              <span th:text="${fuente}">Nombre de fuente</span>
+            </label>
+          </div>
+          <small class="form-hint">Podés seleccionar varias fuentes.</small>
+        </div>
       </div>
 
-
+      <!-- Algoritmo de Consenso -->
       <div class="form-group">
         <label for="algoritmoConsenso">Algoritmo de Consenso</label>
-        <select id="algoritmoConsenso" th:field="*{algoritmoConsenso}" class="form-control" required>
-          <option value="">Seleccioná un algoritmo</option>
+        <select id="algoritmoConsenso" th:field="*{algoritmoConsenso}" class="form-control">
+          <option value="">Seleccioná un algoritmo (opcional)</option>
           <option th:value="MULTIPLES_MENCIONES">Múltiples menciones</option>
           <option th:value="MAYORIA_SIMPLE">Mayoría simple</option>
           <option th:value="ABSOLUTA">Absoluta</option>
         </select>
       </div>
 
+      <!-- Criterios de Pertenencia -->
       <div class="form-group">
         <label>Criterios de Pertenencia</label>
-        <div id="criterios-container" class="criterios-container"></div>
-        <button type="button" class="btn btn--secondary btn--small" onclick="agregarCriterio()">+ Agregar Criterio</button>
+
+        <div id="criterios-container">
+          <!-- Se agregan dinámicamente -->
+        </div>
+
+        <div class="text-danger" id="criterios-error" style="display:none;"></div>
+
+        <button type="button" class="btn btn--secondary" onclick="agregarCriterio()">Agregar Criterio</button>
       </div>
 
+      <!-- Acciones -->
       <div class="form-actions">
         <button type="submit" class="btn btn--primary">Crear Colección</button>
         <a th:href="@{/admin/colecciones}" class="btn btn--secondary">Cancelar</a>
@@ -76,6 +92,65 @@
   </main>
 </div>
 
+<!-- Validación frontend -->
+<script>
+  document.querySelector("form").addEventListener("submit", function(e) {
+
+    // 1️⃣ Validar criterios de pertenencia
+    const criterios = document.querySelectorAll(".criterio-item");
+    if (criterios.length === 0) {
+      e.preventDefault();
+      document.getElementById("criterios-error").textContent = "Debés agregar al menos un criterio de pertenencia.";
+      document.getElementById("criterios-error").style.display = "block";
+      return;
+    } else {
+      document.getElementById("criterios-error").style.display = "none";
+    }
+
+    // Validar parámetros de cada criterio
+    for (const criterio of criterios) {
+      const tipo = criterio.querySelector("select").value;
+
+      if (tipo === "FECHA") {
+        const inicio = criterio.querySelector("input[name*='fechaInicio']").value;
+        const fin = criterio.querySelector("input[name*='fechaFinal']").value;
+        if (!inicio || !fin) {
+          e.preventDefault();
+          document.getElementById("criterios-error").textContent = "Debés completar ambas fechas en cada criterio de tipo FECHA.";
+          document.getElementById("criterios-error").style.display = "block";
+          return;
+        }
+      }
+
+      if (tipo === "CATEGORIA") {
+        const cat = criterio.querySelector("input[name*='categoria']").value;
+        if (!cat) {
+          e.preventDefault();
+          document.getElementById("criterios-error").textContent = "Debés completar la categoría en cada criterio de tipo CATEGORIA.";
+          document.getElementById("criterios-error").style.display = "block";
+          return;
+        }
+      }
+    }
+    document.getElementById("criterios-error").style.display = "none";
+
+    // 2️⃣ Validar fuentes, solo si hay checkboxes
+    const todasLasFuentes = document.querySelectorAll("input[name='fuentes']");
+    if (todasLasFuentes.length > 0) {
+      const seleccionadas = document.querySelectorAll("input[name='fuentes']:checked");
+      if (seleccionadas.length === 0) {
+        e.preventDefault();
+        document.getElementById("fuentes-error").textContent = "Debés seleccionar al menos una fuente.";
+        document.getElementById("fuentes-error").style.display = "block";
+        return;
+      } else {
+        document.getElementById("fuentes-error").style.display = "none";
+      }
+    }
+  });
+</script>
+
+<!-- Script de agregar criterios -->
 <script>
   let criterioIndex = 0;
 
@@ -114,17 +189,17 @@
     paramsContainer.innerHTML = "";
 
     if (tipo === "FECHA") {
-  paramsContainer.innerHTML = `
-    <label>Fecha mínima</label>
-    <input type="date" name="criteriosDePertenencias[${index}].parametros[fechaInicio]" class="form-control">
-    <label>Fecha máxima</label>
-    <input type="date" name="criteriosDePertenencias[${index}].parametros[fechaFinal]" class="form-control">
-  `;
-  } else if (tipo === "CATEGORIA") {
       paramsContainer.innerHTML = `
-        <label>Categoría</label>
-        <input type="text" name="criteriosDePertenencias[${index}].parametros[categoria]" placeholder="Ej: Ambiental, Histórico..." class="form-control">
-      `;
+            <label>Fecha mínima</label>
+            <input type="date" name="criteriosDePertenencias[${index}].parametros[fechaInicio]" class="form-control" required>
+            <label>Fecha máxima</label>
+            <input type="date" name="criteriosDePertenencias[${index}].parametros[fechaFinal]" class="form-control" required>
+        `;
+    } else if (tipo === "CATEGORIA") {
+      paramsContainer.innerHTML = `
+            <label>Categoría</label>
+            <input type="text" name="criteriosDePertenencias[${index}].parametros[categoria]" placeholder="Ej: Ambiental, Histórico..." class="form-control" required>
+        `;
     }
   }
 </script>

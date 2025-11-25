@@ -2,12 +2,16 @@ package ar.utn.ba.dds.front_tp.services;
 
 import ar.utn.ba.dds.front_tp.dto.colecciones.ColeccionDTO;
 import ar.utn.ba.dds.front_tp.dto.colecciones.ColeccionInputDTO;
+import ar.utn.ba.dds.front_tp.mappers.ColeccionMapper;
 import ar.utn.ba.dds.front_tp.services.internal.WebApiCallerService;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+import org.springframework.web.reactive.function.client.WebClientResponseException;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.util.Collections;
 import java.util.List;
@@ -18,6 +22,7 @@ public class ColeccionesApiService {
 
   private static final Logger log = LoggerFactory.getLogger(ColeccionesApiService.class);
   private final WebApiCallerService webApiCallerService;
+  private final ColeccionMapper coleccionMapper;
 
   @Value("${colecciones.service.url}")
   private String coleccionesServiceUrl;
@@ -44,18 +49,25 @@ public class ColeccionesApiService {
   }
 
   public ColeccionDTO crearColeccion(ColeccionInputDTO coleccionInput, String token) {
-    try {
-      String url = coleccionesServiceUrl + "/colecciones";
-      log.info("Creando nueva colección en: {}", url);
+    String url = coleccionesServiceUrl + "/colecciones";
+    log.info("Creando nueva colección en: {}", url);
 
-      return webApiCallerService.postWithAuth(url, coleccionInput, ColeccionDTO.class, token);
+    ColeccionDTO coleccionDTO = coleccionMapper.toColeccionDTO(coleccionInput);
+    log.info("Criterios: " + coleccionDTO.getCriteriosDePertenencias());
+
+    try {
+      return webApiCallerService.postWithAuth(url, coleccionDTO, ColeccionDTO.class, token);
+    } catch (WebClientResponseException e) {
+      log.error("Error al crear la colección: {}", e.getResponseBodyAsString());
+      // Lanza una excepción runtime con el mensaje del backend
+      throw new RuntimeException("No se pudo crear la colección: " + e.getResponseBodyAsString(), e);
 
     } catch (Exception e) {
-      log.error("Error al crear la colección: {}", e.getMessage());
-      // Lanzamos la excepción para que el controlador la maneje y muestre un error
+      log.error("Error inesperado al crear la colección: {}", e.getMessage());
       throw new RuntimeException("No se pudo crear la colección. Causa: " + e.getMessage(), e);
     }
   }
+
 
   public void eliminarColeccion(Long id, String token) {
     try {

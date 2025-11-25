@@ -52,7 +52,7 @@ public class AdminController {
     model.addAttribute("coleccion", new ColeccionInputDTO());
     List<String> fuentesDisponibles = fuentesApiService.obtenerFuentes().getFuentes();
     model.addAttribute("fuentesDisponibles", fuentesDisponibles);
-    log.info("fuentes: " + fuentesDisponibles.get(0));
+    log.info("Fuentes disponibles: " + fuentesDisponibles);
     return "admin-crear-coleccion";
   }
 

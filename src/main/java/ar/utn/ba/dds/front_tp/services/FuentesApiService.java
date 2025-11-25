@@ -12,7 +12,6 @@ public class FuentesApiService {
 
   private final WebClient webClient;
 
-  @Autowired
   public FuentesApiService() {
     this.webClient = WebClient.builder().baseUrl("http://localhost:8081/metamapa").build();
   }
