@@ -3,6 +3,7 @@ package ar.utn.ba.dds.front_tp.controller;
 import ar.utn.ba.dds.front_tp.Utils.JwtUtils;
 import ar.utn.ba.dds.front_tp.dto.hechos.CrearHechoDTO;
 import ar.utn.ba.dds.front_tp.dto.hechos.HechoDTO;
+import ar.utn.ba.dds.front_tp.dto.hechos.UbicacionDTO;
 import ar.utn.ba.dds.front_tp.dto.hechos.input.SolicitudEliminacionInputDTO;
 import ar.utn.ba.dds.front_tp.dto.output.HechoOutputDTO;
 import ar.utn.ba.dds.front_tp.dto.output.SoliOutputDTO;
@@ -11,6 +12,7 @@ import ar.utn.ba.dds.front_tp.exceptions.DuplicateTitleException;
 import ar.utn.ba.dds.front_tp.services.GestionUsuariosApiService;
 import ar.utn.ba.dds.front_tp.services.HechosApiService;
 import ar.utn.ba.dds.front_tp.services.SolicitudesApiService;
+import ar.utn.ba.dds.front_tp.services.SolicitudesModificacionApiService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.servlet.http.HttpSession;
 import java.time.LocalDate;
@@ -40,6 +42,7 @@ public class HechosController {
   private static final Logger log = LoggerFactory.getLogger(HechosController.class);
   private final HechosApiService hechosApiService;
   private final SolicitudesApiService solicitudesApiService;
+  private final SolicitudesModificacionApiService solicitudesModificacionApiService;
 
   // Inyectamos el conversor de JSON
   private final ObjectMapper objectMapper;
@@ -71,29 +74,30 @@ public class HechosController {
     }
     return "mapa";
   }
+
   @GetMapping("/subir-hecho")
-  public String subirHecho(Model model){
-    model.addAttribute("hecho", new HechoOutputDTO());
+  public String subirHecho(Model model) {
+    model.addAttribute("hecho", HechoOutputDTO.builder().build());
     return "subir-hecho";
   }
 
 
   @PostMapping("/crear-hecho")
   //@PreAuthorize("hasAnyRole('ADMIN', 'CONTRIBUYENTE')")
-  public String crearHecho(@ModelAttribute("hecho") HechoOutputDTO  hecho,
+  public String crearHecho(@ModelAttribute("hecho") HechoOutputDTO hecho,
                            BindingResult bindingResult,
                            Model model,
                            RedirectAttributes redirectAttributes,
                            Authentication authentication) {
     AuthResponseDTO token = (AuthResponseDTO) authentication.getDetails();
 
-    if (authentication != null){
+    if (authentication != null) {
       var email = JwtUtils.validarToken(token.getAccessToken());
       hecho.setUsuario(email);
     } else {
       hecho.setUsuario("VISUALIZADOR");
     }
-    log.info("usuario en crear hecho: "+ hecho.getUsuario());
+    log.info("usuario en crear hecho: " + hecho.getUsuario());
     //    log.info("Token recibido del backend de usuarios: {}", token); // 👈
 //    log.info("AccessToken: {}", token.getAccessToken()); // 👈
 //    log.info("Llegue a crear hechos... creo: " + hecho.getTitulo());
@@ -108,7 +112,7 @@ public class HechosController {
       hechosApiService.crearHecho(payload, token.getAccessToken());
       redirectAttributes.addFlashAttribute("mensaje", "Hecho creado exitosamente");
       redirectAttributes.addFlashAttribute("tipoMensaje", "success");
-      return "redirect:/home";
+      return "redirect:/hechos/mis-hechos";
     } catch (DuplicateTitleException ex) {
       // Duplicidad: Para un campo de tu DTO (ej. si el título de un hecho debe ser único)
       bindingResult.rejectValue("titulo", "error.titulo.duplicado", ex.getMessage());
@@ -166,7 +170,7 @@ public class HechosController {
 
       SolicitudEliminacionInputDTO solicitud = new SolicitudEliminacionInputDTO();
       solicitud.setTituloHecho(hecho.getTitulo());
-      if (authentication != null){
+      if (authentication != null) {
         AuthResponseDTO token = (AuthResponseDTO) authentication.getDetails();
         var email = JwtUtils.validarToken(token.getAccessToken());
         solicitud.setUsuario(email);
@@ -174,7 +178,7 @@ public class HechosController {
         solicitud.setUsuario("VISUALIZADOR");
       }
 
-      log.info("USUARIO"+ solicitud.getUsuario());
+      log.info("USUARIO" + solicitud.getUsuario());
 
       boolean esAnonimo = (authentication == null || !authentication.isAuthenticated());
 
@@ -219,7 +223,7 @@ public class HechosController {
     }
 
     try {
-      if (authentication != null){
+      if (authentication != null) {
         AuthResponseDTO token = (AuthResponseDTO) authentication.getDetails();
         var email = JwtUtils.validarToken(token.getAccessToken());
         solicitud.setUsuario(email);
@@ -227,7 +231,7 @@ public class HechosController {
         solicitud.setUsuario("VISUALIZADOR");
       }
 
-      log.info("USUARIO justito antes de mandar"+ solicitud.getUsuario());
+      log.info("USUARIO justito antes de mandar" + solicitud.getUsuario());
 
       SoliOutputDTO respuesta = solicitudesApiService.crearSolicitudEliminacion(solicitud);
 
@@ -282,8 +286,13 @@ public class HechosController {
     model.addAttribute("hecho", hecho);
     return "editar-hecho";
   }
+
   @PostMapping("/{id}/editar")
-  public String subirHechoEditado(@PathVariable Long id, Model model, Authentication authentication) {
-
-
+  public String subirHechoEditado(@PathVariable Long id, @ModelAttribute("hecho") HechoDTO hechoDTO, Authentication authentication) {
+    try{this.solicitudesModificacionApiService.crearSolicitudModificacion(id, hechoDTO);
+    } catch (Exception e){
+      log.error(e.getMessage());
+    }
+    return "redirect:/hechos/mis-hechos";
   }
+}

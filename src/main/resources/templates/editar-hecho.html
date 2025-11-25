@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<html lang="es" xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
 
 <head>
     <meta charset="UTF-8">
@@ -34,17 +34,33 @@
 </head>
 
 <body>
-<div class="admin-layout">
-    <aside class="sidebar">
-        <a th:href="@{/}" class="logo">MetaMapa Admin</a>
-        <nav class="sidebar__nav">
-            <a th:href="@{/admin/dashboard}" class="sidebar__link">Dashboard</a>
-            <a th:href="@{/admin/colecciones}" class="sidebar__link">Colecciones</a>
-            <a th:href="@{/admin/revisiones}" class="sidebar__link sidebar__link--active">Revisiones</a>
-        </nav>
-        <a th:href="@{/auth/logout}" class="btn btn--secondary sidebar__logout">Cerrar Sesión</a>
-    </aside>
+<header class="header">
+    <div class="container">
+        <a th:href="@{/}" class="logo">MetaMapa</a>
+        <nav class="nav">
+            <a th:href="@{/hechos/mapa}" class="nav__link">Visualizar</a>
 
+            <!-- Solo visible para admin -->
+            <a th:href="@{/admin/dashboard}" class="nav__link" sec:authorize="hasRole('ADMIN')">
+                Admin Dashboard
+            </a>
+
+            <!-- Solo visible si NO está autenticado -->
+            <a th:href="@{/auth}" class="btn btn--secondary" sec:authorize="isAnonymous()">Iniciar Sesión</a>
+            <a th:href="@{/auth?modoRegistro=true}" class="btn btn--primary" sec:authorize="isAnonymous()">Registrarse</a>
+
+            <!-- Solo visible si sí está autenticado -->
+            <a th:href="@{/hechos/mis-hechos}" class="nav__link" sec:authorize="isAuthenticated()">Mis Hechos</a>
+            <form th:action="@{/auth/logout}" method="post"
+                  sec:authorize="isAuthenticated()"
+                  class="nav__logout-form">
+                <button type="submit" class="btn btn--secondary">Cerrar Sesión</button>
+            </form>
+        </nav>
+    </div>
+</header>
+
+<div class="admin-layout">
     <main class="main-content">
         <h1 class="page-title">Editar Hecho</h1>
 
@@ -52,7 +68,7 @@
 
         <div class="form-card" style="max-width: 900px; margin: 0 auto; padding: 30px; background: white; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.05);">
 
-            <form th:action="@{/admin/revisiones/hechos/{id}/editar(id=${hecho.id})}"
+            <form th:action="@{/hechos/{id}/editar(id=${hecho.id})}"
                   th:object="${hecho}"
                   method="post">
 
@@ -99,14 +115,33 @@
                 </div>
 
                 <div class="form-actions" style="display: flex; justify-content: flex-end; gap: 15px; margin-top: 30px;">
-                    <a th:href="@{/admin/revisiones}" class="btn btn--secondary">Cancelar</a>
+                    <a th:href="@{/hechos/mis-hechos}" class="btn btn--secondary">Cancelar</a>
                     <button type="submit" class="btn btn--primary">Guardar Cambios</button>
                 </div>
 
+                <!-- Hidden fields para preservar valores no editables -->
+                <input type="hidden" th:field="*{usuario}">
             </form>
         </div>
     </main>
 </div>
+
+<footer class="footer">
+    <div class="container">
+        <div class="footer__about">
+            <p>
+                MetaMapa es un sistema de código abierto de una ONG, diseñado para la recopilación y mapeo colaborativo
+                de información, protegiendo la identidad de sus usuarios.
+            </p>
+        </div>
+        <br>
+        <div class="footer__links">
+            <a href="#">Política de Privacidad</a>
+            <a href="#">Términos de Uso</a>
+            <a href="#">Contacto</a>
+        </div>
+    </div>
+</footer>
 
 <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
 
