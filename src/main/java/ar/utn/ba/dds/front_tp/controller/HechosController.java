@@ -1,6 +1,7 @@
 package ar.utn.ba.dds.front_tp.controller;
 
 import ar.utn.ba.dds.front_tp.Utils.JwtUtils;
+import ar.utn.ba.dds.front_tp.dto.colecciones.ColeccionDTO;
 import ar.utn.ba.dds.front_tp.dto.hechos.CrearHechoDTO;
 import ar.utn.ba.dds.front_tp.dto.hechos.HechoDTO;
 import ar.utn.ba.dds.front_tp.dto.hechos.UbicacionDTO;
@@ -81,6 +82,29 @@ public class HechosController {
     return "subir-hecho";
   }
 
+  @GetMapping("/mapa/coleccion/{id}")
+  public String verHechosColeccion(@ModelAttribute("coleccion")ColeccionDTO coleccion,
+                                   @RequestParam(required = false, defaultValue = "CURADO") String modo,
+                                   @RequestParam(required = false, name = "fechaAcontecimientoDesde") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate fechaDesde,
+                                   @RequestParam(required = false, name = "fechaAcontecimientoHasta") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate fechaHasta,
+                                   Model model) {
+    try {
+      List<HechoDTO> hechos = hechosApiService.obtenerHechosColeccion(coleccion.getId());
+
+      String hechosJson = objectMapper.writeValueAsString(hechos);
+
+      model.addAttribute("hechosJson", hechosJson);
+      model.addAttribute("modoActual", modo);
+      model.addAttribute("fechaDesde", fechaDesde != null ? fechaDesde.toString() : "");
+      model.addAttribute("fechaHasta", fechaHasta != null ? fechaHasta.toString() : "");
+
+      return "mapa";
+    } catch (Exception e) {
+      log.error(e.getMessage(), e);
+        model.addAttribute("errorGlobal", "Ocurrió un error inesperado: " + e.getMessage());
+        return "home";
+      }
+    }
 
   @PostMapping("/crear-hecho")
   //@PreAuthorize("hasAnyRole('ADMIN', 'CONTRIBUYENTE')")
