@@ -39,6 +39,11 @@
             <button class="tab-button tab-button--active" onclick="openTab(event, 'hechos')">
                 Hechos Pendientes (<span th:text="${#lists.size(hechosPendientes)}">0</span>)
             </button>
+
+            <button class="tab-button" onclick="openTab(event, 'modificaciones')">
+                Solicitudes de Modificación (<span th:text="${#lists.size(modificacionesPendientes)}">0</span>)
+            </button>
+
             <button class="tab-button" onclick="openTab(event, 'solicitudes')">
                 Solicitudes de Eliminación (<span th:text="${#lists.size(solicitudesPendientes)}">0</span>)
             </button>
@@ -79,7 +84,61 @@
             </table>
         </div>
 
-        <!-- TABLA 2: SOLICITUDES DE ELIMINACIÓN (Opcional, para completar la vista) -->
+        <!-- TABLA 2: SOLICITUDES DE MODIFICACIÓN -->
+        <div id="modificaciones" class="table-container tab-content">
+            <table class="data-table">
+                <thead>
+                <tr>
+                    <th>Hecho</th>
+                    <th>Acción</th>
+                </tr>
+                </thead>
+
+                <tbody>
+                <tr th:each="soliModificacion : ${modificacionesPendientes}">
+                    <!-- Nombre del hecho -->
+                    <td th:text="${soliModificacion.hechoTitulo}">Título del Hecho</td>
+
+                    <!-- Botón gestionar -->
+                    <td>
+                        <div style="display: flex; gap: 5px;">
+                            <!-- HIDDEN INPUTS CON TODA LA SOLICITUD -->
+                            <form th:action="@{/admin/revisiones/modificaciones/{id}/detalle(id=${soliModificacion.id})}"
+                                  method="get">
+
+                                <input type="hidden" name="id" th:value="${soliModificacion.id}"/>
+                                <input type="hidden" name="hechoId" th:value="${soliModificacion.hechoId}"/>
+                                <input type="hidden" name="hechoTitulo" th:value="${soliModificacion.hechoTitulo}"/>
+                                <input type="hidden" name="hechoDescripcion" th:value="${soliModificacion.hechoDescripcion}"/>
+                                <input type="hidden" name="hechoCategoria" th:value="${soliModificacion.hechoCategoria}"/>
+                                <input type="hidden" name="hechoLatitud" th:value="${soliModificacion.hechoLatitud}"/>
+                                <input type="hidden" name="hechoLongitud" th:value="${soliModificacion.hechoLongitud}"/>
+                                <input type="hidden" name="hechoMultimedia" th:value="${soliModificacion.hechoMultimedia}"/>
+                                <input type="hidden" name="fechaHecho"
+                                       th:value="${#temporals.format(soliModificacion.fechaHecho, 'yyyy-MM-dd''T''HH:mm:ss')}"/>
+                                <input type="hidden" name="estado" th:value="${soliModificacion.estado}"/>
+                                <input type="hidden" name="usuario" th:value="${soliModificacion.usuario}"/>
+
+                                <!-- Botón Gestionar -->
+                                <button type="submit" class="btn btn--small btn--primary">
+                                    Gestionar
+                                </button>
+                            </form>
+
+                        </div>
+                    </td>
+                </tr>
+
+                <tr th:if="${#lists.isEmpty(modificacionesPendientes)}">
+                    <td colspan="2" style="text-align: center;">
+                        No hay solicitudes de modificación pendientes.
+                    </td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- TABLA 3: SOLICITUDES DE ELIMINACIÓN (Opcional, para completar la vista) -->
         <div id="solicitudes" class="table-container tab-content">
             <table class="data-table">
                 <thead>

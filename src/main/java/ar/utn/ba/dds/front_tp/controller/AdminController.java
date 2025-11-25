@@ -3,6 +3,7 @@ package ar.utn.ba.dds.front_tp.controller;
 import ar.utn.ba.dds.front_tp.dto.colecciones.ColeccionDTO;
 import ar.utn.ba.dds.front_tp.dto.colecciones.ColeccionInputDTO;
 import ar.utn.ba.dds.front_tp.dto.hechos.HechoDTO;
+import ar.utn.ba.dds.front_tp.dto.hechos.input.SolicitudModificacionInputDTO;
 import ar.utn.ba.dds.front_tp.dto.usuarios.AuthResponseDTO;
 import ar.utn.ba.dds.front_tp.dto.admin.DashboardSummaryDTO;
 import ar.utn.ba.dds.front_tp.services.ColeccionesApiService;
@@ -10,6 +11,7 @@ import ar.utn.ba.dds.front_tp.services.DashboardApiService;
 import ar.utn.ba.dds.front_tp.services.FuentesApiService;
 import ar.utn.ba.dds.front_tp.services.HechosApiService;
 import ar.utn.ba.dds.front_tp.services.RevisionesApiService;
+import ar.utn.ba.dds.front_tp.services.SolicitudesModificacionApiService;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -36,6 +38,7 @@ public class AdminController {
   private final DashboardApiService dashboardApiService;
   private final RevisionesApiService revisionesApiService;
   private final HechosApiService hechosApiService;
+  private final SolicitudesModificacionApiService solicitudesModificacionApiService;
   private static final Logger log = LoggerFactory.getLogger(AdminController.class);
 
   @GetMapping("/colecciones")
@@ -167,9 +170,11 @@ public class AdminController {
     // Cargar listas
     var hechos = revisionesApiService.obtenerHechosPendientes(token);
     var solicitudes = revisionesApiService.obtenerSolicitudesPendientes(token);
+    var solicitudesModificacion = solicitudesModificacionApiService.obtenerSolicitudesModificacionPendientes();
 
     model.addAttribute("hechosPendientes", hechos);
     model.addAttribute("solicitudesPendientes", solicitudes);
+    model.addAttribute("modificacionesPendientes", solicitudesModificacion);
 
     return "admin-revisiones";
   }
@@ -246,7 +251,41 @@ public class AdminController {
     }
     return "redirect:/admin/revisiones";
   }
-  // TODO: no funcionan los botones aeptar y rechazar, queda pendiente de solucionar.
+
+  @GetMapping("/revisiones/modificaciones/{id}/detalle")
+  public String verDetalleModificacion(@PathVariable Long id,
+                                       @ModelAttribute("soliModificacion") SolicitudModificacionInputDTO solicitudModificacion,
+                                       Model model,
+                                       RedirectAttributes redirectAttributes) {
+    try {
+      model.addAttribute("solicitudModificacion", solicitudModificacion);
+
+      return "admin-detalle-modificacion";
+
+    } catch (Exception e) {
+      redirectAttributes.addFlashAttribute("error", "No se pudo cargar el hecho modificado.");
+      return "redirect:/admin/revisiones";
+    }
+  }
+
+  @PostMapping("/revisiones/modificaciones/{id}/{accion}")
+  public String accionesSolicitudModificacion(@PathVariable Long id,
+                              @PathVariable String accion,
+                              RedirectAttributes redirectAttributes) {
+    try {
+      if ("aprobar".equals(accion)) {
+        solicitudesModificacionApiService.aceptarSolicitudModificacion(id);
+        redirectAttributes.addFlashAttribute("mensaje", "Hecho aprobado correctamente.");
+      } else if ("rechazar".equals(accion)) {
+        solicitudesModificacionApiService.rechazarSolicitudModificacion(id);
+        redirectAttributes.addFlashAttribute("mensaje", "Hecho rechazado correctamente.");
+      }
+    } catch (Exception e) {
+      redirectAttributes.addFlashAttribute("error", "Error al procesar el hecho: " + e.getMessage());
+    }
+    return "redirect:/admin/revisiones";
+  }
+
   // Acciones sobre Solicitudes (Aceptar eliminación / Rechazar solicitud)
   @PostMapping("/revisiones/solicitudes/{id}/{accion}")
   public String accionesSolicitud(@PathVariable Long id,
