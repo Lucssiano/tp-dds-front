@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Términos de Uso - MetaMapa</title>
+    <link rel="stylesheet" th:href="@{/css/global.css}">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        /* Reutilizamos los estilos de la página de privacidad */
+        .legal-content {
+            max-width: 800px;
+            margin: 40px auto;
+            padding: 0 20px;
+            line-height: 1.6;
+            color: #333;
+        }
+        .legal-content h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            color: var(--primary-color, #000);
+        }
+        .legal-content h2 {
+            font-size: 1.5rem;
+            margin-top: 30px;
+            margin-bottom: 15px;
+            border-bottom: 2px solid #eee;
+            padding-bottom: 10px;
+        }
+        .legal-content p {
+            margin-bottom: 15px;
+        }
+        .legal-content ul {
+            margin-bottom: 15px;
+            padding-left: 20px;
+        }
+        .legal-content li {
+            margin-bottom: 8px;
+        }
+        .last-updated {
+            color: #666;
+            font-style: italic;
+            margin-bottom: 40px;
+        }
+    </style>
+</head>
+
+<body>
+<header class="header">
+    <div class="container">
+        <a th:href="@{/}" class="logo">MetaMapa</a>
+        <nav class="nav">
+            <a th:href="@{/hechos/mapa}" class="nav__link">Visualizar</a>
+            <a th:href="@{/auth}" class="btn btn--secondary" sec:authorize="isAnonymous()">Iniciar Sesión</a>
+            <a th:href="@{/hechos/mis-hechos}" class="nav__link" sec:authorize="isAuthenticated()">Mis Hechos</a>
+        </nav>
+    </div>
+</header>
+
+<main class="legal-content">
+    <h1>Términos de Uso</h1>
+    <p class="last-updated">Última actualización: 25 de Noviembre de 2025</p>
+
+    <p>Al acceder y utilizar la plataforma <strong>MetaMapa</strong>, usted acepta cumplir con los siguientes Términos y Condiciones. Si no está de acuerdo con alguna parte de estos términos, por favor absténgase de utilizar nuestros servicios.</p>
+
+    <h2>1. Naturaleza del Servicio</h2>
+    <p>MetaMapa es una herramienta de <strong>mapeo colaborativo de código abierto</strong>. Su objetivo es permitir a la comunidad documentar, geolocalizar y preservar hechos históricos y sociales. La información disponible en la plataforma es generada principalmente por los usuarios.</p>
+
+    <h2>2. Conducta del Usuario</h2>
+    <p>Al contribuir con contenido (creación de hechos, subida de imágenes, comentarios), usted se compromete a:</p>
+    <ul>
+        <li><strong>Veracidad:</strong> Subir información que considere verídica y, en la medida de lo posible, respaldada por fuentes confiables.</li>
+        <li><strong>Respeto:</strong> No publicar contenido que incite al odio, discriminación, violencia o acoso hacia personas o grupos.</li>
+        <li><strong>Legalidad:</strong> No publicar contenido que viole derechos de autor, marcas registradas o leyes locales vigentes.</li>
+        <li><strong>No Vandalismo:</strong> No alterar malintencionadamente la información subida por otros usuarios ni sabotear el mapa con datos falsos ("spam").</li>
+    </ul>
+
+    <h2>3. Licencia del Contenido</h2>
+    <p>Dado el carácter abierto de MetaMapa:</p>
+    <ul>
+        <li>El contenido que usted publica (texto y metadatos) se comparte bajo una licencia <strong>Creative Commons Atribución-CompartirIgual (CC BY-SA)</strong>. Esto significa que otros pueden usar, adaptar y compartir su contenido siempre que le den crédito y licencien sus nuevas creaciones bajo los mismos términos.</li>
+        <li>Usted conserva los derechos morales sobre su contenido, pero otorga a MetaMapa una licencia perpetua, mundial y gratuita para alojar, mostrar y distribuir dicho contenido.</li>
+    </ul>
+
+    <h2>4. Moderación y Suspensión</h2>
+    <p>Los administradores de MetaMapa se reservan el derecho de:</p>
+    <ul>
+        <li>Revisar, editar o eliminar cualquier contenido ("Hecho") que viole estos términos o las políticas de la comunidad, sin previo aviso.</li>
+        <li>Suspender o eliminar la cuenta de cualquier usuario que reincida en comportamientos vandálicos o abusivos.</li>
+    </ul>
+
+    <h2>5. Exención de Responsabilidad</h2>
+    <p>MetaMapa se proporciona "tal cual". Aunque nos esforzamos por mantener la integridad de los datos:</p>
+    <ul>
+        <li>No garantizamos la exactitud, integridad o actualidad de la información mostrada en el mapa.</li>
+        <li>No nos hacemos responsables por las decisiones tomadas basándose en la información de la plataforma.</li>
+        <li>No somos responsables por el contenido subido por terceros. Las opiniones expresadas en los hechos pertenecen a sus autores y no necesariamente a la Organización.</li>
+    </ul>
+
+    <h2>6. Modificaciones</h2>
+    <p>Podemos actualizar estos términos ocasionalmente para reflejar cambios en nuestra plataforma o normativas legales. Le notificaremos sobre cambios significativos a través de la plataforma o por correo electrónico.</p>
+
+</main>
+
+<footer class="footer">
+    <div class="container">
+        <div class="footer__links">
+            <a th:href="@{/privacidad}">Política de Privacidad</a>
+            <a th:href="@{/terminos}">Términos de Uso</a>
+            <a th:href="@{/contacto}">Contacto</a>
+        </div>
+        <br>
+        <p style="text-align:center; font-size: 0.9rem; color: #888;">&copy; 2025 MetaMapa. Todos los derechos reservados.</p>
+    </div>
+</footer>
+
+</body>
+</html>
