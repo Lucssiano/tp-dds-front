@@ -5,9 +5,14 @@ import ar.utn.ba.dds.front_tp.dto.hechos.HechoDTO;
 import ar.utn.ba.dds.front_tp.services.ColeccionesApiService;
 import ar.utn.ba.dds.front_tp.services.HechosApiService;
 import lombok.RequiredArgsConstructor;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import java.util.List;
 import java.util.Map;
@@ -18,6 +23,7 @@ public class HomeController {
 
   private final ColeccionesApiService coleccionesApiService;
   private final HechosApiService hechosApiService;
+  private static final Logger log = LoggerFactory.getLogger(HomeController.class);
 
   @GetMapping({"/", "/home"})
   public String mostrarHome(Model model) {
@@ -57,5 +63,37 @@ public class HomeController {
       model.addAttribute("hechoDestacado", null);
     }
     return "home";
+  }
+
+  @GetMapping("/privacidad")
+  public String mostrarPrivacidad() {
+    return "legales/privacidad";
+  }
+
+  @GetMapping("/terminos")
+  public String mostrarTerminos() {
+    return "legales/terminos";
+  }
+
+  @GetMapping("/contacto")
+  public String mostrarContacto() {
+    return "legales/contacto";
+  }
+
+  @PostMapping("/contacto")
+  public String procesarContacto(@RequestParam String nombre,
+                                 @RequestParam String email,
+                                 @RequestParam String mensaje,
+                                 RedirectAttributes redirectAttributes) {
+
+    // Aquí simularíamos el envío de email o guardado en BD
+    log.info("NUEVO MENSAJE DE CONTACTO RECIBIDO:");
+    log.info("De: {} ({})", nombre, email);
+    log.info("Mensaje: {}", mensaje);
+
+    // Feedback al usuario
+    redirectAttributes.addFlashAttribute("mensajeExito", "¡Gracias por contactarnos! Hemos recibido tu mensaje y la sede más cercana te responderá a la brevedad.");
+
+    return "redirect:/contacto";
   }
 }

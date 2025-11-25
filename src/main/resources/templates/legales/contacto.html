@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Contacto - MetaMapa</title>
+    <link rel="stylesheet" th:href="@{/css/global.css}">
+    <link rel="stylesheet" th:href="@{/css/landing.css}">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700&display=swap" rel="stylesheet">
+
+    <style>
+        .contact-container {
+            max-width: 1000px;
+            margin: 40px auto;
+            padding: 0 20px;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 50px;
+        }
+
+        /* Columna Izquierda: Formulario */
+        .contact-form-section h1 {
+            font-size: 2rem;
+            margin-bottom: 10px;
+            color: var(--primary-color, #000);
+        }
+        .contact-intro {
+            color: #666;
+            margin-bottom: 30px;
+        }
+        .form-group {
+            margin-bottom: 20px;
+        }
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 500;
+        }
+        .form-control {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            font-family: inherit;
+        }
+
+        /* Columna Derecha: Sedes (Team) */
+        .sedes-section {
+            background-color: #f9f9f9;
+            padding: 30px;
+            border-radius: 12px;
+        }
+        .sedes-title {
+            font-size: 1.5rem;
+            margin-bottom: 20px;
+            border-bottom: 2px solid #ddd;
+            padding-bottom: 10px;
+        }
+        .sede-card {
+            background: white;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 15px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+            transition: transform 0.2s;
+        }
+        .sede-card:hover {
+            transform: translateY(-2px);
+        }
+        .sede-name {
+            font-weight: 700;
+            color: #333;
+            display: block;
+        }
+        .sede-responsable {
+            font-size: 0.9rem;
+            color: #555;
+            margin: 5px 0;
+        }
+        .sede-email {
+            font-size: 0.85rem;
+            color: var(--primary-color, #007bff);
+            text-decoration: none;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .contact-container {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        /* Alerta de éxito */
+        .alert-success {
+            background-color: #d4edda;
+            color: #155724;
+            padding: 15px;
+            border-radius: 6px;
+            margin-bottom: 20px;
+            border: 1px solid #c3e6cb;
+        }
+    </style>
+</head>
+
+<body>
+<header class="header">
+    <div class="container">
+        <a th:href="@{/}" class="logo">MetaMapa</a>
+        <nav class="nav">
+            <a th:href="@{/hechos/mapa}" class="nav__link">Visualizar</a>
+            <a th:href="@{/auth}" class="btn btn--secondary" sec:authorize="isAnonymous()">Iniciar Sesión</a>
+            <a th:href="@{/hechos/mis-hechos}" class="nav__link" sec:authorize="isAuthenticated()">Mis Hechos</a>
+        </nav>
+    </div>
+</header>
+
+<main>
+    <div class="contact-container">
+
+        <section class="contact-form-section">
+            <h1>Contacto</h1>
+            <p class="contact-intro">¿Tenés alguna duda, sugerencia o encontraste un problema en el mapa? Escribinos.</p>
+
+            <div th:if="${mensajeExito}" class="alert-success" th:text="${mensajeExito}"></div>
+
+            <form th:action="@{/contacto}" method="post">
+                <div class="form-group">
+                    <label for="nombre">Nombre</label>
+                    <input type="text" id="nombre" name="nombre" class="form-control" required placeholder="Tu nombre">
+                </div>
+
+                <div class="form-group">
+                    <label for="email">Correo Electrónico</label>
+                    <input type="email" id="email" name="email" class="form-control" required placeholder="tucorreo@ejemplo.com">
+                </div>
+
+                <div class="form-group">
+                    <label for="mensaje">Mensaje</label>
+                    <textarea id="mensaje" name="mensaje" rows="5" class="form-control" required placeholder="¿En qué podemos ayudarte?"></textarea>
+                </div>
+
+                <button type="submit" class="btn btn--primary btn--large" style="width: 100%">Enviar Mensaje</button>
+            </form>
+        </section>
+
+        <section class="sedes-section">
+            <h2 class="sedes-title">Nuestras Sedes</h2>
+            <p style="margin-bottom: 20px; font-size: 0.9rem; color: #666;">
+                Para consultas específicas, podés contactar directamente con nuestros representantes regionales:
+            </p>
+
+            <div class="sede-card">
+                <span class="sede-name">📍 Sede Palermo </span>
+                <p class="sede-responsable">Gerente: <strong>Marcelo Fabrizio Lombardo</strong></p>
+                <a href="mailto:integrante1@metamapa.org" class="sede-email">mlombardo@frba.utn.edu.ar</a>
+            </div>
+
+            <div class="sede-card">
+                <span class="sede-name">📍 Sede San Telmo </span>
+                <p class="sede-responsable">Gerente: <strong>Juan Francisco Meza Longa</strong></p>
+                <a href="mailto:integrante2@metamapa.org" class="sede-email">jmezalonga@frba.utn.edu.ar</a>
+            </div>
+
+            <div class="sede-card">
+                <span class="sede-name">📍 Sede Lugano </span>
+                <p class="sede-responsable">Gerente: <strong>Matías Alejo Tort</strong></p>
+                <a href="mailto:integrante3@metamapa.org" class="sede-email">mtort@frba.utn.edu.ar</a>
+            </div>
+
+            <div class="sede-card">
+                <span class="sede-name">📍 Sede San Isidro </span>
+                <p class="sede-responsable">Gerente: <strong>Javier Armando Fernandez</strong></p>
+                <a href="mailto:integrante4@metamapa.org" class="sede-email">javfernandez@frba.utn.edu.ar</a>
+            </div>
+
+            <div class="sede-card">
+                <span class="sede-name">📍 Sede Ituzaingó </span>
+                <p class="sede-responsable">Gerente: <strong>Luciano Tomás Riente</strong></p>
+                <a href="mailto:integrante4@metamapa.org" class="sede-email">lriente@frba.utn.edu.ar</a>
+            </div>
+
+        </section>
+    </div>
+</main>
+
+<footer class="footer">
+    <div class="container">
+        <div class="footer__links">
+            <a th:href="@{/privacidad}">Política de Privacidad</a>
+            <a th:href="@{/terminos}">Términos de Uso</a>
+            <a th:href="@{/contacto}">Contacto</a>
+        </div>
+        <br>
+        <p style="text-align:center; font-size: 0.9rem; color: #888;">&copy; 2025 MetaMapa. Todos los derechos reservados.</p>
+    </div>
+</footer>
+
+</body>
+</html>

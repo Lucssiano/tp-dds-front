@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Política de Privacidad - MetaMapa</title>
+    <link rel="stylesheet" th:href="@{/css/global.css}">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        /* Estilos simples para páginas de texto */
+        .legal-content {
+            max-width: 800px;
+            margin: 40px auto;
+            padding: 0 20px;
+            line-height: 1.6;
+            color: #333;
+        }
+        .legal-content h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            color: var(--primary-color, #000);
+        }
+        .legal-content h2 {
+            font-size: 1.5rem;
+            margin-top: 30px;
+            margin-bottom: 15px;
+            border-bottom: 2px solid #eee;
+            padding-bottom: 10px;
+        }
+        .legal-content p {
+            margin-bottom: 15px;
+        }
+        .legal-content ul {
+            margin-bottom: 15px;
+            padding-left: 20px;
+        }
+        .legal-content li {
+            margin-bottom: 8px;
+        }
+        .last-updated {
+            color: #666;
+            font-style: italic;
+            margin-bottom: 40px;
+        }
+    </style>
+</head>
+
+<body>
+<header class="header">
+    <div class="container">
+        <a th:href="@{/}" class="logo">MetaMapa</a>
+        <nav class="nav">
+            <a th:href="@{/hechos/mapa}" class="nav__link">Visualizar</a>
+            <a th:href="@{/auth}" class="btn btn--secondary" sec:authorize="isAnonymous()">Iniciar Sesión</a>
+            <a th:href="@{/hechos/mis-hechos}" class="nav__link" sec:authorize="isAuthenticated()">Mis Hechos</a>
+        </nav>
+    </div>
+</header>
+
+<main class="legal-content">
+    <h1>Política de Privacidad</h1>
+    <p class="last-updated">Última actualización: 25 de Noviembre de 2025</p>
+
+    <p>Bienvenido a <strong>MetaMapa</strong>. Somos una plataforma de código abierto gestionada por una Organización No Gubernamental (ONG), dedicada a la recopilación, preservación y visualización colaborativa de hechos históricos y sociales. Su privacidad y la seguridad de su identidad son fundamentales para nuestra misión.</p>
+
+    <h2>1. Información que Recopilamos</h2>
+    <p>Para operar la plataforma y garantizar la veracidad de los datos, recopilamos los siguientes tipos de información:</p>
+    <ul>
+        <li><strong>Datos de Registro:</strong> Al crear una cuenta, solicitamos un nombre de usuario, dirección de correo electrónico y contraseña.</li>
+        <li><strong>Contribuciones Públicas:</strong> La información sobre los "Hechos" que usted sube (título, descripción, fecha, categoría y archivos multimedia) es información pública.</li>
+        <li><strong>Datos de Geolocalización:</strong> Recopilamos las coordenadas geográficas asociadas a los hechos que usted reporta.</li>
+        <li><strong>Metadatos Técnicos:</strong> Dirección IP, tipo de navegador y sistema operativo con fines de seguridad y prevención de spam.</li>
+    </ul>
+
+    <h2>2. Uso de la Información</h2>
+    <p>Utilizamos su información para los siguientes fines:</p>
+    <ul>
+        <li><strong>Publicación y Mapeo:</strong> Mostrar los hechos en el mapa público accesible a la comunidad.</li>
+        <li><strong>Moderación:</strong> Permitir a nuestros administradores revisar la veracidad y cumplimiento de las normas de la comunidad.</li>
+        <li><strong>Comunicación:</strong> Enviarle notificaciones sobre el estado de sus contribuciones (aprobaciones, rechazos o solicitudes de revisión).</li>
+        <li><strong>Estadísticas:</strong> Generar reportes anónimos sobre tendencias y participación social.</li>
+    </ul>
+
+    <h2>3. Protección de la Identidad</h2>
+    <p>Entendemos la sensibilidad de la información que se comparte en MetaMapa. Por ello:</p>
+    <ul>
+        <li>No compartimos su correo electrónico ni datos personales con terceros sin su consentimiento explícito.</li>
+        <li>En la visualización pública de los hechos, usted puede optar por aparecer bajo un seudónimo o de manera anónima, protegiendo su identidad real frente al público general.</li>
+        <li>Los administradores tienen acceso a la identidad del autor únicamente con fines de validación y contacto en caso de disputas.</li>
+    </ul>
+
+    <h2>4. Cookies y Tecnologías Similares</h2>
+    <p>Utilizamos cookies de sesión para mantenerlo autenticado mientras navega. También utilizamos almacenamiento local para guardar sus preferencias de visualización del mapa. No utilizamos cookies publicitarias ni de rastreo de terceros.</p>
+
+    <h2>5. Retención de Datos</h2>
+    <p>Conservamos su información de perfil mientras su cuenta esté activa. Los hechos publicados, al ser de interés histórico y colectivo, permanecen en la base de datos de manera indefinida para preservar la memoria histórica, incluso si decide cerrar su cuenta (en cuyo caso, se anonimizarán).</p>
+
+    <h2>6. Sus Derechos</h2>
+    <p>Usted tiene derecho a acceder, rectificar o eliminar su información personal. Puede gestionar sus contribuciones desde el panel "Mis Hechos" o contactarnos para ejercer sus derechos ARCO (Acceso, Rectificación, Cancelación y Oposición).</p>
+
+    <h2>7. Contacto</h2>
+    <p>Si tiene dudas sobre esta política o el manejo de sus datos, por favor contáctenos a través de nuestra sección de contacto o enviando un correo a <strong>privacidad@metamapa.org</strong>.</p>
+</main>
+
+<footer class="footer">
+    <div class="container">
+        <div class="footer__links">
+            <a th:href="@{/privacidad}">Política de Privacidad</a>
+            <a th:href="@{/terminos}">Términos de Uso</a>
+            <a th:href="@{/contacto}">Contacto</a>
+        </div>
+        <br>
+        <p style="text-align:center; font-size: 0.9rem; color: #888;">&copy; 2025 MetaMapa. Todos los derechos reservados.</p>
+    </div>
+</footer>
+
+</body>
+</html>
