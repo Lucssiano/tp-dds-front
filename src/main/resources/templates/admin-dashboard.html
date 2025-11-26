@@ -26,6 +26,10 @@
     <main class="main-content">
         <h1 class="page-title">Panel de Control</h1>
 
+        <!-- Mensajes de feedback (éxito/error) -->
+        <div th:if="${mensaje}" class="alert alert--success" th:text="${mensaje}"></div>
+        <div th:if="${error}" class="alert alert--danger" th:text="${error}"></div>
+
         <!-- Tarjetas de estadísticas dinámicas -->
         <div class="dashboard-grid">
             <div class="stat-card">
@@ -42,10 +46,22 @@
             </div>
         </div>
 
-        <!-- Por ahora, la actividad reciente la dejamos estática hasta tener la API -->
+        <!-- Sección de Actividad Reciente -->
         <div class="recent-activity">
-            <h2 class="section-title">Actividad Reciente</h2>
-            <div class="table-container">
+
+            <!-- CAMBIO AQUÍ: Header flexible para título y botón -->
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                <h2 class="section-title" style="margin-bottom: 0;">Actividad Reciente</h2>
+
+                <button onclick="document.getElementById('modal-importar').style.display='flex'" class="btn btn--primary">
+                    📥 Importar Hechos (CSV)
+                </button>
+            </div>
+
+            <!-- Tabla/Lista de actividad -->
+            <!-- Si ya implementaste la lista dinámica con th:each, úsala aquí. Si no, dejo la tabla estática como fallback -->
+            <div class="table-container" th:if="${actividadReciente == null}">
+                <!-- Tabla estática (Placeholder) -->
                 <table class="data-table">
                     <thead>
                     <tr>
@@ -71,9 +87,57 @@
                     </tbody>
                 </table>
             </div>
+
+            <!-- Lista dinámica (Si ya integraste la lógica de backend) -->
+            <div th:if="${actividadReciente != null}" class="activity-list">
+                <div th:each="item : ${actividadReciente}" class="activity-item"
+                     style="padding: 15px; border-bottom: 1px solid #eee; display: flex; gap: 15px; align-items: center;">
+
+                    <div class="activity-icon">
+                        <span th:if="${item.accion == 'NUEVO HECHO'}">📄</span>
+                        <span th:if="${item.accion == 'SOLICITUD BAJA'}">⚠️</span>
+                    </div>
+
+                    <div class="activity-details">
+                        <p class="activity-title" style="margin: 0; font-weight: 500;">
+                            <strong th:text="${item.accion}">Acción</strong>:
+                            <span th:text="${item.tituloHecho}">Título</span>
+                        </p>
+                        <p class="activity-meta" style="margin: 5px 0 0 0; font-size: 0.85rem; color: #666;">
+                            Fuente: <span th:text="${item.fuente}">Fuente</span> •
+                            <span th:text="${#temporals.format(item.fecha, 'dd/MM/yyyy HH:mm')}">Fecha</span>
+                        </p>
+                    </div>
+                </div>
+                <div th:if="${#lists.isEmpty(actividadReciente)}" style="padding: 20px; text-align: center; color: #666;">
+                    No hay actividad reciente registrada.
+                </div>
+            </div>
+        </div>
+
+        <!-- Modal de Importación (Oculto por defecto) -->
+        <div id="modal-importar" class="modal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); align-items:center; justify-content:center; z-index:1000;">
+            <div class="modal-content" style="background:white; padding:30px; border-radius:8px; width:400px; position:relative;">
+
+                <span onclick="document.getElementById('modal-importar').style.display='none'"
+                      style="position:absolute; top:10px; right:15px; cursor:pointer; font-size:1.5rem;">&times;</span>
+
+                <h2 style="margin-bottom:20px;">Importar Hechos</h2>
+
+                <form th:action="@{/admin/importar-hechos}" method="post" enctype="multipart/form-data">
+                    <div class="form-group" style="margin-bottom:20px;">
+                        <label for="csvFile" style="display:block; margin-bottom:10px;">Seleccioná el archivo .csv</label>
+                        <input type="file" id="csvFile" name="archivoCsv" accept=".csv" class="form-control" required>
+                    </div>
+
+                    <div style="text-align:right;">
+                        <button type="button" onclick="document.getElementById('modal-importar').style.display='none'" class="btn btn--secondary">Cancelar</button>
+                        <button type="submit" class="btn btn--primary">Subir</button>
+                    </div>
+                </form>
+            </div>
         </div>
     </main>
 </div>
 </body>
-
 </html>

@@ -24,6 +24,8 @@ import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import java.util.List;
@@ -315,6 +317,23 @@ public class AdminController {
     model.addAttribute("fuentesDisponibles", fuentesDisponibles);
 
     return "admin-fuentes";
+  }
+
+  @PostMapping("/importar-hechos")
+  public String importarHechos(@RequestParam("archivoCsv") MultipartFile file,
+                               Authentication authentication,
+                               RedirectAttributes redirectAttributes) {
+    AuthResponseDTO authData = (AuthResponseDTO) authentication.getDetails();
+
+    try {
+      // Llamamos al servicio (código abajo)
+      dashboardApiService.importarHechos(file, authData.getAccessToken());
+      redirectAttributes.addFlashAttribute("mensaje", "Archivo enviado a procesar correctamente.");
+    } catch (Exception e) {
+      redirectAttributes.addFlashAttribute("error", "Error al subir archivo: " + e.getMessage());
+    }
+
+    return "redirect:/admin/dashboard";
   }
 }
 
