@@ -35,8 +35,7 @@ import java.util.List;
 public class ColeccionesApiService {
 
   private static final Logger log = LoggerFactory.getLogger(ColeccionesApiService.class);
-  @Value("${colecciones.service.url}")
-  private String coleccionesServiceUrl;
+  private String coleccionesServiceUrl = "http://localhost:8081/metamapa";
   private final WebApiCallerService webApiCallerService;
   private final ColeccionMapper coleccionMapper;
   private final WebClient webClient;
