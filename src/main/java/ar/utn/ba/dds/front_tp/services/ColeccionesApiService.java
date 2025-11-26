@@ -40,49 +40,19 @@ public class ColeccionesApiService {
   private final WebApiCallerService webApiCallerService;
   private final ColeccionMapper coleccionMapper;
   private final WebClient webClient;
-  private final ObjectMapper objectMapper;
 
-  public ColeccionesApiService(WebApiCallerService webApiCallerService, ColeccionMapper coleccionMapper, ObjectMapper objectMapper){
+  public ColeccionesApiService(WebApiCallerService webApiCallerService, ColeccionMapper coleccionMapper){
     this.webClient = WebClient.builder().baseUrl("http://localhost:8081/metamapa/colecciones").build();
     this.webApiCallerService = webApiCallerService;
     this.coleccionMapper = coleccionMapper;
-    this.objectMapper = objectMapper;
   }
-
-  // Asumimos que ObjectMapper está disponible en esta clase (inyectado o instanciado)
-// private final ObjectMapper objectMapper = new ObjectMapper();
-
-//  private Mono<Throwable> manejarError(ClientResponse response) {
-//    return response.bodyToMono(String.class)
-//        .doOnNext(body -> log.error("ERROR RAW BODY => {}", body)) // 🔥 ESTO SÍ SE VE
-//        .flatMap(body -> {
-//
-//          try {
-//            ApiError apiError = objectMapper.readValue(body, ApiError.class);
-//
-//            //log.error("ApiError mapeado: code={}, message={}, fields={}", apiError.getCode(), apiError.getMessage(), apiError.getFields());
-//
-//            return Mono.error(new ValidationException(response.statusCode().value(), apiError));
-//          } catch (Exception e) {
-//            log.error("Error parseando error JSON. Body original: {}", body);
-//            return Mono.error(
-//                new RuntimeException(
-//                    "Error desconocido del backend: " + body
-//                )
-//            );
-//          }
-//        });
-//  }
-
 
   private Mono<Throwable> manejarError(ClientResponse response) {
     int status = response.statusCode().value();
     log.info("🌐 Iniciando manejo de error HTTP. Status recibido: {}", status);
 
-    // 🚨 PASO 1: Leer el cuerpo como String (Esto garantiza que el stream no se rompa por codec)
     return response.bodyToMono(ApiError.class)
         .flatMap(err -> {
-          log.info("Entre al flat map");
           String apiCode = err != null ? err.code() : "N/A";
           // LOG 2: Registramos el contenido del ApiError (o si estaba vacío)
           log.info("API Error Body deserializado (Código/Mensaje): {} / {}",

@@ -3,6 +3,7 @@ package ar.utn.ba.dds.front_tp.services;
 import ar.utn.ba.dds.front_tp.dto.hechos.CrearHechoDTO;
 import ar.utn.ba.dds.front_tp.dto.hechos.EditarHechoDTO;
 import ar.utn.ba.dds.front_tp.dto.hechos.HechoDTO;
+import ar.utn.ba.dds.front_tp.dto.input.PageInputDTO;
 import ar.utn.ba.dds.front_tp.dto.output.HechoOutputDTO;
 import ar.utn.ba.dds.front_tp.dto.usuarios.AuthResponseDTO;
 import ar.utn.ba.dds.front_tp.mappers.HechoMapper;
@@ -17,11 +18,13 @@ import org.springframework.beans.factory.annotation.Value;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;
 import org.springframework.web.reactive.function.client.WebClientResponseException;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import org.springframework.web.util.UriComponentsBuilder;
@@ -52,7 +55,7 @@ public class HechosApiService {
    * @return Una lista de HechoDTO.
    */
   public List<HechoDTO> obtenerHechos(String modo, LocalDate fechaDesde, LocalDate fechaHasta) {
-    UriComponentsBuilder builder = UriComponentsBuilder.fromUriString(hechosServiceUrl + "/hechos")
+    UriComponentsBuilder builder = UriComponentsBuilder.fromUriString(hechosServiceUrl + "/hechos/paginado")
         .queryParam("page", 0)
         .queryParam("size", 100);
 
@@ -74,16 +77,25 @@ public class HechosApiService {
     log.info("Llamando a la URL de hechos: {}", urlFinal);
 
     try {
-      return webApiCallerService.getList(urlFinal, HechoDTO.class);
+      // Para evitar el warning deberia hacer algo similar a lo q hago abajo con webclient pero hay q modificar la implementacion del webApiCallerService
+      PageInputDTO<HechoDTO> pagedResponse = webApiCallerService.get(urlFinal, PageInputDTO.class);
+
+      return pagedResponse.getContent();
+
     } catch (RuntimeException e) {
+      // Lógica de error y llamada pública
       if (e.getMessage() != null && e.getMessage().contains("No hay token de acceso disponible")) {
         log.warn("No hay token: usando llamada pública sin autenticación");
-        return webClient.get()
+
+        // Definición explícita del tipo genérico para WebClient (sino me lanza un warning porq no conoce el tipo de dato que va dentro de PageInputDTO)
+        ParameterizedTypeReference<PageInputDTO<HechoDTO>> typeRef = new ParameterizedTypeReference<PageInputDTO<HechoDTO>>() {};
+        PageInputDTO<HechoDTO> pagedResponse = webClient.get()
             .uri(urlFinal)
             .retrieve()
-            .bodyToFlux(HechoDTO.class)
-            .collectList()
+            .bodyToMono(typeRef) // bodyToMono, no bodyToFlux
             .block();
+
+        return pagedResponse != null ? pagedResponse.getContent() : Collections.emptyList();
       }
       throw e;
     }
