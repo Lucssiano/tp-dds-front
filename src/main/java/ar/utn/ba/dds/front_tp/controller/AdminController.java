@@ -6,6 +6,12 @@ import ar.utn.ba.dds.front_tp.dto.hechos.HechoDTO;
 import ar.utn.ba.dds.front_tp.dto.hechos.input.SolicitudModificacionInputDTO;
 import ar.utn.ba.dds.front_tp.dto.usuarios.AuthResponseDTO;
 import ar.utn.ba.dds.front_tp.dto.admin.DashboardSummaryDTO;
+import ar.utn.ba.dds.front_tp.exceptions.api.AutenticationException;
+import ar.utn.ba.dds.front_tp.exceptions.api.AuthorizationException;
+import ar.utn.ba.dds.front_tp.exceptions.api.GeneralApiException;
+import ar.utn.ba.dds.front_tp.exceptions.api.InternalServerErrorException;
+import ar.utn.ba.dds.front_tp.exceptions.api.ResourceNotFoundException;
+import ar.utn.ba.dds.front_tp.exceptions.api.ValidationException;
 import ar.utn.ba.dds.front_tp.services.ColeccionesApiService;
 import ar.utn.ba.dds.front_tp.services.DashboardApiService;
 import ar.utn.ba.dds.front_tp.services.FuentesApiService;
@@ -28,7 +34,10 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Controller
 @RequestMapping("/admin")
@@ -58,13 +67,36 @@ public class AdminController {
     return "admin-crear-coleccion";
   }
 
+//  @PostMapping("/colecciones/crear")
+//  public String crearColeccion(@ModelAttribute("coleccionNueva") ColeccionInputDTO coleccionInput,
+//                               Authentication authentication, // Inyectamos Authentication
+//                               RedirectAttributes redirectAttributes) {
+//
+//    // Obtenemos el DTO de los "detalles" del objeto Authentication
+//    log.info("😎Llegamos as post de crear coleccion: "+ coleccionInput.getTitulo());
+//    AuthResponseDTO authData = (AuthResponseDTO) authentication.getDetails();
+//    if (authData == null || authData.getAccessToken() == null) {
+//      redirectAttributes.addFlashAttribute("error", "Tu sesión ha expirado.");
+//      return "redirect:/auth/login";
+//    }
+//
+//    try {
+//      coleccionesApiService.crearColeccion(coleccionInput, authData.getAccessToken());
+//      redirectAttributes.addFlashAttribute("mensaje", "¡Colección creada exitosamente!");
+//    } catch (Exception e) {
+//      redirectAttributes.addFlashAttribute("error", "Error al crear la colección: " + e.getMessage());
+//    }
+//    return "redirect:/admin/colecciones";
+//  }
+
   @PostMapping("/colecciones/crear")
-  public String crearColeccion(@ModelAttribute("coleccionNueva") ColeccionInputDTO coleccionInput,
-                               Authentication authentication, // Inyectamos Authentication
+  public String crearColeccion(@ModelAttribute("coleccion") ColeccionInputDTO coleccionInput,
+                               Authentication authentication,
+                               Model model,
                                RedirectAttributes redirectAttributes) {
 
-    // Obtenemos el DTO de los "detalles" del objeto Authentication
-    log.info("😎Llegamos as post de crear coleccion: "+ coleccionInput.getTitulo());
+    log.info("😎 Llegamos al post de crear coleccion: "+ coleccionInput.getTitulo());
+
     AuthResponseDTO authData = (AuthResponseDTO) authentication.getDetails();
     if (authData == null || authData.getAccessToken() == null) {
       redirectAttributes.addFlashAttribute("error", "Tu sesión ha expirado.");
@@ -72,12 +104,51 @@ public class AdminController {
     }
 
     try {
-      coleccionesApiService.crearColeccion(coleccionInput, authData.getAccessToken());
+      coleccionesApiService.crearColeccion(coleccionInput, authData.getAccessToken()).block();
       redirectAttributes.addFlashAttribute("mensaje", "¡Colección creada exitosamente!");
-    } catch (Exception e) {
-      redirectAttributes.addFlashAttribute("error", "Error al crear la colección: " + e.getMessage());
+      return "redirect:/admin/colecciones";
     }
-    return "redirect:/admin/colecciones";
+    // 1. Errores de Formulario (400/422)
+    catch (ValidationException ex) {
+      model.addAttribute("errors", ex.getApiError().fields());
+      model.addAttribute("coleccion", coleccionInput);
+      model.addAttribute("fuentesDisponibles", fuentesApiService.obtenerFuentes().getFuentes());
+      return "admin-crear-coleccion";
+    }
+    // 2. Errores de Autenticación (401)
+    catch (AutenticationException ex) {
+      redirectAttributes.addFlashAttribute("error", "Tu sesión ha expirado. Por favor, vuelve a ingresar.");
+      return "redirect:/auth/login";
+    }
+    // 3. Errores de Autorización (403)
+    catch (AuthorizationException ex) {
+      redirectAttributes.addFlashAttribute("error", "Acceso denegado: No tienes permisos.");
+      return "redirect:/error/403";
+    }
+    // 4. Errores de Recurso No Encontrado (404)
+    catch (ResourceNotFoundException ex) {
+      redirectAttributes.addFlashAttribute("error", "El recurso solicitado no fue encontrado.");
+      return "redirect:/error/404";
+    }
+    // 5. Errores de Servidor (5xx)
+    catch (InternalServerErrorException ex) {
+      // Es mejor evitar mostrar el mensaje técnico 5xx al usuario final
+      redirectAttributes.addFlashAttribute("error", "Error del sistema. Intente nuevamente.");
+      return "redirect:/admin/colecciones";
+    }
+    // 6. Errores Generales de API (Fallback 4xx no mapeado, ej. 409 Conflict)
+    catch (GeneralApiException ex) {
+      String message = ex.getApiError() != null ? ex.getApiError().message() : "Error inesperado de API.";
+      redirectAttributes.addFlashAttribute("error", "Error de la API: " + message);
+      return "redirect:/admin/colecciones";
+    }
+    // 7. Fallback de Java (Network, I/O, Error de Bloqueo .block(), etc.)
+    catch (Exception ex) {
+      // Este catch atrapa cualquier fallo de bajo nivel que no provenga del flujo Mono.error()
+      log.error("Fallo inesperado de bajo nivel: {}", ex.getMessage());
+      redirectAttributes.addFlashAttribute("error", "Fallo de comunicación: " + ex.getMessage());
+      return "redirect:/admin/colecciones";
+    }
   }
 
   @GetMapping("/colecciones/eliminar/{id}")
@@ -104,9 +175,10 @@ public class AdminController {
     return "redirect:/admin/colecciones";
   }
 
-  // GET: Mostrar el formulario de "crear" coleccion lleno para modificar una colección.
   @GetMapping("/colecciones/editar/{id}")
-  public String mostrarFormularioEdicion(@PathVariable Long id, Model model, RedirectAttributes redirectAttributes) {
+  public String mostrarFormularioEdicion(@PathVariable Long id,
+                                         Model model,
+                                         RedirectAttributes redirectAttributes) {
     try {
       ColeccionDTO existente = coleccionesApiService.obtenerColeccionPorId(id);
 
@@ -114,12 +186,30 @@ public class AdminController {
       form.setTitulo(existente.getTitulo());
       form.setDescripcion(existente.getDescripcion());
       form.setAlgoritmoConsenso(existente.getAlgoritmoConsenso());
-      form.setFuentes(existente.getFuentes());
-      form.setCriteriosDePertenencias(existente.getCriteriosDePertenencias());
+
+      // Fuentes ya seleccionadas (las que vienen del backend)
+      form.setFuentes(
+          existente.getFuentes() != null
+              ? new ArrayList<>(existente.getFuentes())
+              : new ArrayList<>()
+      );
+
+      // Criterios existentes (incluye tipoCriterio + parametros)
+      if (existente.getCriteriosDePertenencias() != null) {
+        existente.getCriteriosDePertenencias().forEach(c -> {
+          if (c.getParametros() == null) {
+            c.setParametros(new HashMap<>()); // por si acaso
+          }
+        });
+        form.setCriteriosDePertenencias(new ArrayList<>(existente.getCriteriosDePertenencias()));
+      } else {
+        form.setCriteriosDePertenencias(new ArrayList<>());
+      }
 
       model.addAttribute("coleccion", form);
       model.addAttribute("idColeccion", id);
 
+      // Fuentes disponibles para checkboxes
       List<String> fuentesDisponibles = fuentesApiService.obtenerFuentes().getFuentes();
       model.addAttribute("fuentesDisponibles", fuentesDisponibles);
 
@@ -129,6 +219,7 @@ public class AdminController {
       return "redirect:/admin/colecciones";
     }
   }
+
 
   // POST: Guardar los cambios luego de modificar una colección.
   @PostMapping("/colecciones/editar/{id}")

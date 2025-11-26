@@ -13,10 +13,10 @@ public class FuentesApiService {
   private final WebClient webClient;
 
   public FuentesApiService() {
-    this.webClient = WebClient.builder().baseUrl("http://localhost:8081/metamapa").build();
+    this.webClient = WebClient.builder().baseUrl("http://localhost:8081/metamapa/fuentes").build();
   }
 
   public FuentesInputDTO obtenerFuentes() {
-    return webClient.get().uri("/fuentes").retrieve().bodyToMono(FuentesInputDTO.class).block();
+    return webClient.get().retrieve().bodyToMono(FuentesInputDTO.class).block();
   }
 }

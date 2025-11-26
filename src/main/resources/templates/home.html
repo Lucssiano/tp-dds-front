@@ -61,7 +61,7 @@
           <div class="card__content">
             <h3 class="card__title" th:text="${coleccion.titulo}">Título</h3>
             <p class="card__description" th:text="${coleccion.descripcion}">Descripción</p>
-            <a th:href="@{'/colecciones/' + ${coleccion.id}}" class="card__link">Ver Colección</a>
+            <a th:href="@{/hechos/mapa/coleccion/{id}(id=${coleccion.id})}"class="card__link">Ver Colección</a>
           </div>
         </div>
       </div>

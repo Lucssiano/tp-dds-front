@@ -89,6 +89,20 @@ public class HechosApiService {
     }
   }
 
+  public List<HechoDTO> obtenerHechosColeccion(Long id){
+    try {
+      return webClient.get()
+          .uri(hechosServiceUrl + "/colecciones/" + id +"/hechos")
+          .retrieve()
+          .bodyToFlux(HechoDTO.class)
+          .collectList()
+          .block();
+    } catch (Exception e) {
+      log.warn("No se pudieron obtener los hechos de la coleccion: "+id+" por error"+e.getMessage());
+      return null;
+    }
+  }
+
   public HechoDTO obtenerHecho(Long id){
     return webClient.get()
         .uri(hechosServiceUrl + "/hechos/" + id)

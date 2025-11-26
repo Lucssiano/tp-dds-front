@@ -24,6 +24,12 @@
   <main class="main-content">
     <h1 class="page-title">Crear Nueva Colección</h1>
 
+    <div class="alert alert-danger" th:if="${errors != null and !errors.isEmpty()}">
+      <ul>
+        <li th:each="err : ${errors}" th:text="${err.value}"></li>
+      </ul>
+    </div>
+
     <form th:action="@{/admin/colecciones/crear}" th:object="${coleccion}" method="post" class="form-card">
 
       <!-- Título -->
