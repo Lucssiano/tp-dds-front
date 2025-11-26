@@ -22,76 +22,133 @@
     <main class="main-content">
         <h1 class="page-title">Editar Colección</h1>
 
-        <form th:action="@{/admin/colecciones/editar/{id}(id=${idColeccion})}" th:object="${coleccion}" method="post" class="form-card">
+        <form th:action="@{/admin/colecciones/editar/{id}(id=${idColeccion})}"
+              th:object="${coleccion}"
+              method="post"
+              class="form-card">
 
+            <!-- TÍTULO -->
             <div class="form-group">
                 <label for="titulo">Título</label>
                 <input type="text" id="titulo" th:field="*{titulo}" class="form-control">
             </div>
 
+            <!-- DESCRIPCIÓN -->
             <div class="form-group">
                 <label for="descripcion">Descripción</label>
                 <textarea id="descripcion" th:field="*{descripcion}" rows="4" class="form-control"></textarea>
             </div>
 
+            <!-- FUENTES (misma lógica que en crear, pero con las ya seleccionadas marcadas) -->
             <div class="form-group">
                 <label>Fuentes Asociadas</label>
 
-                <div class="checkbox-group"
-                     th:each="fuente : ${fuentesDisponibles}">
-                    <label>
-                        <input type="checkbox"
-                               th:field="*{fuentes}"
-                               th:value="${fuente}">
-                        <span th:text="${fuente}">Nombre de fuente</span>
-                    </label>
+                <!-- Si NO hay fuentes -->
+                <div th:if="${#lists.isEmpty(fuentesDisponibles)}" class="no-fuentes-msg">
+                    <p>No hay fuentes disponibles actualmente.</p>
                 </div>
 
-                <small class="form-hint">Podés seleccionar varias fuentes.</small>
+                <!-- Si hay fuentes -->
+                <div th:unless="${#lists.isEmpty(fuentesDisponibles)}">
+                    <div class="checkbox-group"
+                         th:each="fuente : ${fuentesDisponibles}">
+                        <label>
+                            <!-- Las que ya están en coleccion.fuentes aparecen tildadas solo con esto -->
+                            <input type="checkbox"
+                                   th:field="*{fuentes}"
+                                   th:value="${fuente}">
+                            <span th:text="${fuente}">Nombre de fuente</span>
+                        </label>
+                    </div>
+                    <small class="form-hint">Podés seleccionar varias fuentes.</small>
+                </div>
+
+                <div id="fuentes-error" class="text-danger" style="display:none;"></div>
             </div>
 
-
+            <!-- ALGORITMO CONSENSO -->
             <div class="form-group">
                 <label for="algoritmoConsenso">Algoritmo de Consenso</label>
                 <select id="algoritmoConsenso" th:field="*{algoritmoConsenso}" class="form-control">
                     <option value="">Seleccioná un algoritmo</option>
-                    <option value="MULTIPLES_MENCIONES">Múltiples menciones</option>
-                    <option value="MAYORIA_SIMPLE">Mayoría simple</option>
-                    <option value="ABSOLUTA">Absoluta</option>
+                    <option th:value="MULTIPLES_MENCIONES">Múltiples menciones</option>
+                    <option th:value="MAYORIA_SIMPLE">Mayoría simple</option>
+                    <option th:value="ABSOLUTA">Absoluta</option>
                 </select>
             </div>
 
+            <!-- CRITERIOS EXISTENTES (editar nombre + parámetros) -->
             <div class="form-group">
                 <label>Criterios de Pertenencia</label>
                 <div id="criterios-container" class="criterios-container">
 
                     <div th:each="criterio, stat : *{criteriosDePertenencias}" class="criterio-item">
+                        <!-- Nombre -->
                         <div class="form-subgroup">
                             <label>Nombre del Criterio</label>
-                            <input type="text" th:field="*{criteriosDePertenencias[__${stat.index}__].nombreCriterio}" class="form-control" required>
+                            <input type="text"
+                                   th:field="*{criteriosDePertenencias[__${stat.index}__].nombreCriterio}"
+                                   class="form-control"
+                                   required>
                         </div>
 
+                        <!-- Tipo (no editable, pero se manda hidden) -->
                         <div class="form-subgroup">
                             <label>Tipo (No editable)</label>
-                            <input type="text" th:value="${criterio.tipoCriterio}" class="form-control" disabled>
-                            <input type="hidden" th:field="*{criteriosDePertenencias[__${stat.index}__].tipoCriterio}">
+                            <input type="text"
+                                   th:value="${criterio.tipoCriterio}"
+                                   class="form-control"
+                                   disabled>
+                            <input type="hidden"
+                                   th:field="*{criteriosDePertenencias[__${stat.index}__].tipoCriterio}">
                         </div>
 
-                        <div class="form-subgroup" th:if="${criterio.tipoCriterio == 'FECHA'}">
+                        <!-- Parámetros para FECHA -->
+                        <div class="form-subgroup"
+                             th:if="${criterio.tipoCriterio.name() == 'FECHA'}">
                             <label>Fecha Inicio</label>
-                            <input type="date" th:field="*{criteriosDePertenencias[__${stat.index}__].parametros['fechaInicio']}" class="form-control">
+                            <input type="date"
+                                   th:field="*{criteriosDePertenencias[__${stat.index}__].parametros['fechaInicio']}"
+                                   class="form-control">
+
                             <label>Fecha Fin</label>
-                            <input type="date" th:field="*{criteriosDePertenencias[__${stat.index}__].parametros['fechaFinal']}" class="form-control">
+                            <input type="date"
+                                   th:field="*{criteriosDePertenencias[__${stat.index}__].parametros['fechaFin']}"
+                                   class="form-control">
                         </div>
 
-                        <button type="button" class="btn btn--danger btn--small" onclick="this.parentElement.remove()">Eliminar</button>
+                        <!-- Parámetros para CATEGORIA -->
+                        <div class="form-subgroup"
+                             th:if="${criterio.tipoCriterio.name() == 'CATEGORIA'}">
+                            <label>Categoría</label>
+                            <input type="text"
+                                   th:field="*{criteriosDePertenencias[__${stat.index}__].parametros['categoria']}"
+                                   placeholder="Ej: Caída de aeronave"
+                                   class="form-control">
+                        </div>
+
+                        <button type="button"
+                                class="btn btn--third btn--small"
+                                onclick="this.parentElement.remove()">
+                            Eliminar
+                        </button>
                         <hr>
                     </div>
 
                 </div>
-                <button type="button" class="btn btn--secondary btn--small" onclick="agregarCriterio()">+ Agregar Nuevo Criterio</button>
+
+                <!-- Botón para agregar nuevos criterios -->
+                <button type="button"
+                        class="btn btn--secondary btn--small"
+                        onclick="agregarCriterio()">
+                    + Agregar Nuevo Criterio
+                </button>
+
+                <div class="text-danger" id="criterios-error" style="display:none;"></div>
             </div>
 
+
+            <!-- ACCIONES -->
             <div class="form-actions">
                 <button type="submit" class="btn btn--primary">Guardar Cambios</button>
                 <a th:href="@{/admin/colecciones}" class="btn btn--secondary">Cancelar</a>
@@ -101,7 +158,7 @@
 </div>
 
 <script th:inline="javascript">
-    /* Inicializamos el índice en base a cuántos elementos ya trajo el Backend */
+    /* Arrancamos desde la cantidad de criterios que ya vienen del backend */
     let criterioIndex = [[${coleccion.criteriosDePertenencias != null ? coleccion.criteriosDePertenencias.size() : 0}]];
 
     function agregarCriterio() {
@@ -109,27 +166,38 @@
         const wrapper = document.createElement('div');
         wrapper.classList.add('criterio-item');
 
-        // Usamos criterioIndex para generar nombres únicos (ej: criteriosDePertenencias[5])
         wrapper.innerHTML = `
-      <div class="form-subgroup">
-        <label>Nombre del Criterio</label>
-        <input type="text" name="criteriosDePertenencias[${criterioIndex}].nombreCriterio" placeholder="Nuevo criterio" class="form-control" required>
-      </div>
+          <div class="form-subgroup">
+            <label>Nombre del Criterio</label>
+            <input type="text"
+                   name="criteriosDePertenencias[${criterioIndex}].nombreCriterio"
+                   placeholder="Nuevo criterio"
+                   class="form-control"
+                   required>
+          </div>
 
-      <div class="form-subgroup">
-        <label>Tipo de Criterio</label>
-        <select name="criteriosDePertenencias[${criterioIndex}].tipoCriterio" class="form-control" required onchange="actualizarParametros(this, ${criterioIndex})">
-          <option value="">Seleccionar tipo</option>
-          <option value="FECHA">Fecha</option>
-          <option value="CATEGORIA">Categoría</option>
-        </select>
-      </div>
+          <div class="form-subgroup">
+            <label>Tipo de Criterio</label>
+            <select name="criteriosDePertenencias[${criterioIndex}].tipoCriterio"
+                    class="form-control"
+                    required
+                    onchange="actualizarParametros(this, ${criterioIndex})">
+              <option value="">Seleccionar tipo</option>
+              <option value="FECHA">Fecha</option>
+              <option value="CATEGORIA">Categoría</option>
+            </select>
+          </div>
 
-      <div id="parametros-${criterioIndex}" class="form-subgroup"></div>
+          <div id="parametros-${criterioIndex}" class="form-subgroup"></div>
 
-      <button type="button" class="btn btn--danger btn--small" onclick="this.parentElement.remove()">Eliminar</button>
-      <hr>
-    `;
+          <button type="button"
+                  class="btn btn--danger btn--small"
+                  onclick="this.parentElement.remove()">
+            Eliminar
+          </button>
+          <hr>
+        `;
+
         container.appendChild(wrapper);
         criterioIndex++;
     }
@@ -141,18 +209,26 @@
 
         if (tipo === "FECHA") {
             paramsContainer.innerHTML = `
-        <label>Fecha mínima</label>
-        <input type="date" name="criteriosDePertenencias[${index}].parametros[fechaInicio]" class="form-control">
-        <label>Fecha máxima</label>
-        <input type="date" name="criteriosDePertenencias[${index}].parametros[fechaFinal]" class="form-control">
-      `;
+                <label>Fecha mínima</label>
+                <input type="date"
+                       name="criteriosDePertenencias[${index}].parametros[fechaInicio]"
+                       class="form-control">
+                <label>Fecha máxima</label>
+                <input type="date"
+                       name="criteriosDePertenencias[${index}].parametros[fechaFin]"
+                       class="form-control">
+            `;
         } else if (tipo === "CATEGORIA") {
             paramsContainer.innerHTML = `
-        <label>Categoría</label>
-        <input type="text" name="criteriosDePertenencias[${index}].parametros[categoria]" placeholder="Ej: Ambiental" class="form-control">
-      `;
+                <label>Categoría</label>
+                <input type="text"
+                       name="criteriosDePertenencias[${index}].parametros[categoria]"
+                       placeholder="Ej: Caída de aeronave"
+                       class="form-control">
+            `;
         }
     }
 </script>
+
 </body>
 </html>

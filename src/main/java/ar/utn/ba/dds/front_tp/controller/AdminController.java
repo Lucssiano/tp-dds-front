@@ -26,6 +26,8 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 
 @Controller
@@ -102,9 +104,10 @@ public class AdminController {
     return "redirect:/admin/colecciones";
   }
 
-  // GET: Mostrar el formulario de "crear" coleccion lleno para modificar una colección.
   @GetMapping("/colecciones/editar/{id}")
-  public String mostrarFormularioEdicion(@PathVariable Long id, Model model, RedirectAttributes redirectAttributes) {
+  public String mostrarFormularioEdicion(@PathVariable Long id,
+                                         Model model,
+                                         RedirectAttributes redirectAttributes) {
     try {
       ColeccionDTO existente = coleccionesApiService.obtenerColeccionPorId(id);
 
@@ -112,12 +115,30 @@ public class AdminController {
       form.setTitulo(existente.getTitulo());
       form.setDescripcion(existente.getDescripcion());
       form.setAlgoritmoConsenso(existente.getAlgoritmoConsenso());
-      form.setFuentes(existente.getFuentes());
-      form.setCriteriosDePertenencias(existente.getCriteriosDePertenencias());
+
+      // Fuentes ya seleccionadas (las que vienen del backend)
+      form.setFuentes(
+          existente.getFuentes() != null
+              ? new ArrayList<>(existente.getFuentes())
+              : new ArrayList<>()
+      );
+
+      // Criterios existentes (incluye tipoCriterio + parametros)
+      if (existente.getCriteriosDePertenencias() != null) {
+        existente.getCriteriosDePertenencias().forEach(c -> {
+          if (c.getParametros() == null) {
+            c.setParametros(new HashMap<>()); // por si acaso
+          }
+        });
+        form.setCriteriosDePertenencias(new ArrayList<>(existente.getCriteriosDePertenencias()));
+      } else {
+        form.setCriteriosDePertenencias(new ArrayList<>());
+      }
 
       model.addAttribute("coleccion", form);
       model.addAttribute("idColeccion", id);
 
+      // Fuentes disponibles para checkboxes
       List<String> fuentesDisponibles = fuentesApiService.obtenerFuentes().getFuentes();
       model.addAttribute("fuentesDisponibles", fuentesDisponibles);
 
@@ -127,6 +148,7 @@ public class AdminController {
       return "redirect:/admin/colecciones";
     }
   }
+
 
   // POST: Guardar los cambios luego de modificar una colección.
   @PostMapping("/colecciones/editar/{id}")
