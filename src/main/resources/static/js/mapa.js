@@ -133,8 +133,8 @@ document.addEventListener('DOMContentLoaded', () => {
                     document.getElementById('modal-date').textContent = formatearFechaParaArgentina(fact.fechaHecho);
                     document.getElementById('modal-location').textContent = `${ubicacion.provincia || ''}, ${ubicacion.municipio || ''}`;
 
-                    const fuentesTexto = Array.isArray(fact.fuentes) ? fact.fuentes.join(', ') : (fact.fuentes || 'Desconocida');
-                    document.getElementById('modal-source').textContent = fuentesTexto;
+
+                    document.getElementById('modal-source').textContent = fact.fuente;
                     document.getElementById('modal-description').textContent = fact.descripcion || '';
 
                     // 👉 Setear link "Ver Hecho"
