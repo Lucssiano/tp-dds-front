@@ -60,7 +60,7 @@ public class DashboardApiService {
 
   public void importarHechos(MultipartFile file, String token) {
     try {
-      String url = dashboardServiceUrl + "/admin/importar-hechos"; // Ajusta según tu backend
+      String url = "http://localhost:8082/fuente-estatica/hechos/importar";
 
       MultipartBodyBuilder builder = new MultipartBodyBuilder();
       builder.part("file", file.getResource());
