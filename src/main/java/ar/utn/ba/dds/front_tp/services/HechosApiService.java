@@ -123,8 +123,6 @@ public class HechosApiService {
         .block();
   }
 
-  // CAMBIO 1: El parámetro ahora es CrearHechoDTO (el wrapper que manda el controller)
-
   public HechoOutputDTO crearHecho(CrearHechoDTO payload, String token) {
 
     log.info("Enviando hecho. Título: {}", payload.getHecho().getTitulo());

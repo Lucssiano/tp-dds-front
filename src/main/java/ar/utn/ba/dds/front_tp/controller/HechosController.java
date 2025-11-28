@@ -16,6 +16,7 @@ import ar.utn.ba.dds.front_tp.services.SolicitudesApiService;
 import ar.utn.ba.dds.front_tp.services.SolicitudesModificacionApiService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.servlet.http.HttpSession;
+import java.security.Principal;
 import java.time.LocalDate;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
@@ -35,7 +36,9 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import org.springframework.security.core.Authentication;
 import java.util.List;
-
+import java.util.Optional;
+import org.springframework.security.authentication.AnonymousAuthenticationToken;
+import org.springframework.security.core.context.SecurityContextHolder;
 @Controller
 @RequestMapping("/hechos")
 @RequiredArgsConstructor
@@ -44,11 +47,10 @@ public class HechosController {
   private final HechosApiService hechosApiService;
   private final SolicitudesApiService solicitudesApiService;
   private final SolicitudesModificacionApiService solicitudesModificacionApiService;
-
-  // Inyectamos el conversor de JSON
   private final ObjectMapper objectMapper;
   @Autowired
   private HttpSession session;
+  private SecurityContextHolder securityContextHolder;
 
   @GetMapping("/mapa")
   public String mostrarMapa(
@@ -107,52 +109,56 @@ public class HechosController {
     }
 
   @PostMapping("/crear-hecho")
-  //@PreAuthorize("hasAnyRole('ADMIN', 'CONTRIBUYENTE')")
   public String crearHecho(@ModelAttribute("hecho") HechoOutputDTO hecho,
                            BindingResult bindingResult,
                            Model model,
                            RedirectAttributes redirectAttributes,
-                           Authentication authentication) {
-    AuthResponseDTO token = (AuthResponseDTO) authentication.getDetails();
+                           // Quitamos Authentication del parámetro para evitar el conflicto
+                           // Lo obtenemos de forma estática dentro
+                           Principal principal) { // Usamos Principal para obtener el nombre de usuario de forma segura
 
-    if (authentication != null) {
-      var email = JwtUtils.validarToken(token.getAccessToken());
-      hecho.setUsuario(email);
-    } else {
-      hecho.setUsuario("VISUALIZADOR");
+    String token = null;
+    String usuarioEmail = "VISUALIZADOR/ANÓNIMO";
+
+    Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+
+    // 1. LÓGICA DE EXTRACCIÓN DE USUARIO SEGURO
+    if (principal != null) {
+      // Si Principal existe, está logueado
+      usuarioEmail = principal.getName();
+
+      // Intentamos obtener el token real solo si está realmente autenticado
+      if (authentication != null && !(authentication instanceof AnonymousAuthenticationToken)) {
+        try {
+          AuthResponseDTO authData = (AuthResponseDTO) authentication.getDetails();
+          token = authData.getAccessToken();
+        } catch (Exception e) {
+          System.err.println("Advertencia: Fallo al castear token para usuario: " + principal.getName());
+          token = null;
+        }
+      }
     }
-    log.info("usuario en crear hecho: " + hecho.getUsuario());
-    //    log.info("Token recibido del backend de usuarios: {}", token); // 👈
-//    log.info("AccessToken: {}", token.getAccessToken()); // 👈
-//    log.info("Llegue a crear hechos... creo: " + hecho.getTitulo());
+    // -------------------------------------------------------------------
+
+    hecho.setUsuario(usuarioEmail);
 
     try {
       CrearHechoDTO payload = new CrearHechoDTO();
-      payload.setHecho(hecho);                // Metemos los datos del formulario
-      payload.setAccessToken(token.getAccessToken()); // <--- ESTO ES LO QUE FALTABA
+      payload.setHecho(hecho);
+      payload.setAccessToken(token); // Token es null si es anónimo
 
-      // 3. Llamamos al servicio enviando el PAYLOAD (que tiene token adentro),
-      //    y también pasamos el token aparte para el Header HTTP.
-      hechosApiService.crearHecho(payload, token.getAccessToken());
-      redirectAttributes.addFlashAttribute("mensaje", "Hecho creado exitosamente");
+      // LLAMADA AL SERVICIO: La llamada POST viajará SIN el header Authorization si token es null.
+      hechosApiService.crearHecho(payload, token);
+
+      redirectAttributes.addFlashAttribute("mensaje", "Hecho creado exitosamente y enviado a moderación.");
       redirectAttributes.addFlashAttribute("tipoMensaje", "success");
-      return "redirect:/hechos/mis-hechos";
-    } catch (DuplicateTitleException ex) {
-      // Duplicidad: Para un campo de tu DTO (ej. si el título de un hecho debe ser único)
-      bindingResult.rejectValue("titulo", "error.titulo.duplicado", ex.getMessage());
-      model.addAttribute("hecho", hecho); // Vuelve a cargar el DTO para que el usuario no pierda los datos
-      model.addAttribute("errorGlobal", "El título de Hecho ya existe. Por favor, elige otro.");
-      return "subir-hecho"; // Retorna a la vista del formulario
-    } catch (RuntimeException e) {
-      // Errores de API/Comunicación: Fallo al consumir el servicio REST o error 5xx del backend.
-      log.error("Error al crear hecho por falla de servicio", e);
-      model.addAttribute("errorGlobal", "No se pudo comunicar con el servicio. Inténtalo más tarde.");
-      model.addAttribute("hecho", hecho);
-      return "subir-hecho";
+
+      // Si el usuario es anónimo, lo devolvemos al mapa. Si es contribuyente, a mis-hechos.
+      return "redirect:/hechos/mapa";
     } catch (Exception e) {
-      // Fallback: Error inesperado que no manejamos.
-      log.error("Error inesperado al crear hecho", e);
-      model.addAttribute("errorGlobal", "Ocurrió un error inesperado: " + e.getMessage());
+      // CORRECCIÓN DEL ERROR DE THYMELEAF: El archivo de vista no se encuentra.
+      log.error("Error al crear hecho (Retornando a formulario)", e);
+      model.addAttribute("errorGlobal", "Error al guardar el hecho: " + e.getMessage());
       model.addAttribute("hecho", hecho);
       return "subir-hecho";
     }
@@ -181,7 +187,7 @@ public class HechosController {
     } catch (Exception e) {
       log.error(e.getMessage(), e);
       model.addAttribute("errorGlobal", "Ocurrió un error inesperado: " + e.getMessage());
-      return "home"; // o la vista que uses para el home
+      return "home";
     }
   }
 
