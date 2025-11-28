@@ -28,11 +28,11 @@ public class SecurityConfig {
             // ✅ Rutas públicas (no requieren login)
             .requestMatchers(
                 "/", "/home", "/auth/**", "/hechos/**", "/colecciones/**",
-                "/css/**", "/js/**", "/images/**", "/privacidad", "/terminos", "/contacto"
+                "/css/**", "/js/**", "/images/**", "/privacidad", "/terminos", "/contacto",
+                "/hechos/subir-hecho", "/hechos/crear-hecho"
             ).permitAll()
             // 🔒 Rutas de Administrador (requieren rol ADMIN)
             .requestMatchers("/admin/**").hasRole("ADMIN")
-            .requestMatchers("/hechos/subir-hecho", "/hechos/crear-hecho").hasRole("CONTRIBUYENTE")
             // 🔒 Cualquier otra ruta requiere que el usuario esté autenticado
             .anyRequest().authenticated()
         )
