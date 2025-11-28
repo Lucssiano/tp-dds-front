@@ -35,6 +35,7 @@ public class HechosApiService {
   private final WebClient webClient;
   private final WebApiCallerService webApiCallerService;
   private final String hechosServiceUrl = "http://localhost:8081/metamapa";
+  private final String fuenteDinamicaUrl = "http://localhost:8083/fuente-dinamica/hechos";
   private final HechoMapper hechoMapper;
 
   @Autowired
@@ -129,9 +130,12 @@ public class HechosApiService {
     log.info("Lat: {}, Long: {}", payload.getHecho().getLatitud(), payload.getHecho().getLongitud());
     log.info("Token incluido en body: {}", payload.getAccessToken() != null ? "SI" : "NO");
 
-    String url = hechosServiceUrl + "/hechos";
-
-    return webApiCallerService.postWithAuth(url, payload, HechoOutputDTO.class, token);
+    return webApiCallerService.postWithAuth(
+        fuenteDinamicaUrl,        // URL 8083
+        payload.getHecho(),       // Body: HechoOutputDTO
+        HechoOutputDTO.class,     // Respuesta esperada
+        token                     // Token para el Header
+    );
   }
 
   public Void editarHecho(Long id, HechoDTO hechoDTO) {
