@@ -1,5 +1,7 @@
 package ar.utn.ba.dds.front_tp.controller;
 
+import ar.utn.ba.dds.front_tp.dto.admin.CategoriaDTO;
+import ar.utn.ba.dds.front_tp.dto.admin.ColeccionEstadisticaDTO;
 import ar.utn.ba.dds.front_tp.dto.colecciones.ColeccionDTO;
 import ar.utn.ba.dds.front_tp.dto.colecciones.ColeccionInputDTO;
 import ar.utn.ba.dds.front_tp.dto.hechos.HechoDTO;
@@ -12,15 +14,13 @@ import ar.utn.ba.dds.front_tp.exceptions.api.GeneralApiException;
 import ar.utn.ba.dds.front_tp.exceptions.api.InternalServerErrorException;
 import ar.utn.ba.dds.front_tp.exceptions.api.ResourceNotFoundException;
 import ar.utn.ba.dds.front_tp.exceptions.api.ValidationException;
-import ar.utn.ba.dds.front_tp.services.ColeccionesApiService;
-import ar.utn.ba.dds.front_tp.services.DashboardApiService;
-import ar.utn.ba.dds.front_tp.services.FuentesApiService;
-import ar.utn.ba.dds.front_tp.services.HechosApiService;
-import ar.utn.ba.dds.front_tp.services.RevisionesApiService;
-import ar.utn.ba.dds.front_tp.services.SolicitudesModificacionApiService;
+import ar.utn.ba.dds.front_tp.services.*;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Controller;
@@ -34,9 +34,9 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
+import java.nio.charset.StandardCharsets;
+import java.time.LocalDateTime;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Controller
@@ -50,6 +50,7 @@ public class AdminController {
   private final RevisionesApiService revisionesApiService;
   private final HechosApiService hechosApiService;
   private final SolicitudesModificacionApiService solicitudesModificacionApiService;
+  private final EstadisticasApiService estadisticasApiService;
   private static final Logger log = LoggerFactory.getLogger(AdminController.class);
 
   @GetMapping("/colecciones")
@@ -426,5 +427,71 @@ public class AdminController {
 
     return "redirect:/admin/dashboard";
   }
+    @GetMapping("/estadisticas")
+    public String mostrarEstadisticas(
+            @RequestParam(value = "top", required = false) Boolean top,
+            @RequestParam(value = "categorias", required = false) List<String> categorias,
+            Model model) {
+
+        log.info("➡️ Iniciando /estadisticas");
+        log.info("➡️ Parametro top = {}", top);
+        log.info("➡️ Parametro categorias = {}", categorias);
+
+        // 1. Llamo al backend
+        List<CategoriaDTO> resultado = estadisticasApiService.obtenerCategorias(categorias, top);
+
+        log.info("✔️ Backend respondió {} categorías", resultado.size());
+        CategoriaDTO categoriaMax = estadisticasApiService.obtenerCategorias(categorias, true).get(0);
+
+        List<ColeccionEstadisticaDTO> resultadoColecciones = estadisticasApiService.obtenerColecciones(List.of());
+
+
+
+        // 2. Cargo resultados en el model
+        model.addAttribute("categorias", resultado);
+        model.addAttribute("categoriaMaxima",categoriaMax);
+        model.addAttribute("colecciones",resultadoColecciones);
+
+        // 3. Lista de nombres
+        List<String> nombres = resultado.stream()
+                .map(CategoriaDTO::getCategoria)
+                .toList();
+
+        model.addAttribute("nombresCategorias", nombres);
+        log.info("✔️ nombresCategorias = {}", nombres);
+
+        // 4. Mandar estado actual del filtro (IMPORTANTE PARA EVITAR EL ERROR)
+        model.addAttribute("filtroCategorias", categorias);
+        model.addAttribute("filtroTop", top);
+
+        // FIX: atributo que Thymeleaf necesita para el selected
+        model.addAttribute("categoriaSeleccionada",
+                categorias != null ? categorias : List.of());
+
+        log.info("✔️ categoriaSeleccionada = {}", categorias);
+
+        return "admin-estadisticas";
+    }
+
+
+
+
+
+//    @GetMapping("/estadisticas/csv")
+//    public ResponseEntity<byte[]> exportarEstadisticasCSV() {
+//        // Datos hardcodeados de ejemplo
+//        String csvContent = "Provincia,Categoría,Cantidad\n" +
+//                "Buenos Aires,Terremotos,15\n" +
+//                "Cordoba,Inundaciones,8\n" +
+//                "Santa Fe,Incendios,12\n";
+//
+//        byte[] bytes = csvContent.getBytes(StandardCharsets.UTF_8);
+//
+//        return ResponseEntity.ok()
+//                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"estadisticas.csv\"")
+//                .contentType(MediaType.parseMediaType("text/csv"))
+//                .body(bytes);
+//    }
+
 }
 
