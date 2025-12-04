@@ -22,7 +22,7 @@ public class HechoDTO {
   private String descripcion;
   private String categoria;
   private List<FuenteOutputDTO> fuente;
-  private Path multimedia;
+  private List<String> multimedia;
   @JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss")
   private LocalDateTime fechaHecho;
   private UbicacionDTO ubicacionOutputDTO;

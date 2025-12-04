@@ -20,8 +20,8 @@ public class HechoOutputDTO {
   private String titulo;
   private String descripcion;
   private String categoria;
-  private Path multimedia;
-  @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd'T'HH:mm:ss")
+  private List<String> multimedia;
+  @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd'T'HH:mm")
   private LocalDateTime fecha; // TODO: TIENE QUE SER LOCALDATETIME
   private BigDecimal latitud;
   private BigDecimal longitud;

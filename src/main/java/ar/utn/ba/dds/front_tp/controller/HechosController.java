@@ -10,12 +10,12 @@ import ar.utn.ba.dds.front_tp.dto.output.HechoOutputDTO;
 import ar.utn.ba.dds.front_tp.dto.output.SoliOutputDTO;
 import ar.utn.ba.dds.front_tp.dto.usuarios.AuthResponseDTO;
 import ar.utn.ba.dds.front_tp.exceptions.DuplicateTitleException;
-import ar.utn.ba.dds.front_tp.services.GestionUsuariosApiService;
-import ar.utn.ba.dds.front_tp.services.HechosApiService;
-import ar.utn.ba.dds.front_tp.services.SolicitudesApiService;
-import ar.utn.ba.dds.front_tp.services.SolicitudesModificacionApiService;
+import ar.utn.ba.dds.front_tp.services.*;
+import com.fasterxml.jackson.annotation.JacksonAnnotationsInside;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.servlet.http.HttpSession;
+
+import java.io.IOException;
 import java.security.Principal;
 import java.time.LocalDate;
 import lombok.RequiredArgsConstructor;
@@ -33,8 +33,11 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import org.springframework.security.core.Authentication;
+
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import org.springframework.security.authentication.AnonymousAuthenticationToken;
@@ -47,6 +50,8 @@ public class HechosController {
   private final HechosApiService hechosApiService;
   private final SolicitudesApiService solicitudesApiService;
   private final SolicitudesModificacionApiService solicitudesModificacionApiService;
+  @Autowired
+  private  final UploadFileService imagenesService;
   private final ObjectMapper objectMapper;
   @Autowired
   private HttpSession session;
@@ -110,6 +115,7 @@ public class HechosController {
 
   @PostMapping("/crear-hecho")
   public String crearHecho(@ModelAttribute("hecho") HechoOutputDTO hecho,
+                           @RequestParam("multimediaFiles") List<MultipartFile> multipartFiles,
                            BindingResult bindingResult,
                            Model model,
                            RedirectAttributes redirectAttributes,
@@ -139,6 +145,29 @@ public class HechosController {
       }
     }
     // -------------------------------------------------------------------
+      try{
+          log.info("Tamaño lista" + multipartFiles.size());
+      }
+      catch (Exception e){
+          throw new RuntimeException("Esta vacia la lista de imagens: ", e);
+      }
+      if (multipartFiles != null && !multipartFiles.isEmpty()) {
+          List<String> nombresGuardados = new ArrayList<>();
+          System.out.println("Archivos recibidos: " + multipartFiles.size());
+          multipartFiles.forEach(f -> System.out.println(" - " + f.getOriginalFilename()));
+          for (MultipartFile file : multipartFiles) {
+              if (!file.isEmpty()) {
+                  try {
+                      String uniqueFileName = imagenesService.copy(file);
+                      nombresGuardados.add(uniqueFileName);
+                  } catch (IOException e) {
+                      throw new RuntimeException("Error al guardar archivo: " + file.getOriginalFilename(), e);
+                  }
+              }
+          }
+
+          hecho.setMultimedia(nombresGuardados);
+      }
 
     hecho.setUsuario(usuarioEmail);
 
