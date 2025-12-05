@@ -42,11 +42,13 @@
                     th:action="@{/hechos/crear-hecho}"
                     th:object="${hecho}"
                     method="post"
-                    enctype="multipart/form-data"> <div class="form-group">
-                <label for="fact-title">Título (obligatorio)</label>
-                <input type="text" id="fact-title" th:field="*{titulo}" class="form-control" placeholder="Ej: Terremoto de 1985" required>
-                <p th:if="${#fields.hasErrors('titulo')}" th:errors="*{titulo}" class="text-danger">Error de título</p>
-            </div>
+                    enctype="multipart/form-data">
+
+                <div class="form-group">
+                    <label for="fact-title">Título (obligatorio)</label>
+                    <input type="text" id="fact-title" th:field="*{titulo}" class="form-control" placeholder="Ej: Terremoto de 1985" required>
+                    <p th:if="${#fields.hasErrors('titulo')}" th:errors="*{titulo}" class="text-danger">Error de título</p>
+                </div>
 
                 <div class="form-group">
                     <label for="fact-description">Descripción (obligatorio)</label>
@@ -68,18 +70,25 @@
                 <div class="form-group">
                     <label>Ubicación</label>
                     <div class="location-search-container">
-                        <input type="text" id="address-input" class="form-control" placeholder="Ej: Av. Rivadavia 1234, CABA">
+                        <input type="text" id="address-input" class="form-control" placeholder="Ej: Av. Rivadavia 1234, CABA" required>
                         <button type="button" class="btn btn--secondary" id="geocode-btn">Buscar</button>
                     </div>
                     <div id="map-preview" style="height: 200px; border-radius: 4px; margin-top: 10px; margin-bottom: 10px;">
                     </div>
+
                     <input type="hidden" id="lat-input" th:field="*{latitud}" name="latitud">
                     <input type="hidden" id="lng-input" th:field="*{longitud}" name="longitud">
+
+                    <p th:errors="*{latitud}" class="text-danger location-error" id="latitud-error-msg"
+                       th:style="${#fields.hasErrors('latitud') ? 'display: block;' : 'display: none;'}"
+                       th:text="${#fields.hasErrors('latitud') ? #fields.errors('latitud')[0] : '¡Debes seleccionar una ubicación!'}">
+                    </p>
+                    <p th:if="${#fields.hasErrors('longitud')}" th:errors="*{longitud}" class="text-danger" style="display: none;"></p>
                 </div>
 
                 <div class="form-group">
                     <label for="fact-date">Fecha</label>
-                    <input type="datetime-local" id="fact-date" th:field="*{fecha}" th:value="${#temporals.format(hecho.fecha, 'yyyy-MM-dd''T''HH:mm')}" class="form-control">
+                    <input type="datetime-local" id="fact-date" th:field="*{fecha}"  required th:value="${#temporals.format(hecho.fecha, 'yyyy-MM-dd''T''HH:mm')}" th:max="${#temporals.format(#temporals.createNow(), 'yyyy-MM-dd''T''HH:mm')}" class="form-control">
                 </div>
 
 
@@ -146,6 +155,24 @@
             alert('Por favor, ingresa una dirección.');
         }
     });
+</script>
+
+<script>
+    // 3. LÓGICA PARA QUE EL MENSAJE DE ÉXITO DESAPAREZCA (POP-UP)
+    const successAlert = document.querySelector('.alert--success');
+
+    if (successAlert) {
+        successAlert.style.transition = 'opacity 0.5s ease-in-out';
+
+        setTimeout(() => {
+            successAlert.style.opacity = '0';
+
+            setTimeout(() => {
+                successAlert.remove();
+            }, 500);
+
+        }, 5000);
+    }
 </script>
 </body>
 

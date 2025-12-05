@@ -120,85 +120,91 @@ public class HechosController {
       }
     }
 
-  @PostMapping("/crear-hecho")
-  public String crearHecho(@ModelAttribute("hecho") HechoOutputDTO hecho,
-                           @RequestParam("multimediaFiles") List<MultipartFile> multipartFiles,
-                           BindingResult bindingResult,
-                           Model model,
-                           RedirectAttributes redirectAttributes,
-                           // Quitamos Authentication del parámetro para evitar el conflicto
-                           // Lo obtenemos de forma estática dentro
-                           Principal principal) { // Usamos Principal para obtener el nombre de usuario de forma segura
+    @PostMapping("/crear-hecho")
+    public String crearHecho(@ModelAttribute("hecho") HechoOutputDTO hecho, //habia un @Valid que quite, tal vez tenga que volver a ponerlo y la dependencia
+                             BindingResult bindingResult,
+                             @RequestParam("multimediaFiles") List<MultipartFile> multipartFiles,
+                             Model model,
+                             RedirectAttributes redirectAttributes,
+                             Principal principal) { // Usamos Principal para obtener el nombre de usuario de forma segura
 
-    String token = null;
-    String usuarioEmail = "VISUALIZADOR/ANÓNIMO";
+        String token = null;
+        String usuarioEmail = "VISUALIZADOR/ANÓNIMO";
 
-    Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
 
-    // 1. LÓGICA DE EXTRACCIÓN DE USUARIO SEGURO
-    if (principal != null) {
-      // Si Principal existe, está logueado
-      usuarioEmail = principal.getName();
-
-      // Intentamos obtener el token real solo si está realmente autenticado
-      if (authentication != null && !(authentication instanceof AnonymousAuthenticationToken)) {
-        try {
-          AuthResponseDTO authData = (AuthResponseDTO) authentication.getDetails();
-          token = authData.getAccessToken();
-        } catch (Exception e) {
-          System.err.println("Advertencia: Fallo al castear token para usuario: " + principal.getName());
-          token = null;
+        // 1. LÓGICA DE EXTRACCIÓN DE USUARIO SEGURO (Mantenemos el código original)
+        if (principal != null) {
+            usuarioEmail = principal.getName();
+            if (authentication != null && !(authentication instanceof AnonymousAuthenticationToken)) {
+                try {
+                    AuthResponseDTO authData = (AuthResponseDTO) authentication.getDetails();
+                    token = authData.getAccessToken();
+                } catch (Exception e) {
+                    System.err.println("Advertencia: Fallo al castear token para usuario: " + principal.getName());
+                    token = null;
+                }
+            }
         }
-      }
+        // -------------------------------------------------------------------
+
+        // 2. VALIDACIÓN DEL LADO DEL SERVIDOR (SI FALLA, SE QUEDA en la vista POST)
+        if (bindingResult.hasErrors()) {
+            log.warn("Errores de validación encontrados.");
+            // Devuelve el formulario con los errores de Thymeleaf
+            return "subir-hecho";
+        }
+        // ----------------------------------------------------------------------
+
+        // 3. PROCESAMIENTO DE ARCHIVOS (Mantenemos el código original)
+        if (multipartFiles != null && !multipartFiles.isEmpty()) {
+            List<String> nombresGuardados = new ArrayList<>();
+            multipartFiles.forEach(f -> System.out.println(" - " + f.getOriginalFilename()));
+            for (MultipartFile file : multipartFiles) {
+                if (!file.isEmpty()) {
+                    try {
+                        String uniqueFileName = imagenesService.copy(file);
+                        nombresGuardados.add(uniqueFileName);
+                    } catch (IOException e) {
+                        // Si falla el guardado de archivos, manejamos como un error del servicio.
+                        redirectAttributes.addFlashAttribute("errorGlobal", "Error al guardar archivos multimedia: " + e.getMessage());
+                        return "redirect:/hechos/subir-hecho";
+                    }
+                }
+            }
+            hecho.setMultimedia(nombresGuardados);
+        }
+
+        hecho.setUsuario(usuarioEmail);
+
+        try {
+            CrearHechoDTO payload = new CrearHechoDTO();
+            payload.setHecho(hecho);
+            payload.setAccessToken(token);
+
+            // LLAMADA AL SERVICIO
+            hechosApiService.crearHecho(payload, token);
+
+            // 🚨 CAMINO DE ÉXITO (PRG) 🚨
+            // Usamos Flash Attributes para llevar el mensaje a la siguiente petición GET
+            redirectAttributes.addFlashAttribute("mensaje", "¡Hecho creado con éxito! Se ha enviado a moderación.");
+            redirectAttributes.addFlashAttribute("tipoMensaje", "success");
+
+            // Redirecciona al GET de la página del formulario
+            return "redirect:/hechos/subir-hecho";
+
+        } catch (Exception e) {
+            log.error("Error al crear hecho (Redireccionando con error)", e);
+
+            // 🚨 CAMINO DE ERROR DEL SERVICIO (PRG) 🚨
+            // Usamos Flash Attributes para llevar el mensaje de error del servicio
+            redirectAttributes.addFlashAttribute("errorGlobal", "Error al guardar el hecho: " + e.getMessage());
+            redirectAttributes.addFlashAttribute("tipoMensaje", "danger");
+
+            // Redirecciona al GET para mostrar el error sin el problema de recarga
+            return "redirect:/hechos/subir-hecho";
+        }
     }
-    // -------------------------------------------------------------------
-//      try{
-//          log.info("Tamaño lista" + multipartFiles.size());
-//      }
-//      catch (Exception e){
-//          throw new RuntimeException("Esta vacia la lista de imagens: ", e);
-//      }
-      if (multipartFiles != null && !multipartFiles.isEmpty()) {
-          List<String> nombresGuardados = new ArrayList<>();
-          System.out.println("Archivos recibidos: " + multipartFiles.size());
-          multipartFiles.forEach(f -> System.out.println(" - " + f.getOriginalFilename()));
-          for (MultipartFile file : multipartFiles) {
-              if (!file.isEmpty()) {
-                  try {
-                      String uniqueFileName = imagenesService.copy(file);
-                      nombresGuardados.add(uniqueFileName);
-                  } catch (IOException e) {
-                      throw new RuntimeException("Error al guardar archivo: " + file.getOriginalFilename(), e);
-                  }
-              }
-          }
-
-          hecho.setMultimedia(nombresGuardados);
-      }
-
-    hecho.setUsuario(usuarioEmail);
-
-    try {
-      CrearHechoDTO payload = new CrearHechoDTO();
-      payload.setHecho(hecho);
-      payload.setAccessToken(token); // Token es null si es anónimo
-
-      // LLAMADA AL SERVICIO: La llamada POST viajará SIN el header Authorization si token es null.
-      hechosApiService.crearHecho(payload, token);
-
-      redirectAttributes.addFlashAttribute("mensaje", "Hecho creado exitosamente y enviado a moderación.");
-      redirectAttributes.addFlashAttribute("tipoMensaje", "success");
-
-      // Si el usuario es anónimo, lo devolvemos al mapa. Si es contribuyente, a mis-hechos.
-      return "redirect:/hechos/mapa";
-    } catch (Exception e) {
-      // CORRECCIÓN DEL ERROR DE THYMELEAF: El archivo de vista no se encuentra.
-      log.error("Error al crear hecho (Retornando a formulario)", e);
-      model.addAttribute("errorGlobal", "Error al guardar el hecho: " + e.getMessage());
-      model.addAttribute("hecho", hecho);
-      return "subir-hecho";
-    }
-  }
 
   @GetMapping("/{id}/detalle")
   public String verDetalleHecho(@PathVariable Long id,
