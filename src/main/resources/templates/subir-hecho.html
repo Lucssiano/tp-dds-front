@@ -60,10 +60,13 @@
                 <div class="form-group">
                     <label for="fact-category">Categoría</label>
                     <select id="fact-category" th:field="*{categoria}" class="form-control">
-                        <option value="">Selecciona una categoría</option>
-                        <option value="natural">Hecho Natural</option>
-                        <option value="historico">Hecho Histórico</option>
-                        <option value="social">Hecho Social</option>
+                        <option th:value="null" th:text="'Selecciona una categoría'"></option>
+
+                        <option th:each="cat : ${categorias}"
+                                th:value="${cat.id}"
+                                th:text="${cat.nombre}">
+                        </option>
+
                     </select>
                 </div>
 

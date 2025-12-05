@@ -1,5 +1,6 @@
 package ar.utn.ba.dds.front_tp.services;
 
+import ar.utn.ba.dds.front_tp.dto.hechos.CategoriaDTO;
 import ar.utn.ba.dds.front_tp.dto.hechos.CrearHechoDTO;
 import ar.utn.ba.dds.front_tp.dto.hechos.EditarHechoDTO;
 import ar.utn.ba.dds.front_tp.dto.hechos.HechoDTO;
@@ -151,6 +152,23 @@ public class HechosApiService {
         .block();
   }
 
+  public List<CategoriaDTO> obtenerCategorias(){
+      try{
+        String url = hechosServiceUrl +"/hechos/categorias";
+        List<CategoriaDTO> categorias = webClient.get()
+                .uri(url)
+                .retrieve()
+                .bodyToFlux(CategoriaDTO.class)
+                .collectList()
+                .block();
+
+        return categorias;
+
+      }catch (Exception e){
+          log.error("No se pudieron obtener las categorias {}", e.getMessage());
+          return null;
+      }
+  }
   public HechoDTO obtenerUltimoHecho() {
 
     try {

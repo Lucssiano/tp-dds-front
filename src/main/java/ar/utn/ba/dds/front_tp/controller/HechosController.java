@@ -2,6 +2,7 @@ package ar.utn.ba.dds.front_tp.controller;
 
 import ar.utn.ba.dds.front_tp.Utils.JwtUtils;
 import ar.utn.ba.dds.front_tp.dto.colecciones.ColeccionDTO;
+import ar.utn.ba.dds.front_tp.dto.hechos.CategoriaDTO;
 import ar.utn.ba.dds.front_tp.dto.hechos.CrearHechoDTO;
 import ar.utn.ba.dds.front_tp.dto.hechos.HechoDTO;
 import ar.utn.ba.dds.front_tp.dto.hechos.UbicacionDTO;
@@ -93,6 +94,21 @@ public class HechosController {
   @GetMapping("/subir-hecho")
   public String subirHecho(Model model) {
     model.addAttribute("hecho", HechoOutputDTO.builder().build());
+      try {
+          // 1. Obtener las categorías del servicio
+          List<CategoriaDTO> categorias = hechosApiService.obtenerCategorias();
+
+          // 2. Agregar la lista de categorías al Model
+          // Este atributo se usa en el th:each de la vista
+          log.info("Cantidadcategorias"+ categorias.size());
+          model.addAttribute("categorias", categorias);
+
+      } catch (Exception e) {
+          log.error("Error al obtener categorías para subir-hecho", e);
+          // En caso de error, pasamos una lista vacía para evitar errores en la vista.
+          model.addAttribute("categorias", new ArrayList<CategoriaDTO>());
+          model.addAttribute("errorGlobal", "Error al cargar las categorías. Intente más tarde.");
+      }
     return "subir-hecho";
   }
 
@@ -176,6 +192,7 @@ public class HechosController {
         }
 
         hecho.setUsuario(usuarioEmail);
+
 
         try {
             CrearHechoDTO payload = new CrearHechoDTO();
