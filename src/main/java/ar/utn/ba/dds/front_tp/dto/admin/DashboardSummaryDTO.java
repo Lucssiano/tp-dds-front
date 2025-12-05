@@ -9,5 +9,6 @@ import java.io.Serializable;
 public class DashboardSummaryDTO implements Serializable {
   private long hechosPendientes;
   private long solicitudesEliminacion;
+  private long solicitudesModificacion;
   private long coleccionesActivas;
 }
