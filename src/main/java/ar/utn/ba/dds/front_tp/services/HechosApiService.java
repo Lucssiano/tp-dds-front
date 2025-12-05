@@ -130,7 +130,7 @@ public class HechosApiService {
     log.info("Enviando hecho. Título: {}", payload.getHecho().getTitulo());
     log.info("Lat: {}, Long: {}", payload.getHecho().getLatitud(), payload.getHecho().getLongitud());
     log.info("Token incluido en body: {}", payload.getAccessToken() != null ? "SI" : "NO");
-    log.info("Primer imagen: {} ", payload.getHecho().getMultimedia().get(0));
+    //log.info("Primer imagen: {} ", payload.getHecho().getMultimedia().get(0));
     return webApiCallerService.postWithAuth(
         fuenteDinamicaUrl,        // URL 8083
         payload.getHecho(),       // Body: HechoOutputDTO
