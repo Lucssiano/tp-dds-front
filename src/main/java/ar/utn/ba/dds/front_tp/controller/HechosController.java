@@ -16,13 +16,17 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.servlet.http.HttpSession;
 
 import java.io.IOException;
+import java.net.MalformedURLException;
 import java.security.Principal;
 import java.time.LocalDate;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.io.Resource;
 import org.springframework.format.annotation.DateTimeFormat;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -39,7 +43,10 @@ import org.springframework.security.core.Authentication;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
+import java.util.stream.Collectors;
+
 import org.springframework.security.authentication.AnonymousAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
 @Controller
@@ -145,12 +152,12 @@ public class HechosController {
       }
     }
     // -------------------------------------------------------------------
-      try{
-          log.info("Tamaño lista" + multipartFiles.size());
-      }
-      catch (Exception e){
-          throw new RuntimeException("Esta vacia la lista de imagens: ", e);
-      }
+//      try{
+//          log.info("Tamaño lista" + multipartFiles.size());
+//      }
+//      catch (Exception e){
+//          throw new RuntimeException("Esta vacia la lista de imagens: ", e);
+//      }
       if (multipartFiles != null && !multipartFiles.isEmpty()) {
           List<String> nombresGuardados = new ArrayList<>();
           System.out.println("Archivos recibidos: " + multipartFiles.size());
@@ -200,8 +207,11 @@ public class HechosController {
     try {
       var hecho = hechosApiService.obtenerHecho(id);
       model.addAttribute("hecho", hecho);
+        List<String> rutasMultimedia = hecho.getMultimedia();
+        // Nombrar la variable en el modelo como 'imagenes' para que coincida con la vista
+        model.addAttribute("imagenes", rutasMultimedia);
 
-      boolean esPropietario = false;
+        boolean esPropietario = false;
 
       if (authentication != null && authentication.getDetails() instanceof AuthResponseDTO token) {
         String email = JwtUtils.validarToken(token.getAccessToken());
@@ -213,6 +223,8 @@ public class HechosController {
       model.addAttribute("esPropietario", esPropietario);
 
       return "hecho-detalle";
+
+
     } catch (Exception e) {
       log.error(e.getMessage(), e);
       model.addAttribute("errorGlobal", "Ocurrió un error inesperado: " + e.getMessage());
@@ -325,8 +337,13 @@ public class HechosController {
 
       // Llamamos al backend para traer los hechos del usuario
       var hechosUsuario = hechosApiService.obtenerHechosUsuario(email);
-
-      model.addAttribute("hechos", hechosUsuario);
+        try {
+            log.info("Hechos que me traje edl usuario cantidad: " + hechosUsuario.size());
+        } catch (Exception e) {
+            log.info("Bardie por lista nula " + hechosUsuario.size());
+            throw new RuntimeException(e);
+        }
+        model.addAttribute("hechos", hechosUsuario);
       model.addAttribute("usuarioEmail", email);
 
       return "mis-hechos";  // => templates/mis-hechos.html
@@ -354,4 +371,16 @@ public class HechosController {
     }
     return "redirect:/hechos/mis-hechos";
   }
+    @GetMapping(value = "/uploads/{filename}")
+    public ResponseEntity<Resource> goImage(@PathVariable String filename) {
+        Resource resource = null;
+        try {
+            resource = imagenesService.load(filename);
+        } catch (MalformedURLException e) {
+            e.printStackTrace();
+        }
+        return ResponseEntity.ok()
+                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + resource.getFilename() + "\"")
+                .body(resource);
+    }
 }

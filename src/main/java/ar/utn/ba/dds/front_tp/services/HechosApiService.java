@@ -79,6 +79,7 @@ public class HechosApiService {
 
     try {
       // Para evitar el warning deberia hacer algo similar a lo q hago abajo con webclient pero hay q modificar la implementacion del webApiCallerService
+        log.info("Antes del llamado api");
       PageInputDTO<HechoDTO> pagedResponse = webApiCallerService.get(urlFinal, PageInputDTO.class);
 
       return pagedResponse.getContent();
@@ -177,8 +178,7 @@ public class HechosApiService {
 
   public List<HechoDTO> obtenerHechosUsuario(String usuario){
     UriComponentsBuilder builder = UriComponentsBuilder.fromUriString(hechosServiceUrl + "/hechos")
-        .queryParam("usuario", usuario)
-        .queryParam("actualizarProxy", false);
+        .queryParam("usuario", usuario);
     try {
       return webClient.get()
           .uri(builder.toUriString())
