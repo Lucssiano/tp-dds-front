@@ -4,15 +4,13 @@ import ar.utn.ba.dds.front_tp.Utils.JwtUtils;
 import ar.utn.ba.dds.front_tp.dto.colecciones.ColeccionDTO;
 import ar.utn.ba.dds.front_tp.dto.hechos.CategoriaDTO;
 import ar.utn.ba.dds.front_tp.dto.hechos.CrearHechoDTO;
-import ar.utn.ba.dds.front_tp.dto.hechos.HechoDTO;
-import ar.utn.ba.dds.front_tp.dto.hechos.UbicacionDTO;
+import ar.utn.ba.dds.front_tp.dto.input.ColeccionInputDTO;
+import ar.utn.ba.dds.front_tp.dto.input.HechoInputDTO;
 import ar.utn.ba.dds.front_tp.dto.hechos.input.SolicitudEliminacionInputDTO;
 import ar.utn.ba.dds.front_tp.dto.output.HechoOutputDTO;
 import ar.utn.ba.dds.front_tp.dto.output.SoliOutputDTO;
 import ar.utn.ba.dds.front_tp.dto.usuarios.AuthResponseDTO;
-import ar.utn.ba.dds.front_tp.exceptions.DuplicateTitleException;
 import ar.utn.ba.dds.front_tp.services.*;
-import com.fasterxml.jackson.annotation.JacksonAnnotationsInside;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.servlet.http.HttpSession;
 
@@ -28,7 +26,6 @@ import org.springframework.core.io.Resource;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
@@ -44,9 +41,6 @@ import org.springframework.security.core.Authentication;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Objects;
-import java.util.Optional;
-import java.util.stream.Collectors;
 
 import org.springframework.security.authentication.AnonymousAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -72,7 +66,7 @@ public class HechosController {
       @RequestParam(required = false, name = "fechaAcontecimientoHasta") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate fechaHasta,
       Model model) {
     try {
-      List<HechoDTO> hechos = hechosApiService.obtenerHechos(modo, fechaDesde, fechaHasta);
+      List<HechoInputDTO> hechos = hechosApiService.obtenerHechos(modo, fechaDesde, fechaHasta);
       log.info("Cantidad de hechos recibidos: {}", hechos.size());
 
       // Convertimos la lista a un String JSON
@@ -113,13 +107,13 @@ public class HechosController {
   }
 
   @GetMapping("/mapa/coleccion/{id}")
-  public String verHechosColeccion(@ModelAttribute("coleccion")ColeccionDTO coleccion,
+  public String verHechosColeccion(@ModelAttribute("coleccion") ColeccionInputDTO coleccion,
                                    @RequestParam(required = false, defaultValue = "CURADO") String modo,
                                    @RequestParam(required = false, name = "fechaAcontecimientoDesde") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate fechaDesde,
                                    @RequestParam(required = false, name = "fechaAcontecimientoHasta") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate fechaHasta,
                                    Model model) {
     try {
-      List<HechoDTO> hechos = hechosApiService.obtenerHechosColeccion(coleccion.getId());
+      List<HechoInputDTO> hechos = hechosApiService.obtenerHechosColeccion(coleccion.getId());
 
       String hechosJson = objectMapper.writeValueAsString(hechos);
 
@@ -263,7 +257,7 @@ public class HechosController {
       var hecho = hechosApiService.obtenerHecho(id);
 
       SolicitudEliminacionInputDTO solicitud = new SolicitudEliminacionInputDTO();
-      solicitud.setTituloHecho(hecho.getTitulo());
+      solicitud.setIdHecho(hecho.getId());
       if (authentication != null) {
         AuthResponseDTO token = (AuthResponseDTO) authentication.getDetails();
         var email = JwtUtils.validarToken(token.getAccessToken());
@@ -380,15 +374,15 @@ public class HechosController {
   @GetMapping("/{id}/editar")
   public String editarHecho(@PathVariable Long id, Model model, Authentication authentication) {
 
-    HechoDTO hecho = hechosApiService.obtenerHecho(id);
+    HechoInputDTO hecho = hechosApiService.obtenerHecho(id);
 
     model.addAttribute("hecho", hecho);
     return "editar-hecho";
   }
 
   @PostMapping("/{id}/editar")
-  public String subirHechoEditado(@PathVariable Long id, @ModelAttribute("hecho") HechoDTO hechoDTO, Authentication authentication) {
-    try{this.solicitudesModificacionApiService.crearSolicitudModificacion(id, hechoDTO);
+  public String subirHechoEditado(@PathVariable Long id, @ModelAttribute("hecho") HechoInputDTO hechoInputDTO, Authentication authentication) {
+    try{this.solicitudesModificacionApiService.crearSolicitudModificacion(id, hechoInputDTO);
     } catch (Exception e){
       log.error(e.getMessage());
     }

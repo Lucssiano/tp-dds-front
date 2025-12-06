@@ -1,9 +1,8 @@
 package ar.utn.ba.dds.front_tp.services;
 
-import ar.utn.ba.dds.front_tp.dto.colecciones.ColeccionDTO;
-import ar.utn.ba.dds.front_tp.dto.colecciones.ColeccionInputDTO;
+import ar.utn.ba.dds.front_tp.dto.input.ColeccionInputDTO;
 import ar.utn.ba.dds.front_tp.dto.input.ApiError;
-import ar.utn.ba.dds.front_tp.exceptions.api.ApiException;
+import ar.utn.ba.dds.front_tp.dto.output.ColeccionOutputDTO;
 import ar.utn.ba.dds.front_tp.exceptions.api.AutenticationException;
 import ar.utn.ba.dds.front_tp.exceptions.api.AuthorizationException;
 import ar.utn.ba.dds.front_tp.exceptions.api.GeneralApiException;
@@ -12,19 +11,12 @@ import ar.utn.ba.dds.front_tp.exceptions.api.ResourceNotFoundException;
 import ar.utn.ba.dds.front_tp.exceptions.api.ValidationException;
 import ar.utn.ba.dds.front_tp.mappers.ColeccionMapper;
 import ar.utn.ba.dds.front_tp.services.internal.WebApiCallerService;
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.ClientResponse;
 import org.springframework.web.reactive.function.client.WebClient;
-import org.springframework.web.reactive.function.client.WebClientResponseException;
-import org.springframework.web.server.ResponseStatusException;
 import reactor.core.publisher.Mono;
 import org.springframework.http.HttpStatusCode;
 
@@ -87,12 +79,12 @@ public class ColeccionesApiService {
         });
   }
 
-  public List<ColeccionDTO> obtenerColecciones() {
+  public List<ColeccionInputDTO> obtenerColecciones() {
     try {
       String url = coleccionesServiceUrl + "/colecciones";
       log.info("Obteniendo colecciones desde (público): {}", url);
 
-      List<ColeccionDTO> colecciones = webApiCallerService.getPublicList(url, ColeccionDTO.class);
+      List<ColeccionInputDTO> colecciones = webApiCallerService.getPublicList(url, ColeccionInputDTO.class);
 
       if (colecciones != null) {
         for (int i = 0; i < colecciones.size(); i++) {
@@ -128,15 +120,12 @@ public class ColeccionesApiService {
 //    }
 //  }
 
-  public Mono<ColeccionDTO> crearColeccion(ColeccionInputDTO coleccionInput, String token) {
-    log.info("Iniciando creación de colección: {}", coleccionInput.getTitulo());
-
-    // Convertimos el DTO de entrada al formato esperado por el backend (si es necesario)
-    ColeccionDTO coleccionDTO = coleccionMapper.toColeccionDTO(coleccionInput);
+  public Mono<ColeccionInputDTO> crearColeccion(ColeccionOutputDTO coleccionOutputDTO, String token) {
+    log.info("Iniciando creación de colección: {}", coleccionOutputDTO.getTitulo());
 
     return webClient.post()
         .header(HttpHeaders.AUTHORIZATION, "Bearer " + token)
-        .bodyValue(coleccionDTO)
+        .bodyValue(coleccionOutputDTO)
         .retrieve()
         // Manejo 4xx
         .onStatus(HttpStatusCode::is4xxClientError, response -> {
@@ -156,7 +145,7 @@ public class ColeccionesApiService {
                 return Mono.error(new InternalServerErrorException(status, err));
               });
         })
-        .bodyToMono(ColeccionDTO.class);
+        .bodyToMono(ColeccionInputDTO.class);
   }
 
 
@@ -176,10 +165,10 @@ public class ColeccionesApiService {
   }
 
 
-  public ColeccionDTO obtenerColeccionPorId(Long id) {
+  public ColeccionInputDTO obtenerColeccionPorId(Long id) {
     try {
       String url = coleccionesServiceUrl + "/colecciones?ids=" + id;
-      List<ColeccionDTO> lista = webApiCallerService.getPublicList(url, ColeccionDTO.class);
+      List<ColeccionInputDTO> lista = webApiCallerService.getPublicList(url, ColeccionInputDTO.class);
 
       if (lista != null && !lista.isEmpty()) {
         return lista.get(0);
@@ -201,10 +190,10 @@ public class ColeccionesApiService {
     }
   }
 
-  public List<ColeccionDTO> obtenerUltimasColecciones(int cantidad) {
+  public List<ColeccionInputDTO> obtenerUltimasColecciones(int cantidad) {
     try {
       // 1. Traemos todas (endpoint público)
-      List<ColeccionDTO> todas = obtenerColecciones();
+      List<ColeccionInputDTO> todas = obtenerColecciones();
 
       if (todas == null || todas.isEmpty()) {
         return List.of();

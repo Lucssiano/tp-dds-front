@@ -54,7 +54,7 @@ public class CustomAuthProvider implements AuthenticationProvider {
       // 3. Crea el token de autenticación de Spring
       UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(email, password, authorities);
 
-      // 4. ¡AQUÍ ESTÁ LA MAGIA! Adjuntamos nuestro DTO al token.
+      // 4. ¡AQUÍ ESTÁ LA MAGIA! Adjuntamos nuestro ColeccionOutputDTO al token.
       // Spring se encargará de guardar este objeto completo en la sesión.
       authToken.setDetails(authResponse);
 

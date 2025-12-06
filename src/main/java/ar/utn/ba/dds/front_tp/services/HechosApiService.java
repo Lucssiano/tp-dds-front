@@ -3,31 +3,24 @@ package ar.utn.ba.dds.front_tp.services;
 import ar.utn.ba.dds.front_tp.dto.hechos.CategoriaDTO;
 import ar.utn.ba.dds.front_tp.dto.hechos.CrearHechoDTO;
 import ar.utn.ba.dds.front_tp.dto.hechos.EditarHechoDTO;
-import ar.utn.ba.dds.front_tp.dto.hechos.HechoDTO;
+import ar.utn.ba.dds.front_tp.dto.input.HechoInputDTO;
 import ar.utn.ba.dds.front_tp.dto.input.PageInputDTO;
 import ar.utn.ba.dds.front_tp.dto.output.HechoOutputDTO;
-import ar.utn.ba.dds.front_tp.dto.usuarios.AuthResponseDTO;
 import ar.utn.ba.dds.front_tp.mappers.HechoMapper;
 import ar.utn.ba.dds.front_tp.services.internal.WebApiCallerService;
 import jakarta.servlet.http.HttpSession;
 
-import java.net.URI;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
-import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Value;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;
-import org.springframework.web.reactive.function.client.WebClientResponseException;
 
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import java.util.Map;
 import org.springframework.web.util.UriComponentsBuilder;
 
 @Service
@@ -54,9 +47,9 @@ public class HechosApiService {
    * @param modo Puede ser "CURADO", "IRRESTRICTO" o null.
    * @param fechaDesde La fecha de inicio del rango.
    * @param fechaHasta La fecha de fin del rango.
-   * @return Una lista de HechoDTO.
+   * @return Una lista de HechoInputDTO.
    */
-  public List<HechoDTO> obtenerHechos(String modo, LocalDate fechaDesde, LocalDate fechaHasta) {
+  public List<HechoInputDTO> obtenerHechos(String modo, LocalDate fechaDesde, LocalDate fechaHasta) {
     UriComponentsBuilder builder = UriComponentsBuilder.fromUriString(hechosServiceUrl + "/hechos/paginado")
         .queryParam("page", 0)
         .queryParam("size", 100);
@@ -81,7 +74,7 @@ public class HechosApiService {
     try {
       // Para evitar el warning deberia hacer algo similar a lo q hago abajo con webclient pero hay q modificar la implementacion del webApiCallerService
         log.info("Antes del llamado api");
-      PageInputDTO<HechoDTO> pagedResponse = webApiCallerService.get(urlFinal, PageInputDTO.class);
+      PageInputDTO<HechoInputDTO> pagedResponse = webApiCallerService.get(urlFinal, PageInputDTO.class);
 
       return pagedResponse.getContent();
 
@@ -91,8 +84,8 @@ public class HechosApiService {
         log.warn("No hay token: usando llamada pública sin autenticación");
 
         // Definición explícita del tipo genérico para WebClient (sino me lanza un warning porq no conoce el tipo de dato que va dentro de PageInputDTO)
-        ParameterizedTypeReference<PageInputDTO<HechoDTO>> typeRef = new ParameterizedTypeReference<PageInputDTO<HechoDTO>>() {};
-        PageInputDTO<HechoDTO> pagedResponse = webClient.get()
+        ParameterizedTypeReference<PageInputDTO<HechoInputDTO>> typeRef = new ParameterizedTypeReference<PageInputDTO<HechoInputDTO>>() {};
+        PageInputDTO<HechoInputDTO> pagedResponse = webClient.get()
             .uri(urlFinal)
             .retrieve()
             .bodyToMono(typeRef) // bodyToMono, no bodyToFlux
@@ -104,12 +97,12 @@ public class HechosApiService {
     }
   }
 
-  public List<HechoDTO> obtenerHechosColeccion(Long id){
+  public List<HechoInputDTO> obtenerHechosColeccion(Long id){
     try {
       return webClient.get()
           .uri(hechosServiceUrl + "/colecciones/" + id +"/hechos")
           .retrieve()
-          .bodyToFlux(HechoDTO.class)
+          .bodyToFlux(HechoInputDTO.class)
           .collectList()
           .block();
     } catch (Exception e) {
@@ -118,11 +111,11 @@ public class HechosApiService {
     }
   }
 
-  public HechoDTO obtenerHecho(Long id){
+  public HechoInputDTO obtenerHecho(Long id){
     return webClient.get()
         .uri(hechosServiceUrl + "/hechos/" + id)
         .retrieve()
-        .bodyToMono(HechoDTO.class)
+        .bodyToMono(HechoInputDTO.class)
         .block();
   }
 
@@ -140,9 +133,9 @@ public class HechosApiService {
     );
   }
 
-  public Void editarHecho(Long id, HechoDTO hechoDTO) {
+  public Void editarHecho(Long id, HechoInputDTO hechoInputDTO) {
 
-    EditarHechoDTO editarHechoDTO = hechoMapper.toEditarHechoDTO(hechoDTO);
+    EditarHechoDTO editarHechoDTO = hechoMapper.toEditarHechoDTO(hechoInputDTO);
 
     return webClient.post()
         .uri(hechosServiceUrl + "/hechos/" + id + "/editar")
@@ -169,15 +162,15 @@ public class HechosApiService {
           return null;
       }
   }
-  public HechoDTO obtenerUltimoHecho() {
+  public HechoInputDTO obtenerUltimoHecho() {
 
     try {
       String url = hechosServiceUrl + "/hechos/ultimo";
 
-      HechoDTO hecho = webClient.get()
+      HechoInputDTO hecho = webClient.get()
           .uri(url)
           .retrieve()
-          .bodyToMono(HechoDTO.class)
+          .bodyToMono(HechoInputDTO.class)
           .block();
 
 
@@ -194,14 +187,14 @@ public class HechosApiService {
     }
   }
 
-  public List<HechoDTO> obtenerHechosUsuario(String usuario){
+  public List<HechoInputDTO> obtenerHechosUsuario(String usuario){
     UriComponentsBuilder builder = UriComponentsBuilder.fromUriString(hechosServiceUrl + "/hechos")
         .queryParam("usuario", usuario);
     try {
       return webClient.get()
           .uri(builder.toUriString())
           .retrieve()
-          .bodyToFlux(HechoDTO.class)
+          .bodyToFlux(HechoInputDTO.class)
           .collectList()
           .block();
     }catch (Exception e){

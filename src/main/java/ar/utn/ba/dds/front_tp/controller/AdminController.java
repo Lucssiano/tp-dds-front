@@ -1,11 +1,13 @@
 package ar.utn.ba.dds.front_tp.controller;
 
+import ar.utn.ba.dds.front_tp.dto.admin.ActividadDTO;
 import ar.utn.ba.dds.front_tp.dto.admin.CategoriaDTO;
 import ar.utn.ba.dds.front_tp.dto.admin.ColeccionEstadisticaDTO;
-import ar.utn.ba.dds.front_tp.dto.colecciones.ColeccionDTO;
-import ar.utn.ba.dds.front_tp.dto.colecciones.ColeccionInputDTO;
-import ar.utn.ba.dds.front_tp.dto.hechos.HechoDTO;
+import ar.utn.ba.dds.front_tp.dto.input.ColeccionInputDTO;
+import ar.utn.ba.dds.front_tp.dto.input.FuenteInputDTO;
+import ar.utn.ba.dds.front_tp.dto.input.HechoInputDTO;
 import ar.utn.ba.dds.front_tp.dto.hechos.input.SolicitudModificacionInputDTO;
+import ar.utn.ba.dds.front_tp.dto.output.ColeccionOutputDTO;
 import ar.utn.ba.dds.front_tp.dto.usuarios.AuthResponseDTO;
 import ar.utn.ba.dds.front_tp.dto.admin.DashboardSummaryDTO;
 import ar.utn.ba.dds.front_tp.exceptions.api.AutenticationException;
@@ -18,9 +20,6 @@ import ar.utn.ba.dds.front_tp.services.*;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.MediaType;
-import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Controller;
@@ -34,10 +33,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
-import java.nio.charset.StandardCharsets;
-import java.time.LocalDateTime;
 import java.util.*;
-import java.util.stream.Collectors;
 
 @Controller
 @RequestMapping("/admin")
@@ -55,14 +51,14 @@ public class AdminController {
 
   @GetMapping("/colecciones")
   public String gestionarColecciones(Model model) {
-    List<ColeccionDTO> colecciones = coleccionesApiService.obtenerColecciones();
+    List<ColeccionInputDTO> colecciones = coleccionesApiService.obtenerColecciones();
     model.addAttribute("colecciones", colecciones);
     return "admin-colecciones";
   }
   @GetMapping("/colecciones/crear")
   public String mostrarFormularioCreacion(Model model) {
-    model.addAttribute("coleccion", new ColeccionInputDTO());
-    List<String> fuentesDisponibles = fuentesApiService.obtenerFuentes().getFuentes();
+    model.addAttribute("coleccion", new ColeccionOutputDTO());
+    List<FuenteInputDTO> fuentesDisponibles = fuentesApiService.obtenerFuentes();
     model.addAttribute("fuentesDisponibles", fuentesDisponibles);
     log.info("Fuentes disponibles: " + fuentesDisponibles);
     return "admin-crear-coleccion";
@@ -73,7 +69,7 @@ public class AdminController {
 //                               Authentication authentication, // Inyectamos Authentication
 //                               RedirectAttributes redirectAttributes) {
 //
-//    // Obtenemos el DTO de los "detalles" del objeto Authentication
+//    // Obtenemos el ColeccionOutputDTO de los "detalles" del objeto Authentication
 //    log.info("😎Llegamos as post de crear coleccion: "+ coleccionInput.getTitulo());
 //    AuthResponseDTO authData = (AuthResponseDTO) authentication.getDetails();
 //    if (authData == null || authData.getAccessToken() == null) {
@@ -91,12 +87,12 @@ public class AdminController {
 //  }
 
   @PostMapping("/colecciones/crear")
-  public String crearColeccion(@ModelAttribute("coleccion") ColeccionInputDTO coleccionInput,
+  public String crearColeccion(@ModelAttribute("coleccion") ColeccionOutputDTO coleccionOutputDTO,
                                Authentication authentication,
                                Model model,
                                RedirectAttributes redirectAttributes) {
 
-    log.info("😎 Llegamos al post de crear coleccion: "+ coleccionInput.getTitulo());
+    log.info("😎 Llegamos al post de crear coleccion: "+ coleccionOutputDTO.getTitulo());
 
     AuthResponseDTO authData = (AuthResponseDTO) authentication.getDetails();
     if (authData == null || authData.getAccessToken() == null) {
@@ -105,15 +101,15 @@ public class AdminController {
     }
 
     try {
-      coleccionesApiService.crearColeccion(coleccionInput, authData.getAccessToken()).block();
+      coleccionesApiService.crearColeccion(coleccionOutputDTO, authData.getAccessToken()).block();
       redirectAttributes.addFlashAttribute("mensaje", "¡Colección creada exitosamente!");
       return "redirect:/admin/colecciones";
     }
     // 1. Errores de Formulario (400/422)
     catch (ValidationException ex) {
       model.addAttribute("errors", ex.getApiError().fields());
-      model.addAttribute("coleccion", coleccionInput);
-      model.addAttribute("fuentesDisponibles", fuentesApiService.obtenerFuentes().getFuentes());
+      model.addAttribute("coleccion", coleccionOutputDTO);
+      model.addAttribute("fuentesDisponibles", fuentesApiService.obtenerFuentes());
       return "admin-crear-coleccion";
     }
     // 2. Errores de Autenticación (401)
@@ -181,7 +177,7 @@ public class AdminController {
                                          Model model,
                                          RedirectAttributes redirectAttributes) {
     try {
-      ColeccionDTO existente = coleccionesApiService.obtenerColeccionPorId(id);
+      ColeccionInputDTO existente = coleccionesApiService.obtenerColeccionPorId(id);
 
       ColeccionInputDTO form = new ColeccionInputDTO();
       form.setTitulo(existente.getTitulo());
@@ -211,7 +207,7 @@ public class AdminController {
       model.addAttribute("idColeccion", id);
 
       // Fuentes disponibles para checkboxes
-      List<String> fuentesDisponibles = fuentesApiService.obtenerFuentes().getFuentes();
+      List<FuenteInputDTO> fuentesDisponibles = fuentesApiService.obtenerFuentes();
       model.addAttribute("fuentesDisponibles", fuentesDisponibles);
 
       return "admin-editar-coleccion";
@@ -242,16 +238,40 @@ public class AdminController {
   }
 
   @GetMapping("/dashboard")
-  public String mostrarDashboard(Model model, Authentication authentication) { // Ya no necesitamos HttpSession
-    log.info("Entre a mostrar dashboard" + authentication.getCredentials());
-    // Obtenemos el DTO de los "detalles" del objeto Authentication
+  public String mostrarDashboard(Model model, Authentication authentication) {
     AuthResponseDTO authData = (AuthResponseDTO) authentication.getDetails();
+    String token = authData.getAccessToken();
 
-    // Llamo al servicio para obtener los datos del resumen
-    DashboardSummaryDTO summary = dashboardApiService.getSummary(authData.getAccessToken());
+    DashboardSummaryDTO summary;
+    List<ActividadDTO> actividad;
 
-    // Paso los datos al modelo
+    // 1. CARGA DEL SUMMARY (Protegida)
+    try {
+      summary = dashboardApiService.getSummary(token);
+    } catch (Exception e) {
+      // Si falla, inicializamos el ColeccionOutputDTO con ceros para EVITAR el SpelEvaluationException
+      log.error("Fallo al obtener resumen del dashboard: {}", e.getMessage());
+      // Asumiendo el constructor (hechosPendientes, solicitudesEliminacion, solicitudesModificacion, coleccionesActivas)
+      summary = DashboardSummaryDTO.builder()
+          .hechosPendientes(0L)
+          .solicitudesEliminacion(0L)
+          .solicitudesModificacion(0L)
+          .coleccionesActivas(0L)
+          .build();
+      model.addAttribute("error", "Fallo la carga de estadísticas. Intente de nuevo.");
+    }
+
     model.addAttribute("summary", summary);
+
+    // 2. CARGA DE ACTIVIDAD RECIENTE (Protegida)
+    try {
+      actividad = dashboardApiService.obtenerActividadReciente(token);
+      model.addAttribute("actividadReciente", actividad);
+    } catch (Exception e) {
+      log.error("Error al cargar Actividad Reciente: {}", e.getMessage());
+      // Si falla, pasamos una lista vacía para que Thymeleaf no explote en el th:each
+      model.addAttribute("actividadReciente", Collections.emptyList());
+    }
 
     return "admin-dashboard";
   }
@@ -313,10 +333,10 @@ public class AdminController {
 
   @PostMapping("/revisiones/hechos/{id}/editar")
   public String editarHecho(@PathVariable Long id,
-                            @ModelAttribute("hecho") HechoDTO hechoDTO,
+                            @ModelAttribute("hecho") HechoInputDTO hechoInputDTO,
                             RedirectAttributes redirectAttributes) {
     try {
-      hechosApiService.editarHecho(id, hechoDTO);
+      hechosApiService.editarHecho(id, hechoInputDTO);
       redirectAttributes.addFlashAttribute("mensaje", "Hecho editado con éxito.");
     } catch (Exception e) {
       redirectAttributes.addFlashAttribute("error", "Error al editar: " + e.getMessage());
@@ -405,7 +425,7 @@ public class AdminController {
   @GetMapping("/fuentes")
   public String mostrarFuentes(Model model, Authentication authentication) {
 
-    List<String> fuentesDisponibles = fuentesApiService.obtenerFuentes().getFuentes();
+    List<FuenteInputDTO> fuentesDisponibles = fuentesApiService.obtenerFuentes();
     model.addAttribute("fuentesDisponibles", fuentesDisponibles);
 
     return "admin-fuentes";

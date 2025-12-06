@@ -1,7 +1,6 @@
 package ar.utn.ba.dds.front_tp.services;
 
-import ar.utn.ba.dds.front_tp.dto.hechos.HechoDTO;
-import ar.utn.ba.dds.front_tp.dto.hechos.SolicitudEliminacionDTO;
+import ar.utn.ba.dds.front_tp.dto.input.HechoInputDTO;
 import ar.utn.ba.dds.front_tp.dto.hechos.input.SolicitudModificacionInputDTO;
 import ar.utn.ba.dds.front_tp.dto.output.HechoOutputDTO;
 import ar.utn.ba.dds.front_tp.dto.output.SolicitudModificacionOutputDTO;
@@ -22,16 +21,16 @@ public class SolicitudesModificacionApiService {
     this.webClient = WebClient.builder().baseUrl("http://localhost:8081/metamapa/solicitudes-modif").build();
   }
 
-  public SolicitudModificacionOutputDTO crearSolicitudModificacion(Long id, HechoDTO hechoDTO){
+  public SolicitudModificacionOutputDTO crearSolicitudModificacion(Long id, HechoInputDTO hechoInputDTO){
     HechoOutputDTO hechoOutputDTO = HechoOutputDTO.builder()
-        .titulo(hechoDTO.getTitulo())
-        .descripcion(hechoDTO.getDescripcion())
-        .categoria(hechoDTO.getCategoria())
-        .multimedia(hechoDTO.getMultimedia())
-        .fecha(hechoDTO.getFechaHecho())
-        .latitud(hechoDTO.getUbicacionOutputDTO().getLatitud())
-        .longitud(hechoDTO.getUbicacionOutputDTO().getLongitud())
-        .usuario(hechoDTO.getUsuario())
+        .titulo(hechoInputDTO.getTitulo())
+        .descripcion(hechoInputDTO.getDescripcion())
+        .categoria(hechoInputDTO.getCategoria())
+        .multimedia(hechoInputDTO.getMultimedia())
+        .fecha(hechoInputDTO.getFechaHecho())
+        .latitud(hechoInputDTO.getUbicacionOutputDTO().getLatitud())
+        .longitud(hechoInputDTO.getUbicacionOutputDTO().getLongitud())
+        .usuario(hechoInputDTO.getUsuario())
         .build();
 
     SolicitudModificacionOutputDTO solicitudModificacionOutputDTO = SolicitudModificacionOutputDTO.builder()

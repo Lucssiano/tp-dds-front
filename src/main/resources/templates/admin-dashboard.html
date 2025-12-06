@@ -20,8 +20,6 @@
             <a th:href="@{/admin/colecciones}" class="sidebar__link">Colecciones</a>
             <a th:href="@{/admin/revisiones}" class="sidebar__link">Revisiones</a>
             <a th:href="@{/admin/estadisticas}" class="sidebar__link">Estadísticas </a>
-
-
         </nav>
         <a th:href="@{/auth/logout}" class="btn btn--secondary sidebar__logout">Cerrar Sesión</a>
     </aside>
@@ -56,7 +54,7 @@
         <!-- Sección de Actividad Reciente -->
         <div class="recent-activity">
 
-            <!-- CAMBIO AQUÍ: Header flexible para título y botón -->
+            <!-- Header flexible para título y botón -->
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
                 <h2 class="section-title" style="margin-bottom: 0;">Actividad Reciente</h2>
 
@@ -65,65 +63,43 @@
                 </button>
             </div>
 
-            <!-- Tabla/Lista de actividad -->
-            <!-- Si ya implementaste la lista dinámica con th:each, úsala aquí. Si no, dejo la tabla estática como fallback -->
-            <div class="table-container" th:if="${actividadReciente == null}">
-                <!-- Tabla estática (Placeholder) -->
-                <table class="data-table">
-                    <thead>
-                    <tr>
-                        <th>Acción</th>
-                        <th>Usuario</th>
-                        <th>Hecho</th>
-                        <th>Fecha</th>
-                    </tr>
-                    </thead>
-                    <tbody>
-                    <tr>
-                        <td>Subió hecho</td>
-                        <td>Juan Pérez</td>
-                        <td>Terremoto de 1985</td>
-                        <td>11/08/2025</td>
-                    </tr>
-                    <tr>
-                        <td>Solicitó eliminación</td>
-                        <td>María López</td>
-                        <td>Ruinas de Teyuna</td>
-                        <td>10/08/2025</td>
-                    </tr>
-                    </tbody>
-                </table>
-            </div>
+            <!-- Lista dinámica de Actividad -->
+            <div class="activity-list" style="border: 1px solid #ddd; border-radius: 8px; overflow: hidden;">
 
-            <!-- Lista dinámica (Si ya integraste la lógica de backend) -->
-            <div th:if="${actividadReciente != null}" class="activity-list">
+                <div th:if="${actividadReciente == null || #lists.isEmpty(actividadReciente)}"
+                     style="padding: 20px; text-align: center; color: #666; background: #fff;">
+                    No hay actividad reciente registrada.
+                </div>
+
+                <!-- Bucle de renderizado por item -->
                 <div th:each="item : ${actividadReciente}" class="activity-item"
-                     style="padding: 15px; border-bottom: 1px solid #eee; display: flex; gap: 15px; align-items: center;">
+                     style="padding: 15px; border-bottom: 1px solid #ddd; display: flex; align-items: center; gap: 15px; background: #fff;">
 
-                    <div class="activity-icon">
-                        <span th:if="${item.accion == 'NUEVO HECHO'}">📄</span>
-                        <span th:if="${item.accion == 'SOLICITUD BAJA'}">⚠️</span>
+                    <div class="activity-icon" style="flex-shrink: 0;">
+                        <!-- Íconos basados en el campo 'tipo' -->
+                        <span th:if="${item.tipo == 'NUEVO_HECHO'}" style="font-size: 1.5em; color: #3b82f6;">📄</span>
+                        <span th:if="${item.tipo == 'SOLICITUD_BAJA'}" style="font-size: 1.5em; color: #ef4444;">⚠️</span>
+                        <span th:if="${item.tipo == 'SOLICITUD_MODIFICACION'}" style="font-size: 1.5em; color: #f97316;">✏️</span>
+                        <span th:if="${item.tipo == 'NUEVA_COLECCIÓN'}" style="font-size: 1.5em; color: #10b981;">📚</span>
                     </div>
 
-                    <div class="activity-details">
-                        <p class="activity-title" style="margin: 0; font-weight: 500;">
-                            <strong th:text="${item.accion}">Acción</strong>:
-                            <span th:text="${item.tituloHecho}">Título</span>
+                    <div class="activity-details" style="flex-grow: 1;">
+                        <p class="activity-title" style="margin: 0; font-weight: 600; line-height: 1.4;">
+                            <span th:text="${item.accion}">Acción</span>:
+                            <span th:text="${item.tituloHecho}" style="font-weight: 400; color: #333;">Título</span>
                         </p>
                         <p class="activity-meta" style="margin: 5px 0 0 0; font-size: 0.85rem; color: #666;">
-                            Fuente: <span th:text="${item.fuente}">Fuente</span> •
+                            <span th:text="${item.autor}" style="font-weight: 500;">Autor</span> &bull;
                             <span th:text="${#temporals.format(item.fecha, 'dd/MM/yyyy HH:mm')}">Fecha</span>
                         </p>
                     </div>
-                </div>
-                <div th:if="${#lists.isEmpty(actividadReciente)}" style="padding: 20px; text-align: center; color: #666;">
-                    No hay actividad reciente registrada.
                 </div>
             </div>
         </div>
 
         <!-- Modal de Importación (Oculto por defecto) -->
-        <div id="modal-importar" class="modal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); align-items:center; justify-content:center; z-index:1000;">
+        <div id="modal-importar" class="modal"
+             style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); align-items:center; justify-content:center; z-index:1000;">
             <div class="modal-content" style="background:white; padding:30px; border-radius:8px; width:400px; position:relative;">
 
                 <span onclick="document.getElementById('modal-importar').style.display='none'"

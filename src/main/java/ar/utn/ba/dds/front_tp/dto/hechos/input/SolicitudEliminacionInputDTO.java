@@ -4,7 +4,7 @@ import lombok.Data;
 
 @Data
 public class SolicitudEliminacionInputDTO {
-  private String tituloHecho;
+  private Long idHecho;
   private String justificacion;
   private String usuario;
 }

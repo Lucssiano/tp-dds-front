@@ -1,7 +1,7 @@
 package ar.utn.ba.dds.front_tp.controller;
 
-import ar.utn.ba.dds.front_tp.dto.colecciones.ColeccionDTO;
-import ar.utn.ba.dds.front_tp.dto.hechos.HechoDTO;
+import ar.utn.ba.dds.front_tp.dto.input.ColeccionInputDTO;
+import ar.utn.ba.dds.front_tp.dto.input.HechoInputDTO;
 import ar.utn.ba.dds.front_tp.services.ColeccionesApiService;
 import ar.utn.ba.dds.front_tp.services.HechosApiService;
 import lombok.RequiredArgsConstructor;
@@ -29,7 +29,7 @@ public class HomeController {
   public String mostrarHome(Model model) {
 
     // 1. Obtenemos las 2 últimas colecciones reales del Backend
-    List<ColeccionDTO> recientes = coleccionesApiService.obtenerUltimasColecciones(2);
+    List<ColeccionInputDTO> recientes = coleccionesApiService.obtenerUltimasColecciones(2);
 
     // 2. Mapeamos a la estructura que espera el HTML (agregando imagen fake)
     var coleccionesParaVista = recientes.stream().map(dto -> Map.of(
@@ -43,7 +43,7 @@ public class HomeController {
     // 3. Pasamos al modelo
     model.addAttribute("coleccionesDestacadas", coleccionesParaVista);
 
-    HechoDTO ultimoHecho = hechosApiService.obtenerUltimoHecho();
+    HechoInputDTO ultimoHecho = hechosApiService.obtenerUltimoHecho();
 
     if (ultimoHecho != null) {
       String imagenUrl = "https://picsum.photos/600/400?random=" + ultimoHecho.getId();

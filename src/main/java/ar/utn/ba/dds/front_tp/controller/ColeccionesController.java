@@ -1,10 +1,8 @@
 package ar.utn.ba.dds.front_tp.controller;
 
-import ar.utn.ba.dds.front_tp.dto.colecciones.ColeccionDTO;
+import ar.utn.ba.dds.front_tp.dto.input.ColeccionInputDTO;
 import ar.utn.ba.dds.front_tp.services.ColeccionesApiService;
-import ar.utn.ba.dds.front_tp.services.FuentesApiService;
 import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -22,7 +20,7 @@ public class ColeccionesController {
   @GetMapping
   public String mostrarColecciones(Model model) {
     // Llamo al servicio para obtener la lista de colecciones
-    List<ColeccionDTO> colecciones = coleccionesApiService.obtenerColecciones();
+    List<ColeccionInputDTO> colecciones = coleccionesApiService.obtenerColecciones();
 
     // Agrego la lista al modelo para que la vista pueda usarla
     model.addAttribute("colecciones", colecciones);

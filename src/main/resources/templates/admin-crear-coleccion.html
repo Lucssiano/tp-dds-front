@@ -54,15 +54,17 @@
         </div>
 
         <!-- Si hay fuentes -->
-        <div th:unless="${#lists.isEmpty(fuentesDisponibles)}">
-          <div class="checkbox-group" th:each="fuente : ${fuentesDisponibles}">
-            <label>
-              <input type="checkbox" th:field="*{fuentes}" th:value="${fuente}">
-              <span th:text="${fuente}">Nombre de fuente</span>
-            </label>
+          <div th:unless="${#lists.isEmpty(fuentesDisponibles)}">
+              <div class="checkbox-group" th:each="fuente : ${fuentesDisponibles}">
+                  <label>
+                      <input type="checkbox"
+                             th:field="*{fuentesIds}"
+                             th:value="${fuente.id}">
+                      <span th:text="${fuente.nombre}">Nombre de fuente</span>
+                  </label>
+              </div>
+              <small class="form-hint">Podés seleccionar varias fuentes.</small>
           </div>
-          <small class="form-hint">Podés seleccionar varias fuentes.</small>
-        </div>
       </div>
 
       <!-- Algoritmo de Consenso -->
@@ -199,7 +201,7 @@
             <label>Fecha mínima</label>
             <input type="date" name="criteriosDePertenencias[${index}].parametros[fechaInicio]" class="form-control" required>
             <label>Fecha máxima</label>
-            <input type="date" name="criteriosDePertenencias[${index}].parametros[fechaFinal]" class="form-control" required>
+            <input type="date" name="criteriosDePertenencias[${index}].parametros[fechaFin]" class="form-control" required>
         `;
     } else if (tipo === "CATEGORIA") {
       paramsContainer.innerHTML = `

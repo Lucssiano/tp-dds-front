@@ -1,21 +1,20 @@
 package ar.utn.ba.dds.front_tp.mappers;
 
 import ar.utn.ba.dds.front_tp.dto.hechos.EditarHechoDTO;
-import ar.utn.ba.dds.front_tp.dto.hechos.HechoDTO;
-import ar.utn.ba.dds.front_tp.dto.output.HechoOutputDTO;
+import ar.utn.ba.dds.front_tp.dto.input.HechoInputDTO;
 import org.springframework.stereotype.Component;
 
 @Component
 public class HechoMapper {
-  public EditarHechoDTO toEditarHechoDTO(HechoDTO hechoDTO){
+  public EditarHechoDTO toEditarHechoDTO(HechoInputDTO hechoInputDTO){
     return EditarHechoDTO.builder()
-        .titulo(hechoDTO.getTitulo())
-        .descripcion(hechoDTO.getDescripcion())
-        .categoria(hechoDTO.getCategoria())
-        .multimedia(hechoDTO.getMultimedia())
-        .latitud(hechoDTO.getUbicacionOutputDTO().getLatitud())
-        .longitud(hechoDTO.getUbicacionOutputDTO().getLongitud())
-        .fecha(hechoDTO.getFechaHecho())
+        .titulo(hechoInputDTO.getTitulo())
+        .descripcion(hechoInputDTO.getDescripcion())
+        .categoria(hechoInputDTO.getCategoria())
+        .multimedia(hechoInputDTO.getMultimedia())
+        .latitud(hechoInputDTO.getUbicacionOutputDTO().getLatitud())
+        .longitud(hechoInputDTO.getUbicacionOutputDTO().getLongitud())
+        .fecha(hechoInputDTO.getFechaHecho())
         .build();
   }
 }

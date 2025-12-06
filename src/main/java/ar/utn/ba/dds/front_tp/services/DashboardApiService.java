@@ -1,5 +1,6 @@
 package ar.utn.ba.dds.front_tp.services;
 
+import ar.utn.ba.dds.front_tp.dto.admin.ActividadDTO;
 import ar.utn.ba.dds.front_tp.dto.admin.DashboardSummaryDTO;
 import ar.utn.ba.dds.front_tp.services.internal.WebApiCallerService;
 import lombok.RequiredArgsConstructor;
@@ -13,6 +14,8 @@ import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.reactive.function.BodyInserters;
 import org.springframework.web.reactive.function.client.ExchangeStrategies;
 import org.springframework.web.reactive.function.client.WebClient;
+import java.util.Collections;
+import java.util.List;
 
 @Service
 public class DashboardApiService {
@@ -53,8 +56,30 @@ public class DashboardApiService {
 
     } catch (Exception e) {
       log.error("Error al obtener el resumen del dashboard: {}", e.getMessage());
-      // Si falla, devuelvo un DTO con ceros para que la página no se rompa.
-      return new DashboardSummaryDTO();
+      // Si falla, devuelvo un ColeccionOutputDTO con ceros para que la página no se rompa.
+      return DashboardSummaryDTO.builder()
+          .hechosPendientes(0L)
+          .solicitudesEliminacion(0L)
+          .solicitudesModificacion(0L)
+          .coleccionesActivas(0L)
+          .build();
+    }
+  }
+
+  public List<ActividadDTO> obtenerActividadReciente(String token) {
+    try {
+      // Endpoint expuesto por el AdminController del Agregador (8081)
+      String url = dashboardServiceUrl + "/admin/actividad-reciente";
+
+      log.info("Obteniendo actividad reciente desde: {}", url);
+
+      // Usamos getListWithAuth, esperando la lista de ActividadDTO
+      return webApiCallerService.getListWithAuth(url, token, ActividadDTO.class);
+
+    } catch (Exception e) {
+      log.error("Error al obtener actividad reciente: {}", e.getMessage());
+      // Devolvemos lista vacía para que el HTML no explote
+      return Collections.emptyList();
     }
   }
 

@@ -1,12 +1,10 @@
 package ar.utn.ba.dds.front_tp.services;
 
-import ar.utn.ba.dds.front_tp.dto.hechos.HechoDTO;
+import ar.utn.ba.dds.front_tp.dto.input.HechoInputDTO;
 import ar.utn.ba.dds.front_tp.dto.hechos.SolicitudEliminacionDTO;
 import ar.utn.ba.dds.front_tp.services.internal.WebApiCallerService;
-import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;
 
@@ -25,12 +23,12 @@ public class RevisionesApiService {
     this.webApiCallerService = webApiCallerService;
   }
 
-  public List<HechoDTO> obtenerHechosPendientes(String token) {
+  public List<HechoInputDTO> obtenerHechosPendientes(String token) {
     try {
       String url = baseUrl + "/hechos/pendientes";
 
       log.info("Obteniendo hechos pendientes desde: {}", url);
-      return webApiCallerService.getListWithAuth(url, token, HechoDTO.class);
+      return webApiCallerService.getListWithAuth(url, token, HechoInputDTO.class);
     } catch (Exception e) {
       log.error("Error al obtener hechos pendientes: {}", e.getMessage());
       return Collections.emptyList();
