@@ -38,45 +38,57 @@ public class ColeccionesApiService {
     this.coleccionMapper = coleccionMapper;
   }
 
+  // TODO: HAY 2 OPCIONES: generar un BaseApiClient donde se tengan estos 2 metodos y que todos lo hereden O copiar y pegar esto en todos los lugares que se utilice
   private Mono<Throwable> manejarError(ClientResponse response) {
     int status = response.statusCode().value();
     log.info("🌐 Iniciando manejo de error HTTP. Status recibido: {}", status);
 
     return response.bodyToMono(ApiError.class)
-        .flatMap(err -> {
-          String apiCode = err != null ? err.code() : "N/A";
-          // LOG 2: Registramos el contenido del ApiError (o si estaba vacío)
+        // CASO A: El backend devolvió un JSON con el error
+        .flatMap(apiError -> {
           log.info("API Error Body deserializado (Código/Mensaje): {} / {}",
-              apiCode,
-              err != null ? err.message() : "Cuerpo vacío");
+              apiError.code(), apiError.message());
+          return mapToExceptionWithLogs(status, apiError);
+        })
+        // CASO B: El backend falló sin body (o body vacío)
+        .switchIfEmpty(Mono.defer(() -> {
+          log.warn("API Error Body vacío. Generando error genérico.");
+          ApiError fallbackError = ApiError.of(
+              String.valueOf(status),
+              "Error sin detalle del servidor",
+              List.of("Status code: " + status)
+          );
+          return mapToExceptionWithLogs(status, fallbackError);
+        }));
+  }
 
-          // Mapeo basado en el status
-          if (status == 400 || status == 422) {
-            // Errores de validación con fields (Mapeo de 400/422)
-            log.error("Lanzando ValidationException (Status {}). Código API: {}", status, err != null ? err.code() : "N/A");
-            return Mono.error(new ValidationException(status, err));
-          } else if (status == 401) {
-            // Autenticación
-            log.error("Lanzando AutenticationException (Status 401).");
-            return Mono.error(new AutenticationException(status, err));
-          } else if (status == 403) {
-            // Autorización
-            log.error("Lanzando AuthorizationException (Status 403).");
-            return Mono.error(new AuthorizationException(status, err));
-          } else if (status == 404) {
-            // Recurso no encontrado
-            log.error("Lanzando ResourceNotFoundException (Status 404).");
-            return Mono.error(new ResourceNotFoundException(status, err));
-          } else if (status >= 500) {
-            // Errores 5xx (Aunque deben manejarse en el onStatus 5xx, es un buen fallback)
-            log.error("Lanzando InternalServerErrorException (Status {}).", status);
-            return Mono.error(new InternalServerErrorException(status, err));
-          } else {
-            // Fallback para cualquier otro 4xx no mapeado
-            log.error("Lanzando GeneralApiException (Status {}).", status);
-            return Mono.error(new GeneralApiException(status, err));
-          }
-        });
+  private Mono<Throwable> mapToExceptionWithLogs(int status, ApiError err) {
+    String apiCode = err.code() != null ? err.code() : "N/A";
+
+    if (status == 400 || status == 422) {
+      log.error("Lanzando ValidationException (Status {}). Código API: {}", status, apiCode);
+      return Mono.error(new ValidationException(status, err));
+    }
+    else if (status == 401) {
+      log.error("Lanzando AutenticationException (Status 401).");
+      return Mono.error(new AutenticationException(status, err));
+    }
+    else if (status == 403) {
+      log.error("Lanzando AuthorizationException (Status 403).");
+      return Mono.error(new AuthorizationException(status, err));
+    }
+    else if (status == 404) {
+      log.error("Lanzando ResourceNotFoundException (Status 404).");
+      return Mono.error(new ResourceNotFoundException(status, err));
+    }
+    else if (status >= 500) {
+      log.error("Lanzando InternalServerErrorException (Status {}).", status);
+      return Mono.error(new InternalServerErrorException(status, err));
+    }
+    else {
+      log.error("Lanzando GeneralApiException (Status {}).", status);
+      return Mono.error(new GeneralApiException(status, err));
+    }
   }
 
   public List<ColeccionInputDTO> obtenerColecciones() {
@@ -128,22 +140,9 @@ public class ColeccionesApiService {
         .bodyValue(coleccionOutputDTO)
         .retrieve()
         // Manejo 4xx
-        .onStatus(HttpStatusCode::is4xxClientError, response -> {
-          log.warn("Error 4xx recibido (CLIENTE). Status: {}", response.statusCode().value());
+        .onStatus(HttpStatusCode::isError, response -> {
+          log.warn("Error recibido. Status: {}", response.statusCode().value());
           return this.manejarError(response); // Llama al método centralizado (que mapea 4xx)
-        })
-        // Manejo 5xx
-        .onStatus(HttpStatusCode::is5xxServerError, response -> {
-          int status = response.statusCode().value();
-          log.error("Error 5xx recibido (SERVIDOR). Status: {}", status);
-
-          // Intenta deserializar el ApiError (aunque no es lo usual en 5xx)
-          return response.bodyToMono(ApiError.class)
-              .defaultIfEmpty(null)
-              .flatMap(err -> {
-                // Lanzamos la excepción específica para el servidor.
-                return Mono.error(new InternalServerErrorException(status, err));
-              });
         })
         .bodyToMono(ColeccionInputDTO.class);
   }

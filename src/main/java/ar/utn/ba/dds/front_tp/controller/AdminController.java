@@ -105,46 +105,12 @@ public class AdminController {
       redirectAttributes.addFlashAttribute("mensaje", "¡Colección creada exitosamente!");
       return "redirect:/admin/colecciones";
     }
-    // 1. Errores de Formulario (400/422)
+    // Errores de Formulario (400/422)
     catch (ValidationException ex) {
       model.addAttribute("errors", ex.getApiError().fields());
       model.addAttribute("coleccion", coleccionOutputDTO);
       model.addAttribute("fuentesDisponibles", fuentesApiService.obtenerFuentes());
       return "admin-crear-coleccion";
-    }
-    // 2. Errores de Autenticación (401)
-    catch (AutenticationException ex) {
-      redirectAttributes.addFlashAttribute("error", "Tu sesión ha expirado. Por favor, vuelve a ingresar.");
-      return "redirect:/auth/login";
-    }
-    // 3. Errores de Autorización (403)
-    catch (AuthorizationException ex) {
-      redirectAttributes.addFlashAttribute("error", "Acceso denegado: No tienes permisos.");
-      return "redirect:/error/403";
-    }
-    // 4. Errores de Recurso No Encontrado (404)
-    catch (ResourceNotFoundException ex) {
-      redirectAttributes.addFlashAttribute("error", "El recurso solicitado no fue encontrado.");
-      return "redirect:/error/404";
-    }
-    // 5. Errores de Servidor (5xx)
-    catch (InternalServerErrorException ex) {
-      // Es mejor evitar mostrar el mensaje técnico 5xx al usuario final
-      redirectAttributes.addFlashAttribute("error", "Error del sistema. Intente nuevamente.");
-      return "redirect:/admin/colecciones";
-    }
-    // 6. Errores Generales de API (Fallback 4xx no mapeado, ej. 409 Conflict)
-    catch (GeneralApiException ex) {
-      String message = ex.getApiError() != null ? ex.getApiError().message() : "Error inesperado de API.";
-      redirectAttributes.addFlashAttribute("error", "Error de la API: " + message);
-      return "redirect:/admin/colecciones";
-    }
-    // 7. Fallback de Java (Network, I/O, Error de Bloqueo .block(), etc.)
-    catch (Exception ex) {
-      // Este catch atrapa cualquier fallo de bajo nivel que no provenga del flujo Mono.error()
-      log.error("Fallo inesperado de bajo nivel: {}", ex.getMessage());
-      redirectAttributes.addFlashAttribute("error", "Fallo de comunicación: " + ex.getMessage());
-      return "redirect:/admin/colecciones";
     }
   }
 

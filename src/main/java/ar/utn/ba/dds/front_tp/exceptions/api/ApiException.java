@@ -1,7 +1,10 @@
 package ar.utn.ba.dds.front_tp.exceptions.api;
 
 import ar.utn.ba.dds.front_tp.dto.input.ApiError;
+import lombok.Data;
+import lombok.Getter;
 
+@Getter
 public abstract class ApiException extends RuntimeException {
   protected final int status;
   protected final ApiError apiError;
@@ -11,5 +14,4 @@ public abstract class ApiException extends RuntimeException {
     this.status = status;
     this.apiError = apiError;
   }
-  public ApiError getApiError() { return apiError; }
 }

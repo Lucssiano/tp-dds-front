@@ -10,6 +10,7 @@ import ar.utn.ba.dds.front_tp.mappers.HechoMapper;
 import ar.utn.ba.dds.front_tp.services.internal.WebApiCallerService;
 import jakarta.servlet.http.HttpSession;
 
+import java.net.URI;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import org.slf4j.Logger;
@@ -44,7 +45,7 @@ public class HechosApiService {
 
   /**
    * Obtiene hechos, opcionalmente filtrados por modo y/o rango de fechas.
-   * @param modo Puede ser "CURADO", "IRRESTRICTO" o null.
+   * @param modo Puede ser "CURADA", "IRRESTRICTA" o null.
    * @param fechaDesde La fecha de inicio del rango.
    * @param fechaHasta La fecha de fin del rango.
    * @return Una lista de HechoInputDTO.
@@ -55,7 +56,7 @@ public class HechosApiService {
         .queryParam("size", 100);
 
     if (modo != null && !modo.isEmpty()) {
-      builder.queryParam("modo", modo);
+      builder.queryParam("modoNavegacion", modo);
     }
 
     // --- AQUÍ ESTÁ EL CAMBIO ---
@@ -97,17 +98,38 @@ public class HechosApiService {
     }
   }
 
-  public List<HechoInputDTO> obtenerHechosColeccion(Long id){
+  public List<HechoInputDTO> obtenerHechosColeccion(Long id, String modo, LocalDate fechaDesde, LocalDate fechaHasta) {
     try {
+      // 1. Construimos la URI de forma explícita usando fromHttpUrl
+      // Esto parsea correctamente "http://tuservidor.com"
+      UriComponentsBuilder builder = UriComponentsBuilder.fromHttpUrl(hechosServiceUrl)
+          .path("/colecciones/{id}/hechos"); // Agregamos el resto de la ruta
+
+      // 2. Agregamos los parámetros condicionales
+      if (modo != null) {
+        builder.queryParam("modoNavegacion", modo);
+      }
+      if (fechaDesde != null) {
+        builder.queryParam("fechaAcontecimientoDesde", fechaDesde);
+      }
+      if (fechaHasta != null) {
+        builder.queryParam("fechaAcontecimientoHasta", fechaHasta);
+      }
+
+      // 3. Generamos el objeto URI final (aquí se reemplaza el {id})
+      URI uriFinal = builder.buildAndExpand(id).toUri();
+
+      // 4. Se lo pasamos al WebClient
       return webClient.get()
-          .uri(hechosServiceUrl + "/colecciones/" + id +"/hechos")
+          .uri(uriFinal)
           .retrieve()
           .bodyToFlux(HechoInputDTO.class)
           .collectList()
           .block();
+
     } catch (Exception e) {
-      log.warn("No se pudieron obtener los hechos de la coleccion: "+id+" por error"+e.getMessage());
-      return null;
+      log.warn("No se pudieron obtener los hechos de la coleccion: " + id + " por error " + e.getMessage());
+      return List.of();
     }
   }
 
