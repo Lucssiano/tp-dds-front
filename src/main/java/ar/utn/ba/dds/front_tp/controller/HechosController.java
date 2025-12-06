@@ -60,7 +60,7 @@ public class HechosController {
 
   @GetMapping("/mapa")
   public String mostrarMapa(
-      @RequestParam(required = false, defaultValue = "CURADO") String modo,
+      @RequestParam(required = false, defaultValue = "CURADA") String modo,
       @RequestParam(required = false, name = "fechaAcontecimientoDesde") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate fechaDesde,
       @RequestParam(required = false, name = "fechaAcontecimientoHasta") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate fechaHasta,
       Model model) {
@@ -107,17 +107,16 @@ public class HechosController {
 
   @GetMapping("/mapa/coleccion/{id}")
   public String verHechosColeccion(@ModelAttribute("coleccion") ColeccionInputDTO coleccion,
-                                   @RequestParam(required = false, defaultValue = "CURADO") String modo,
+                                   @RequestParam(required = false, defaultValue = "CURADA") String modoNavegacion,
                                    @RequestParam(required = false, name = "fechaAcontecimientoDesde") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate fechaDesde,
                                    @RequestParam(required = false, name = "fechaAcontecimientoHasta") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate fechaHasta,
                                    Model model) {
     try {
-      List<HechoInputDTO> hechos = hechosApiService.obtenerHechosColeccion(coleccion.getId());
-
+      List<HechoInputDTO> hechos = hechosApiService.obtenerHechosColeccion(coleccion.getId(), modoNavegacion, fechaDesde, fechaHasta);
       String hechosJson = objectMapper.writeValueAsString(hechos);
 
       model.addAttribute("hechosJson", hechosJson);
-      model.addAttribute("modoActual", modo);
+      model.addAttribute("modoActual", modoNavegacion);
       model.addAttribute("fechaDesde", fechaDesde != null ? fechaDesde.toString() : "");
       model.addAttribute("fechaHasta", fechaHasta != null ? fechaHasta.toString() : "");
 

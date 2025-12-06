@@ -51,8 +51,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
         // Modo
         if (toggleSwitch) {
-            const modo = toggleSwitch.checked ? 'IRRESTRICTO' : 'CURADO';
-            url.searchParams.set('modo', modo);
+            const modo = toggleSwitch.checked ? 'IRRESTRICTA' : 'CURADA';
+            url.searchParams.set('modoNavegacion', modo);
         }
 
         // Fechas (usando los nombres correctos para el backend)
@@ -77,7 +77,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // Solo agregamos eventos si los elementos existen en el HTML
     if (toggleSwitch) {
         const modoActual = mapElement.dataset.modo;
-        toggleSwitch.checked = (modoActual === 'IRRESTRICTO');
+        toggleSwitch.checked = (modoActual === 'IRRESTRICTA');
         toggleSwitch.addEventListener('change', aplicarFiltros);
     }
 
