@@ -1,7 +1,6 @@
 package ar.utn.ba.dds.front_tp.controller;
 
 import ar.utn.ba.dds.front_tp.Utils.JwtUtils;
-import ar.utn.ba.dds.front_tp.dto.colecciones.ColeccionDTO;
 import ar.utn.ba.dds.front_tp.dto.hechos.CategoriaDTO;
 import ar.utn.ba.dds.front_tp.dto.hechos.CrearHechoDTO;
 import ar.utn.ba.dds.front_tp.dto.input.ColeccionInputDTO;
