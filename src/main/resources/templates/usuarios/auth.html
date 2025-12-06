@@ -20,15 +20,6 @@
 <div class="auth-container" id="auth-page" th:classappend="${modoRegistro} ? 'is-register' : ''">
   <div class="auth-card">
 
-    <div class="auth-card__toggle">
-      <p>
-        <span th:text="${modoRegistro} ? '¿Ya tienes una cuenta?' : '¿No tienes una cuenta?'"></span>
-
-        <a th:if="${modoRegistro}" th:href="@{/auth/login}" class="toggle-btn">Inicia Sesión</a>
-        <a th:unless="${modoRegistro}" th:href="@{/auth/registrar}" class="toggle-btn">Regístrate</a>
-      </p>
-    </div>
-
     <form id="login-form" th:action="@{/auth/login}" method="post" th:if="${!modoRegistro}">
       <h2 class="auth-card__title">Iniciar Sesión</h2>
 
@@ -50,6 +41,15 @@
         <p th:if="${mensajeRegistro}" class="success-msg" th:text="${mensajeRegistro}"></p>
       </div>
     </form>
+
+    <div class="auth-card__toggle">
+      <p>
+        <span th:text="${modoRegistro} ? '¿Ya tienes una cuenta?' : '¿No tienes una cuenta?'"></span>
+
+        <a th:if="${modoRegistro}" th:href="@{/auth/login}" class="toggle-btn">Inicia Sesión</a>
+        <a th:unless="${modoRegistro}" th:href="@{/auth/registrar}" class="toggle-btn">Regístrate</a>
+      </p>
+    </div>
 
 
     <form id="register-form"

@@ -23,7 +23,7 @@
 }
 
 .auth-card__toggle {
-	margin-bottom: 20px;
+	margin-top: 20px;
 }
 
 .auth-card__toggle a {
@@ -51,5 +51,4 @@
 
 .auth-card .btn {
 	width: 100%;
-	margin-top: 10px;
 }

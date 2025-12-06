@@ -3,9 +3,16 @@ package ar.utn.ba.dds.front_tp.services;
 import ar.utn.ba.dds.front_tp.dto.hechos.CategoriaDTO;
 import ar.utn.ba.dds.front_tp.dto.hechos.CrearHechoDTO;
 import ar.utn.ba.dds.front_tp.dto.hechos.EditarHechoDTO;
+import ar.utn.ba.dds.front_tp.dto.input.ApiError;
 import ar.utn.ba.dds.front_tp.dto.input.HechoInputDTO;
 import ar.utn.ba.dds.front_tp.dto.input.PageInputDTO;
 import ar.utn.ba.dds.front_tp.dto.output.HechoOutputDTO;
+import ar.utn.ba.dds.front_tp.exceptions.api.AutenticationException;
+import ar.utn.ba.dds.front_tp.exceptions.api.AuthorizationException;
+import ar.utn.ba.dds.front_tp.exceptions.api.GeneralApiException;
+import ar.utn.ba.dds.front_tp.exceptions.api.InternalServerErrorException;
+import ar.utn.ba.dds.front_tp.exceptions.api.ResourceNotFoundException;
+import ar.utn.ba.dds.front_tp.exceptions.api.ValidationException;
 import ar.utn.ba.dds.front_tp.mappers.HechoMapper;
 import ar.utn.ba.dds.front_tp.services.internal.WebApiCallerService;
 import jakarta.servlet.http.HttpSession;
@@ -18,12 +25,15 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatusCode;
 import org.springframework.stereotype.Service;
+import org.springframework.web.reactive.function.client.ClientResponse;
 import org.springframework.web.reactive.function.client.WebClient;
 
 import java.util.Collections;
 import java.util.List;
 import org.springframework.web.util.UriComponentsBuilder;
+import reactor.core.publisher.Mono;
 
 @Service
 public class HechosApiService {
@@ -43,6 +53,58 @@ public class HechosApiService {
   }
   @Autowired
   private HttpSession session;
+
+  // TODO: HAY 2 OPCIONES: generar un BaseApiClient donde se tengan estos 2 metodos y que todos lo hereden O copiar y pegar esto en todos los lugares que se utilice
+  private Mono<Throwable> manejarError(ClientResponse response) {
+    int status = response.statusCode().value();
+    log.info("🌐 Iniciando manejo de error HTTP. Status recibido: {}", status);
+
+    return response.bodyToMono(ApiError.class)
+        // CASO A: El backend devolvió un JSON con el error
+        .flatMap(apiError -> {
+          log.info("API Error Body deserializado (Código/Mensaje): {} / {}",
+              apiError.code(), apiError.message());
+          return mapToExceptionWithLogs(status, apiError);
+        })
+        // CASO B: El backend falló sin body (o body vacío)
+        .switchIfEmpty(Mono.defer(() -> {
+          log.warn("API Error Body vacío. Generando error genérico.");
+          ApiError fallbackError = ApiError.of(
+              String.valueOf(status),
+              "Error sin detalle del servidor"
+          );
+          return mapToExceptionWithLogs(status, fallbackError);
+        }));
+  }
+
+  private Mono<Throwable> mapToExceptionWithLogs(int status, ApiError err) {
+    String apiCode = err.code() != null ? err.code() : "N/A";
+
+    if (status == 400 || status == 422) {
+      log.error("Lanzando ValidationException (Status {}). Código API: {}", status, apiCode);
+      return Mono.error(new ValidationException(status, err));
+    }
+    else if (status == 401) {
+      log.error("Lanzando AutenticationException (Status 401).");
+      return Mono.error(new AutenticationException(status, err));
+    }
+    else if (status == 403) {
+      log.error("Lanzando AuthorizationException (Status 403).");
+      return Mono.error(new AuthorizationException(status, err));
+    }
+    else if (status == 404) {
+      log.error("Lanzando ResourceNotFoundException (Status 404).");
+      return Mono.error(new ResourceNotFoundException(status, err));
+    }
+    else if (status >= 500) {
+      log.error("Lanzando InternalServerErrorException (Status {}).", status);
+      return Mono.error(new InternalServerErrorException(status, err));
+    }
+    else {
+      log.error("Lanzando GeneralApiException (Status {}).", status);
+      return Mono.error(new GeneralApiException(status, err));
+    }
+  }
 
   /**
    * Obtiene hechos, opcionalmente filtrados por modo y/o rango de fechas.
@@ -164,6 +226,10 @@ public class HechosApiService {
         .uri(hechosServiceUrl + "/hechos/" + id)
         .bodyValue(editarHechoDTO)
         .retrieve()
+        .onStatus(HttpStatusCode::isError, response -> {
+          log.warn("Error recibido. Status: {}", response.statusCode().value());
+          return this.manejarError(response); // Llama al método centralizado (que mapea 4xx)
+        })
         .bodyToMono(Void.class)
         .block();
   }

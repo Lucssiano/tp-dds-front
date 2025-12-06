@@ -55,8 +55,7 @@ public class ColeccionesApiService {
           log.warn("API Error Body vacío. Generando error genérico.");
           ApiError fallbackError = ApiError.of(
               String.valueOf(status),
-              "Error sin detalle del servidor",
-              List.of("Status code: " + status)
+              "Error sin detalle del servidor"
           );
           return mapToExceptionWithLogs(status, fallbackError);
         }));
@@ -139,7 +138,6 @@ public class ColeccionesApiService {
         .header(HttpHeaders.AUTHORIZATION, "Bearer " + token)
         .bodyValue(coleccionOutputDTO)
         .retrieve()
-        // Manejo 4xx
         .onStatus(HttpStatusCode::isError, response -> {
           log.warn("Error recibido. Status: {}", response.statusCode().value());
           return this.manejarError(response); // Llama al método centralizado (que mapea 4xx)

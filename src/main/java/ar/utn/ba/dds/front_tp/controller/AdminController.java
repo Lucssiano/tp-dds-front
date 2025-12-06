@@ -10,13 +10,9 @@ import ar.utn.ba.dds.front_tp.dto.hechos.input.SolicitudModificacionInputDTO;
 import ar.utn.ba.dds.front_tp.dto.output.ColeccionOutputDTO;
 import ar.utn.ba.dds.front_tp.dto.usuarios.AuthResponseDTO;
 import ar.utn.ba.dds.front_tp.dto.admin.DashboardSummaryDTO;
-import ar.utn.ba.dds.front_tp.exceptions.api.AutenticationException;
-import ar.utn.ba.dds.front_tp.exceptions.api.AuthorizationException;
-import ar.utn.ba.dds.front_tp.exceptions.api.GeneralApiException;
-import ar.utn.ba.dds.front_tp.exceptions.api.InternalServerErrorException;
-import ar.utn.ba.dds.front_tp.exceptions.api.ResourceNotFoundException;
 import ar.utn.ba.dds.front_tp.exceptions.api.ValidationException;
 import ar.utn.ba.dds.front_tp.services.*;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -299,16 +295,34 @@ public class AdminController {
 
   @PostMapping("/revisiones/hechos/{id}/editar")
   public String editarHecho(@PathVariable Long id,
-                            @ModelAttribute("hecho") HechoInputDTO hechoInputDTO,
+                            @ModelAttribute("hecho") @Valid HechoInputDTO hechoInputDTO, // Spring ya lo mete al modelo automáticamente
+                            Model model, // Usamos Model, no RedirectAttributes para errores
                             RedirectAttributes redirectAttributes) {
     try {
       hechosApiService.editarHecho(id, hechoInputDTO);
+
+      // ÉXITO -> REDIRECT
       redirectAttributes.addFlashAttribute("mensaje", "Hecho editado con éxito.");
-    } catch (Exception e) {
-      redirectAttributes.addFlashAttribute("error", "Error al editar: " + e.getMessage());
+      return "redirect:/admin/revisiones/hechos/" + id + "/detalle";
+
+    } catch (ValidationException ex) {
+      // ERROR -> RENDERIZAR VISTA (No redirect)
+
+      // 1. Agregamos el hecho y el modo de edición
+      model.addAttribute("hecho", hechoInputDTO);
+      model.addAttribute("modoEdicion", true);
+
+      // 2. Pasamos los errores
+      model.addAttribute("errors", ex.getApiError().fields());
+
+      // 3. (Opcional) Si tienes desplegables, cárgalos de nuevo aquí
+      // model.addAttribute("categorias", servicio.obtenerCategorias());
+
+      // 4. Devolvemos el nombre del HTML del formulario de edición
+      return "admin-detalle-hecho";
     }
-    return "redirect:/admin/revisiones";
   }
+
 
   // Acciones sobre Hechos (Aprobar/Rechazar)
   @PostMapping("/revisiones/hechos/{id}/{accion}")
