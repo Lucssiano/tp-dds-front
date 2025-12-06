@@ -17,16 +17,16 @@
 
 <body>
 
-<header class="header header--map">
-    <div class="container">
-        <a th:href="@{/}" class="logo">MetaMapa</a>
-        <nav class="nav">
-            <a th:href="@{/colecciones}" class="nav__link">Colecciones</a>
-            <a th:href="@{/hechos/subir-hecho}" class="btn btn--primary">Subir Hecho</a>
-        </nav>
-    </div>
-</header>
-
+<!--<header class="header header&#45;&#45;map">-->
+<!--    <div class="container">-->
+<!--        <a th:href="@{/}" class="logo">MetaMapa</a>-->
+<!--        <nav class="nav">-->
+<!--            <a th:href="@{/colecciones}" class="nav__link">Colecciones</a>-->
+<!--            <a th:href="@{/hechos/subir-hecho}" class="btn btn&#45;&#45;primary">Subir Hecho</a>-->
+<!--        </nav>-->
+<!--    </div>-->
+<!--</header>-->
+<div th:replace="fragments/header :: header"></div>
 <div class="map-layout">
     <aside class="sidebar">
         <div class="filter-panel">
@@ -74,7 +74,7 @@
 
 <div th:replace="~{fragments/modals :: fact-modal}"></div>
 <div th:replace="~{fragments/modals :: report-modal}"></div>
-
+<!--<div th:replace="fragments/footer :: footer"></div>-->
 <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
 <script src="https://npmcdn.com/flatpickr/dist/l10n/es.js"></script>

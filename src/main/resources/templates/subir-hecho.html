@@ -13,14 +13,7 @@
 </head>
 
 <body>
-<header class="header">
-    <div class="container">
-        <a th:href="@{/static}" class="logo">MetaMapa</a>
-        <nav class="nav">
-            <a th:href="@{/auth/logout}" class="btn btn--secondary">Cerrar Sesión</a>
-        </nav>
-    </div>
-</header>
+<div th:replace="fragments/header :: header"></div>
 
 <main class="main-content">
     <div class="container">
@@ -105,7 +98,7 @@
         </div>
     </div>
 </main>
-
+<div th:replace="fragments/footer :: footer"></div>
 <script>
     /* La lógica JavaScript de Leaflet (mapa) permanece intacta */
     const map = L.map('map-preview').setView([-34.6037, -58.3816], 13);

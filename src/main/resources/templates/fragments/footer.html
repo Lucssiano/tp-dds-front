@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+
+<body>
+<footer class="footer">
+    <div class="container">
+        <div class="footer__about">
+            <p>
+                MetaMapa es un sistema de código abierto de una ONG, diseñado para la recopilación y mapeo colaborativo
+                de información, protegiendo la identidad de sus usuarios.
+            </p>
+        </div>
+        <br>
+        <div class="footer__links">
+            <a th:href="@{/privacidad}">Política de Privacidad</a>
+            <a th:href="@{/terminos}">Términos de Uso</a>
+            <a th:href="@{/contacto}">Contacto</a>
+        </div>
+    </div>
+</footer>
+</body>
+</html>

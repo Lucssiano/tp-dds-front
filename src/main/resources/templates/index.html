@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="es">
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
 
   <head>
     <meta charset="UTF-8">
@@ -86,20 +86,7 @@
       </section>
     </main>
 
-    <footer class="footer">
-      <div class="container">
-        <div class="footer__about">
-          <p>MetaMapa es un sistema de código abierto de una ONG, diseñado para la recopilación y mapeo colaborativo de
-            información, protegiendo la identidad de sus usuarios.</p>
-        </div>
-        <br>
-        <div class="footer__links">
-          <a href="#">Política de Privacidad</a>
-          <a href="#">Términos de Uso</a>
-          <a href="#">Contacto</a>
-        </div>
-      </div>
-    </footer>
+    <div th:replace="fragments/footer :: footer"></div>
   </body>
 
 </html>

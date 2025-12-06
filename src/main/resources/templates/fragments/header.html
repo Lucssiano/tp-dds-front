@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<body>
+
+<header th:fragment="header" class="header">
+    <div class="container">
+        <a th:href="@{/}" class="logo">MetaMapa</a>
+        <nav class="nav">
+            <a th:href="@{/admin/dashboard}" class="nav__link" sec:authorize="hasRole('ADMIN')">
+                Admin Dashboard
+            </a>
+            <a th:href="@{/hechos/mapa}" class="nav__link">Visualizar</a>
+
+
+            <a th:href="@{/colecciones}" class="nav__link">Colecciones</a>
+            <a th:href="@{/hechos/subir-hecho}" class="nav__link">Subir Hecho</a>
+<!--          Esta era la clase ed de arriba antes  class="btn btn&#45;&#45;primary"-->
+            <a th:href="@{/auth}" class="btn btn--secondary" sec:authorize="isAnonymous()">Iniciar Sesión</a>
+<!--            <a th:href="@{/auth?modoRegistro=true}" class="btn btn&#45;&#45;primary" sec:authorize="isAnonymous()">Registrarse</a>-->
+
+            <a th:href="@{/hechos/mis-hechos}" class="nav__link"  sec:authorize="isAuthenticated()">Mis Hechos</a>
+            <form th:action="@{/auth/logout}" method="post"
+                  sec:authorize="isAuthenticated()"
+                  class="nav__logout-form">
+                <button type="submit" class="btn btn--secondary">Cerrar Sesión</button>
+            </form>
+        </nav>
+    </div>
+</header>
+
+</body>
+</html>
+
