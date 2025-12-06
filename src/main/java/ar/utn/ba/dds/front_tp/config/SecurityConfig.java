@@ -28,7 +28,8 @@ public class SecurityConfig {
             // ✅ Rutas públicas (no requieren login)
             .requestMatchers(
                 "/", "/home", "/auth/**", "/hechos/**", "/colecciones/**",
-                "/css/**", "/js/**", "/images/**", "/privacidad", "/terminos", "/contacto",
+                "/css/**", "/js/**", "/images/**","/favicon.svg", "/favicon.ico",
+                "/privacidad", "/terminos", "/contacto",
                 "/hechos/subir-hecho", "/hechos/crear-hecho"
             ).permitAll()
             // 🔒 Rutas de Administrador (requieren rol ADMIN)

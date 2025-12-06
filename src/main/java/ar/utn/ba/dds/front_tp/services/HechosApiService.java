@@ -77,7 +77,7 @@ public class HechosApiService {
         log.info("Antes del llamado api");
       PageInputDTO<HechoInputDTO> pagedResponse = webApiCallerService.get(urlFinal, PageInputDTO.class);
 
-      return pagedResponse.getContent();
+      return pagedResponse.content();
 
     } catch (RuntimeException e) {
       // Lógica de error y llamada pública
@@ -92,7 +92,7 @@ public class HechosApiService {
             .bodyToMono(typeRef) // bodyToMono, no bodyToFlux
             .block();
 
-        return pagedResponse != null ? pagedResponse.getContent() : Collections.emptyList();
+        return pagedResponse != null ? pagedResponse.content() : Collections.emptyList();
       }
       throw e;
     }

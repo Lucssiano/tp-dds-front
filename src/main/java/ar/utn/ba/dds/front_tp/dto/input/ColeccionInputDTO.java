@@ -1,6 +1,6 @@
 package ar.utn.ba.dds.front_tp.dto.input;
 
-import ar.utn.ba.dds.front_tp.dto.colecciones.TipoAlgoritmoConsenso;
+import ar.utn.ba.dds.front_tp.dto.TipoAlgoritmoConsenso;
 import lombok.Data;
 import java.util.ArrayList;
 import java.util.List;
