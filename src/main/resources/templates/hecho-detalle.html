@@ -11,12 +11,119 @@
   <link rel="stylesheet" th:href="@{/css/landing.css}">
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" />
+
+  <style>
+    /* Estilos copiados del Admin para mantener la consistencia visual */
+    body {
+      background-color: #f4f6f8; /* Fondo gris suave */
+    }
+
+    .detail-container {
+      max-width: 900px;
+      margin: 40px auto;
+      padding: 0 20px;
+    }
+
+    .stat-card {
+      background: white;
+      border-radius: 8px;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+      padding: 40px;
+    }
+
+    .section-title {
+      font-size: 2rem;
+      font-weight: 700;
+      color: #1a202c;
+      margin-bottom: 0.5rem;
+      margin-top: 0;
+    }
+
+    .content-block {
+      margin-bottom: 24px;
+      padding-bottom: 24px;
+      border-bottom: 1px solid #e2e8f0;
+    }
+
+    .content-block:last-child {
+      border-bottom: none;
+    }
+
+    .content-title {
+      font-size: 0.875rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: #64748b;
+      font-weight: 600;
+      margin-bottom: 8px;
+    }
+
+    .data-table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+
+    .data-table th, .data-table td {
+      text-align: left;
+      padding: 12px 0;
+      border-bottom: 1px solid #edf2f7;
+    }
+
+    .data-table th {
+      width: 30%;
+      color: #64748b;
+      font-weight: 500;
+    }
+
+    /* Badges de Estado */
+    .estado-badge {
+      display: inline-block;
+      padding: 4px 12px;
+      border-radius: 9999px;
+      font-size: 0.75rem;
+      font-weight: 700;
+      color: white;
+      text-transform: uppercase;
+      margin-bottom: 15px;
+    }
+    .estado-ACEPTADO { background-color: #28a745; }
+    .estado-RECHAZADO { background-color: #dc3545; }
+    .estado-PENDIENTE { background-color: #ffc107; color: #333; }
+
+    /* Galería de Imágenes (Scroll Horizontal Moderno) */
+    .gallery-container {
+      display: flex;
+      overflow-x: auto;
+      gap: 15px;
+      padding-bottom: 15px;
+      scroll-snap-type: x mandatory;
+    }
+
+    .gallery-item {
+      flex: 0 0 auto;
+      width: 300px;
+      height: 200px;
+      border-radius: 8px;
+      overflow: hidden;
+      scroll-snap-align: start;
+      border: 1px solid #eee;
+    }
+
+    .gallery-item img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+  </style>
 </head>
 
 <body>
+
 <header class="header">
   <div class="container">
-    <a th:href="@{/}" class="logo">MetaMapa</a>
+    <a th:href="@{/}" class="logo">
+      MetaMapa
+    </a>
     <nav class="nav">
       <a th:href="@{/hechos/mapa}" class="nav__link">Visualizar</a>
 
@@ -27,116 +134,122 @@
       <a th:href="@{/auth}" class="btn btn--secondary" sec:authorize="isAnonymous()">Iniciar Sesión</a>
       <a th:href="@{/auth?modoRegistro=true}" class="btn btn--primary" sec:authorize="isAnonymous()">Registrarse</a>
 
-      <form th:action="@{/auth/logout}" method="post"
-            sec:authorize="isAuthenticated()"
-            class="nav__logout-form">
+      <form th:action="@{/auth/logout}" method="post" sec:authorize="isAuthenticated()" class="nav__logout-form">
         <button type="submit" class="btn btn--secondary">Cerrar Sesión</button>
       </form>
     </nav>
   </div>
 </header>
 
-<main>
-  <section class="featured-fact">
-    <div class="container">
-      <h1 class="featured__title">Detalle del Hecho</h1>
+<main class="detail-container">
 
-      <div class="fact-card">
-        <div class="fact-card__content">
-          <h2 class="fact-card__title" th:text="${hecho.titulo}">Título del hecho</h2>
+  <div class="stat-card">
 
-          <div class="content-block">
-            <h3 class="content-title">Descripción</h3>
-            <p th:text="${hecho.descripcion}">
-              Descripción del hecho.
-            </p>
-          </div>
+    <div style="margin-bottom: 20px;">
+      <span class="estado-badge"
+            th:if="${hecho.estado != null && esPropietario}"
+            th:classappend="'estado-' + ${hecho.estado}"
+            th:text="${hecho.estado}">
+          ESTADO
+      </span>
 
-          <div class="content-block">
-            <h3 class="content-title">Categoría</h3>
-            <p th:text="${hecho.categoria}">Categoría</p>
-          </div>
+      <h1 class="section-title" th:text="${hecho.titulo}">Título del hecho</h1>
+    </div>
 
-          <div class="content-block">
-            <h3 class="content-title">Fuente</h3>
-            <p th:text="${hecho.fuente}">Fuente del hecho</p>
-          </div>
-
-          <div class="content-block">
-            <h3 class="content-title">Fecha del Hecho</h3>
-            <p th:text="${#temporals.format(hecho.fechaHecho, 'dd/MM/yyyy HH:mm')}">
-              01/01/2024 12:00
-            </p>
-          </div>
-
-          <div class="content-block">
-            <h3 class="content-title">Ubicación</h3>
-            <table class="data-table" style="max-width: 700px;">
-              <tbody>
-              <tr>
-                <th>Provincia</th>
-                <td th:text="${hecho.ubicacionOutputDTO.provincia}">Provincia</td>
-              </tr>
-              <tr>
-                <th>Municipio</th>
-                <td th:text="${hecho.ubicacionOutputDTO.municipio}">Municipio</td>
-              </tr>
-              <tr>
-                <th>Departamento</th>
-                <td th:text="${hecho.ubicacionOutputDTO.departamento}">Departamento</td>
-              </tr>
-              <tr>
-                <th>Latitud</th>
-                <td th:text="${hecho.ubicacionOutputDTO.latitud}">-34.6037</td>
-              </tr>
-              <tr>
-                <th>Longitud</th>
-                <td th:text="${hecho.ubicacionOutputDTO.longitud}">-58.3816</td>
-              </tr>
-              </tbody>
-            </table>
-          </div>
-            <div class="carousel-container">
-              <div class="carousel-track">
-                  <div th:each="imagen : ${imagenes}" class="carousel-slide">
-                      <img th:if="${imagen}"  th:src="@{'/hechos/uploads/' + ${imagen}}"  th:alt="'Imagen de ' + ${hecho.titulo}">
-                  </div>
-              </div>
-
-            </div>
-
-
+    <div class="content-block" th:if="${not #lists.isEmpty(imagenes)}">
+      <h3 class="content-title">Imágenes</h3>
+      <div class="gallery-container">
+        <div th:each="imagen : ${imagenes}" class="gallery-item">
+          <img th:if="${imagen}"
+               th:src="@{'/hechos/uploads/' + ${imagen}}"
+               th:alt="'Imagen de ' + ${hecho.titulo}">
         </div>
       </div>
+    </div>
 
-      <div class="content-block" style="margin-top: 30px;">
-        <h3 class="content-title">Mapa</h3>
-        <div id="map-preview"
-             style="height: 400px; border-radius: 8px; margin-bottom: 10px; max-width: 1000px;"></div>
-        <p style="font-size: 0.9rem; color: #666;">
-          El marcador indica la ubicación aproximada del hecho en el mapa.
+    <div class="content-block">
+      <h3 class="content-title">Descripción</h3>
+      <p th:text="${hecho.descripcion}" style="line-height: 1.6; color: #4a5568;">
+        Descripción del hecho.
+      </p>
+    </div>
+
+    <div class="content-block">
+      <div>
+        <h3 class="content-title">Categoría</h3>
+        <p th:text="${hecho.categoria}" style="font-weight: 500;">Categoría</p>
+      </div>
+    </div>
+
+    <div class="content-block">
+      <div>
+        <h3 class="content-title">Fecha del Acontecimiento</h3>
+        <p th:text="${#temporals.format(hecho.fechaHecho, 'dd/MM/yyyy HH:mm')}" style="font-weight: 500;">
+          01/01/2024 12:00
         </p>
       </div>
+    </div>
 
-      <div style="margin-top: 30px; display: flex; gap: 15px; flex-wrap: wrap; align-items: center;">
+    <div class="content-block">
+      <h3 class="content-title">Fuentes</h3>
 
-        <a th:if="${esPropietario}"
-           th:href="@{|/hechos/${hecho.id}/editar|}"
-           class="btn btn--secondary"
-           style="min-width: 160px; text-align: center; justify-content: center;">
-          Editar Hecho
-        </a>
-
-        <a th:href="@{/hechos/mapa}"
-           class="btn btn--secondary"
-           style="min-width: 160px; text-align: center; justify-content: center;">
-          Volver al mapa
-        </a>
-
+      <div th:if="${not #lists.isEmpty(hecho.fuentes)}" style="display: flex; flex-wrap: wrap; gap: 8px;">
+        <span th:each="fuente : ${hecho.fuentes}"
+              th:text="${fuente.nombre}"
+              style="background-color: #f1f5f9; border: 1px solid #cbd5e1; padding: 4px 12px; border-radius: 16px; font-size: 0.85em; color: #475569; font-weight: 500;">
+            Nombre Fuente
+        </span>
       </div>
 
+      <p th:if="${#lists.isEmpty(hecho.fuentes)}" style="color: #94a3b8; font-style: italic;">
+        No se han especificado fuentes.
+      </p>
     </div>
-  </section>
+
+    <div class="content-block">
+      <h3 class="content-title">Detalles de Ubicación</h3>
+      <table class="data-table">
+        <tbody>
+        <tr>
+          <th>Provincia</th>
+          <td th:text="${hecho.ubicacionOutputDTO.provincia}">Provincia</td>
+        </tr>
+        <tr>
+          <th>Municipio</th>
+          <td th:text="${hecho.ubicacionOutputDTO.municipio}">Municipio</td>
+        </tr>
+        <tr>
+          <th>Departamento</th>
+          <td th:text="${hecho.ubicacionOutputDTO.departamento}">Departamento</td>
+        </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="content-block" style="border-bottom: none;">
+      <h3 class="content-title">Ubicación en Mapa</h3>
+      <div id="map-preview"
+           style="height: 400px; border-radius: 8px; margin-bottom: 10px; width: 100%; z-index: 1;"></div>
+    </div>
+
+    <div style="margin-top: 40px; display: flex; gap: 15px; justify-content: center; flex-wrap: wrap;">
+
+      <a th:href="@{/hechos/mapa}"
+         class="btn btn--secondary"
+         style="min-width: 150px; text-align: center;">
+        Ir al mapa
+      </a>
+
+      <a th:if="${esPropietario}"
+         th:href="@{|/hechos/${hecho.id}/editar|}"
+         class="btn btn--primary"
+         style="min-width: 150px; text-align: center;">
+        Editar Hecho
+      </a>
+
+    </div>
+
+  </div>
 </main>
 
 <footer class="footer">
@@ -147,7 +260,6 @@
         de información, protegiendo la identidad de sus usuarios.
       </p>
     </div>
-    <br>
     <div class="footer__links">
       <a href="#">Política de Privacidad</a>
       <a href="#">Términos de Uso</a>
@@ -159,14 +271,22 @@
 <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
 
 <script th:inline="javascript">
-  /* Mapa centrado en la ubicación del hecho */
-  const latInicial = /*[[${hecho.ubicacionOutputDTO.latitud}]]*/ -34.6037;
-  const lngInicial = /*[[${hecho.ubicacionOutputDTO.longitud}]]*/ -58.3816;
+  document.addEventListener('DOMContentLoaded', function() {
+    /* Mapa centrado en la ubicación del hecho */
+    const latInicial = /*[[${hecho.ubicacionOutputDTO.latitud}]]*/ -34.6037;
+    const lngInicial = /*[[${hecho.ubicacionOutputDTO.longitud}]]*/ -58.3816;
 
-  const map = L.map('map-preview').setView([latInicial, lngInicial], 13);
-  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
+    if(latInicial && lngInicial) {
+      const map = L.map('map-preview').setView([latInicial, lngInicial], 14);
+      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '&copy; OpenStreetMap contributors'
+      }).addTo(map);
 
-  L.marker([latInicial, lngInicial]).addTo(map);
+      L.marker([latInicial, lngInicial]).addTo(map)
+              .bindPopup("Ubicación del hecho")
+              .openPopup();
+    }
+  });
 </script>
 
 </body>

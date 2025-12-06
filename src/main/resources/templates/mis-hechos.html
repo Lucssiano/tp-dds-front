@@ -60,25 +60,30 @@
             <div class="card-grid" th:if="${not #lists.isEmpty(hechos)}">
                 <div class="card" th:each="hecho : ${hechos}">
                     <div class="card__content">
+                        <div style="margin-bottom: 10px;">
+                <span class="estado-badge"
+                      th:classappend="'estado-' + ${hecho.estado}"
+                      th:text="${hecho.estado}">
+                    PENDIENTE
+                </span>
+                        </div>
+
                         <h3 class="card__title" th:text="${hecho.titulo}">Título del hecho</h3>
 
-                        <p class="card__description"
-                           th:text="${hecho.descripcion}">
+                        <p class="card__description" th:text="${hecho.descripcion}">
                             Descripción del hecho.
                         </p>
 
                         <p class="card__meta">
-                            <span th:if="${hecho.fechaHecho != null}">
-                                <strong>Fecha: </strong>
-                                <span th:text="${#temporals.format(hecho.fechaHecho, 'dd/MM/yyyy')}">
-                                    01/01/2024
-                                </span>
-                            </span>
+                <span th:if="${hecho.fechaHecho != null}">
+                    <strong>Fecha: </strong>
+                    <span th:text="${#temporals.format(hecho.fechaHecho, 'yyyy-MM-dd HH:mm')}">01/01/2024</span>
+                </span>
                             <br/>
                             <span th:if="${hecho.categoria != null}">
-                                <strong>Categoría: </strong>
-                                <span th:text="${hecho.categoria}">Categoría</span>
-                            </span>
+                    <strong>Categoría: </strong>
+                    <span th:text="${hecho.categoria}">Categoría</span>
+                </span>
                         </p>
 
                         <div style="margin-top: 10px; display: flex; gap: 8px; flex-wrap: wrap;">
@@ -120,3 +125,35 @@
 
 </body>
 </html>
+
+<style>
+    /* Estilo base para la etiqueta */
+    .estado-badge {
+        display: inline-block;
+        padding: 4px 8px;
+        border-radius: 4px;
+        font-size: 0.85rem;
+        font-weight: bold;
+        color: white; /* Texto blanco por defecto */
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+
+    /* Colores según el estado (coinciden con el nombre del ENUM) */
+
+    /* VERDE para ACEPTADO */
+    .estado-ACEPTADO {
+        background-color: #28a745;
+    }
+
+    /* ROJO para RECHAZADO */
+    .estado-RECHAZADO {
+        background-color: #dc3545;
+    }
+
+    /* AMARILLO/NARANJA para PENDIENTE */
+    .estado-PENDIENTE {
+        background-color: #ffc107;
+        color: #333; /* Texto oscuro para que se lea bien sobre amarillo */
+    }
+</style>

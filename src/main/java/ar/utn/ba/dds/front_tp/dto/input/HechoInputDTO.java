@@ -20,11 +20,12 @@ public class HechoInputDTO {
   private String titulo;
   private String descripcion;
   private String categoria;
-  private List<FuenteInputDTO> fuente;
   private List<String> multimedia;
+  private List<FuenteInputDTO> fuentes;
   @JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss")
   private LocalDateTime fechaHecho;
   private UbicacionDTO ubicacionOutputDTO;
   private List<String> etiquetas; // no me llegan parece
+  private String estado;
   private String usuario;
 }

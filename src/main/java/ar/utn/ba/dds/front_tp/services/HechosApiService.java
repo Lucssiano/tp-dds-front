@@ -17,6 +17,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.ParameterizedTypeReference;
+import org.springframework.http.HttpHeaders;
 import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;
 
@@ -159,8 +160,8 @@ public class HechosApiService {
 
     EditarHechoDTO editarHechoDTO = hechoMapper.toEditarHechoDTO(hechoInputDTO);
 
-    return webClient.post()
-        .uri(hechosServiceUrl + "/hechos/" + id + "/editar")
+    return webClient.put()
+        .uri(hechosServiceUrl + "/hechos/" + id)
         .bodyValue(editarHechoDTO)
         .retrieve()
         .bodyToMono(Void.class)
@@ -209,19 +210,27 @@ public class HechosApiService {
     }
   }
 
-  public List<HechoInputDTO> obtenerHechosUsuario(String usuario){
-    UriComponentsBuilder builder = UriComponentsBuilder.fromUriString(hechosServiceUrl + "/hechos")
-        .queryParam("usuario", usuario);
+  public List<HechoInputDTO> obtenerHechosUsuario(String usuario) {
     try {
-      return webClient.get()
-          .uri(builder.toUriString())
+      String url = UriComponentsBuilder.fromUriString(hechosServiceUrl + "/hechos/mis-hechos")
+          .queryParam("usuario", usuario)
+          .queryParam("page", 0)
+          .queryParam("size", 20)
+          .toUriString();
+      var tipoRespuesta = new ParameterizedTypeReference<PageInputDTO<HechoInputDTO>>() {
+      };
+
+      PageInputDTO<HechoInputDTO> pagedResponse = webClient
+          .get()
+          .uri(url)
           .retrieve()
-          .bodyToFlux(HechoInputDTO.class)
-          .collectList()
+          .bodyToMono(tipoRespuesta)
           .block();
-    }catch (Exception e){
-      log.error("No se pudieron obtener los hechos del usuario: "+ usuario + " con error: " + e.getMessage());
-      return null;
+
+      return pagedResponse != null ? pagedResponse.content() : Collections.emptyList();
+    } catch (Exception e) {
+      log.error("No se pudieron obtener los hechos del usuario: " + usuario + " con error: " + e.getMessage());
+      return Collections.emptyList();
     }
   }
 }

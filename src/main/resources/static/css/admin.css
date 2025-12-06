@@ -89,30 +89,56 @@
 
 .table-container {
     overflow-x: auto;
+    background: white;
+    border-radius: 8px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
 }
 
 .data-table {
     width: 100%;
     border-collapse: collapse;
-    background-color: var(--bg-white);
-    border-radius: 2px;
-    overflow: hidden;
+    background-color: white; /* O var(--bg-white) */
+    font-size: 0.95rem;
+    white-space: nowrap; /* Evita que el texto se rompa feo en listas */
 }
 
-
-.data-table th,
-.data-table td {
-    padding: 15px;
-    text-align: left;
-    border-radius: 2px;
-    border: 1px solid var(--border-color);
-}
-
+/* Encabezados más limpios y sutiles */
 .data-table th {
-    background-color: var(--bg-light);
-    font-weight: bold;
-    color: var(--text-medium);
+    background-color: #f8fafc; /* O var(--bg-light) */
+    color: #64748b; /* O var(--text-medium) */
+    font-weight: 600;
+    text-transform: uppercase;
+    font-size: 0.75rem;
+    letter-spacing: 0.05em;
+    padding: 16px;
+    text-align: left;
+    border-bottom: 2px solid #e2e8f0; /* Borde inferior más grueso en header */
+    border-top: none;
+    border-left: none;
+    border-right: none;
 }
+
+/* Celdas con aire y solo líneas horizontales */
+.data-table td {
+    padding: 16px;
+    border-bottom: 1px solid #e2e8f0; /* O var(--border-color) */
+    color: #334155;
+    border-top: none;
+    border-left: none;
+    border-right: none;
+}
+
+/* Efecto Hover en las filas */
+.data-table tbody tr:hover {
+    background-color: #f1f5f9;
+    cursor: default;
+}
+
+/* Quitar el borde de la última fila para que se vea limpio */
+.data-table tbody tr:last-child td {
+    border-bottom: none;
+}
+
 .tabs {
     display: flex;
     margin-bottom: 20px;
