@@ -7,6 +7,7 @@ import lombok.Data;
 import java.math.BigDecimal;
 import java.nio.file.Path;
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Data
 @Builder
@@ -18,7 +19,7 @@ public class SolicitudModificacionInputDTO {
   private String hechoCategoria;
   private BigDecimal hechoLatitud;
   private BigDecimal hechoLongitud;
-  private Path hechoMultimedia;
+  private List<String> hechoMultimedia;
   private LocalDateTime fechaHecho;
   private EstadoSolicitud estado;
   private String usuario;

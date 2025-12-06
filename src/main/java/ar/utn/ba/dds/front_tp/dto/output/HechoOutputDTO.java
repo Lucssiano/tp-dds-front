@@ -32,7 +32,7 @@ public class HechoOutputDTO {
   @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd'T'HH:mm")
   @NotNull(message = "La fecha del hecho es obligatoria.")
   @PastOrPresent(message = "La fecha y hora del hecho no pueden ser futuras.")
-  private LocalDateTime fecha; // TODO: TIENE QUE SER LOCALDATETIME
+  private LocalDateTime fecha;
   @NotNull(message = "La ubicación es obligatoria. Por favor, selecciona un punto en el mapa.")
   private BigDecimal latitud;
   @NotNull(message = "La ubicación es obligatoria. Por favor, selecciona un punto en el mapa.")
