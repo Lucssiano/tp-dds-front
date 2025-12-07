@@ -192,15 +192,15 @@
         <tbody>
         <tr>
           <th>Provincia</th>
-          <td th:text="${hecho.ubicacionOutputDTO.provincia}">Provincia</td>
+          <td th:text="${hecho.getUbicacionDTO.provincia}">Provincia</td>
         </tr>
         <tr>
           <th>Municipio</th>
-          <td th:text="${hecho.ubicacionOutputDTO.municipio}">Municipio</td>
+          <td th:text="${hecho.getUbicacionDTO.municipio}">Municipio</td>
         </tr>
         <tr>
           <th>Departamento</th>
-          <td th:text="${hecho.ubicacionOutputDTO.departamento}">Departamento</td>
+          <td th:text="${hecho.getUbicacionDTO.departamento}">Departamento</td>
         </tr>
         </tbody>
       </table>
@@ -239,8 +239,8 @@
 <script th:inline="javascript">
   document.addEventListener('DOMContentLoaded', function() {
     /* Mapa centrado en la ubicación del hecho */
-    const latInicial = /*[[${hecho.ubicacionOutputDTO.latitud}]]*/ -34.6037;
-    const lngInicial = /*[[${hecho.ubicacionOutputDTO.longitud}]]*/ -58.3816;
+    const latInicial = /*[[${hecho.ubicacionDTO.latitud}]]*/ -34.6037;
+    const lngInicial = /*[[${hecho.ubicacionDTO.longitud}]]*/ -58.3816;
 
     if(latInicial && lngInicial) {
       const map = L.map('map-preview').setView([latInicial, lngInicial], 14);

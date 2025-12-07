@@ -1,8 +1,8 @@
 package ar.utn.ba.dds.front_tp.services;
 
+import ar.utn.ba.dds.front_tp.dto.editar.EditarHechoDTO;
 import ar.utn.ba.dds.front_tp.dto.hechos.CategoriaDTO;
 import ar.utn.ba.dds.front_tp.dto.hechos.CrearHechoDTO;
-import ar.utn.ba.dds.front_tp.dto.hechos.EditarHechoDTO;
 import ar.utn.ba.dds.front_tp.dto.input.ApiError;
 import ar.utn.ba.dds.front_tp.dto.input.HechoInputDTO;
 import ar.utn.ba.dds.front_tp.dto.input.PageInputDTO;
@@ -25,7 +25,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.ParameterizedTypeReference;
-import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatusCode;
 import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.ClientResponse;
@@ -208,6 +207,10 @@ public class HechosApiService {
     return webClient.get()
         .uri(hechosServiceUrl + "/hechos/" + id)
         .retrieve()
+        .onStatus(HttpStatusCode::isError, response -> {
+          log.warn("Error recibido. Status: {}", response.statusCode().value());
+          return this.manejarError(response);
+        })
         .bodyToMono(HechoInputDTO.class)
         .block();
   }
@@ -226,17 +229,16 @@ public class HechosApiService {
     );
   }
 
-  public Void editarHecho(Long id, HechoInputDTO hechoInputDTO) {
-
-    EditarHechoDTO editarHechoDTO = hechoMapper.toEditarHechoDTO(hechoInputDTO);
+  public Void editarHecho(Long id, EditarHechoDTO editarHechoDTO) {
+    HechoOutputDTO hechoOutputDTO = this.hechoMapper.toHechoOutputDTO(editarHechoDTO);
 
     return webClient.put()
         .uri(hechosServiceUrl + "/hechos/" + id)
-        .bodyValue(editarHechoDTO)
+        .bodyValue(hechoOutputDTO)
         .retrieve()
         .onStatus(HttpStatusCode::isError, response -> {
           log.warn("Error recibido. Status: {}", response.statusCode().value());
-          return this.manejarError(response); // Llama al método centralizado (que mapea 4xx)
+          return this.manejarError(response);
         })
         .bodyToMono(Void.class)
         .block();

@@ -93,8 +93,8 @@
                     </div>
                     <p class="form-hint">Hacé clic en el mapa para ajustar la posición exacta.</p>
 
-                    <input type="hidden" id="lat-input" th:field="*{ubicacionOutputDTO.latitud}">
-                    <input type="hidden" id="lng-input" th:field="*{ubicacionOutputDTO.longitud}">
+                    <input type="hidden" id="lat-input" th:field="*{getUbicacionDTO.latitud}">
+                    <input type="hidden" id="lng-input" th:field="*{ubicacionDTO.longitud}">
                 </div>
 
                 <div class="form-actions" style="display: flex; justify-content: flex-end; gap: 15px; margin-top: 30px;">
@@ -115,8 +115,8 @@
 <script th:inline="javascript">
     // 1. Obtener coordenadas iniciales del objeto Java
     // Si vienen nulas, usamos coordenadas por defecto (Buenos Aires)
-    let latInicial = /*[[${hecho.ubicacionOutputDTO.latitud}]]*/ -34.6037;
-    let lngInicial = /*[[${hecho.ubicacionOutputDTO.longitud}]]*/ -58.3816;
+    let latInicial = /*[[${hecho.ubicacionDTO.latitud}]]*/ -34.6037;
+    let lngInicial = /*[[${hecho.ubicacionDTO.longitud}]]*/ -58.3816;
 
     if (!latInicial) latInicial = -34.6037;
     if (!lngInicial) lngInicial = -58.3816;

@@ -3,14 +3,18 @@ package ar.utn.ba.dds.front_tp.controller;
 import ar.utn.ba.dds.front_tp.dto.admin.ActividadDTO;
 import ar.utn.ba.dds.front_tp.dto.admin.CategoriaDTO;
 import ar.utn.ba.dds.front_tp.dto.admin.ColeccionEstadisticaDTO;
+import ar.utn.ba.dds.front_tp.dto.editar.EditarHechoDTO;
+import ar.utn.ba.dds.front_tp.dto.input.ApiError;
 import ar.utn.ba.dds.front_tp.dto.input.ColeccionInputDTO;
 import ar.utn.ba.dds.front_tp.dto.input.FuenteInputDTO;
 import ar.utn.ba.dds.front_tp.dto.input.HechoInputDTO;
 import ar.utn.ba.dds.front_tp.dto.hechos.input.SolicitudModificacionInputDTO;
 import ar.utn.ba.dds.front_tp.dto.output.ColeccionOutputDTO;
+import ar.utn.ba.dds.front_tp.dto.output.HechoOutputDTO;
 import ar.utn.ba.dds.front_tp.dto.usuarios.AuthResponseDTO;
 import ar.utn.ba.dds.front_tp.dto.admin.DashboardSummaryDTO;
 import ar.utn.ba.dds.front_tp.exceptions.api.ValidationException;
+import ar.utn.ba.dds.front_tp.mappers.HechoMapper;
 import ar.utn.ba.dds.front_tp.services.*;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -20,6 +24,7 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
+import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -29,6 +34,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
+import java.io.IOException;
 import java.util.*;
 
 @Controller
@@ -43,6 +49,8 @@ public class AdminController {
   private final HechosApiService hechosApiService;
   private final SolicitudesModificacionApiService solicitudesModificacionApiService;
   private final EstadisticasApiService estadisticasApiService;
+  private  final UploadFileService imagenesService;
+  private final HechoMapper hechoMapper;
   private static final Logger log = LoggerFactory.getLogger(AdminController.class);
 
   @GetMapping("/colecciones")
@@ -260,13 +268,13 @@ public class AdminController {
                                 Model model,
                                 RedirectAttributes redirectAttributes) {
     try {
-      // Traer el hecho individual
-      var hecho = hechosApiService.obtenerHecho(id);
+      // Usamos HechoInputDTO (con estructura anidada ubicacionInputDTO)
+      HechoInputDTO hecho = this.hechosApiService.obtenerHecho(id);
 
       model.addAttribute("hecho", hecho);
-      model.addAttribute("modoEdicion", false);
+      model.addAttribute("id", id);
 
-      return "admin-detalle-hecho";
+      return "admin-hecho-detalle";
 
     } catch (Exception e) {
       redirectAttributes.addFlashAttribute("error", "No se pudo cargar el hecho.");
@@ -279,50 +287,83 @@ public class AdminController {
                             Model model,
                             RedirectAttributes redirectAttributes) {
     try {
-      // Traer el hecho individual
-      var hecho = hechosApiService.obtenerHecho(id);
+      HechoInputDTO inputOriginal = this.hechosApiService.obtenerHecho(id);
+
+      // Mapeamos a EditarHechoDTO (plano)
+      EditarHechoDTO hecho = this.hechoMapper.toEditarHechoDTO(inputOriginal);
 
       model.addAttribute("hecho", hecho);
-      model.addAttribute("modoEdicion", true);
+      model.addAttribute("id", id);
 
-      return "admin-detalle-hecho";
+      return "admin-hecho-editar";
 
     } catch (Exception e) {
-      redirectAttributes.addFlashAttribute("error", "No se pudo cargar el hecho.");
+      redirectAttributes.addFlashAttribute("error", "No se pudo cargar para editar.");
       return "redirect:/admin/revisiones";
     }
   }
 
   @PostMapping("/revisiones/hechos/{id}/editar")
-  public String editarHecho(@PathVariable Long id,
-                            @ModelAttribute("hecho") @Valid HechoInputDTO hechoInputDTO, // Spring ya lo mete al modelo automáticamente
-                            Model model, // Usamos Model, no RedirectAttributes para errores
-                            RedirectAttributes redirectAttributes) {
-    try {
-      hechosApiService.editarHecho(id, hechoInputDTO);
+  public String editarHechoPost(@PathVariable Long id,
+                                @ModelAttribute("hecho") @Valid EditarHechoDTO hecho,
+                                BindingResult bindingResult,
+                                @RequestParam(value = "nuevasImagenes", required = false) List<MultipartFile> multipartFiles,
+                                Model model,
+                                RedirectAttributes redirectAttributes) {
 
-      // ÉXITO -> REDIRECT
+    Map<String, String> erroresVista = new HashMap<>();
+
+    // A. VALIDACIÓN LOCAL
+    if (bindingResult.hasErrors()) {
+      bindingResult.getFieldErrors().forEach(e -> erroresVista.put(e.getField(), e.getDefaultMessage()));
+
+      model.addAttribute("hecho", hecho); // 'hecho' ya tiene la lista multimedia gracias a los hidden inputs
+      model.addAttribute("id", id);
+      model.addAttribute("errores", erroresVista);
+
+      return "admin-hecho-editar";
+    }
+
+    // B. PROCESAR FOTOS NUEVAS
+    if (hecho.getMultimedia() == null) hecho.setMultimedia(new ArrayList<>());
+
+    if (multipartFiles != null) {
+      for (MultipartFile file : multipartFiles) {
+        if (!file.isEmpty()) {
+          try {
+            String name = imagenesService.copy(file);
+            hecho.getMultimedia().add(name);
+          } catch (IOException e) {
+            model.addAttribute("errorGlobal", "Error al subir imagen: " + file.getOriginalFilename());
+            model.addAttribute("hecho", hecho);
+            model.addAttribute("id", id);
+            return "admin-hecho-editar";
+          }
+        }
+      }
+    }
+
+    // C. LLAMADA AL SERVICIO
+    try {
+      this.hechosApiService.editarHecho(id, hecho);
+
       redirectAttributes.addFlashAttribute("mensaje", "Hecho editado con éxito.");
       return "redirect:/admin/revisiones/hechos/" + id + "/detalle";
 
     } catch (ValidationException ex) {
-      // ERROR -> RENDERIZAR VISTA (No redirect)
+      // D. ERROR DE NEGOCIO (ApiError)
+      ApiError apiError = ex.getApiError();
+      if (apiError.fields() != null) erroresVista.putAll(apiError.fields());
+      if (apiError.message() != null) model.addAttribute("globalError", apiError.message());
+      if (apiError.details() != null) model.addAttribute("errorDetails", apiError.details());
 
-      // 1. Agregamos el hecho y el modo de edición
-      model.addAttribute("hecho", hechoInputDTO);
-      model.addAttribute("modoEdicion", true);
+      model.addAttribute("hecho", hecho);
+      model.addAttribute("id", id);
+      model.addAttribute("errores", erroresVista);
 
-      // 2. Pasamos los errores
-      model.addAttribute("errors", ex.getApiError().fields());
-
-      // 3. (Opcional) Si tienes desplegables, cárgalos de nuevo aquí
-      // model.addAttribute("categorias", servicio.obtenerCategorias());
-
-      // 4. Devolvemos el nombre del HTML del formulario de edición
-      return "admin-detalle-hecho";
+      return "admin-hecho-editar";
     }
   }
-
 
   // Acciones sobre Hechos (Aprobar/Rechazar)
   @PostMapping("/revisiones/hechos/{id}/{accion}")

@@ -1,4 +1,4 @@
-package ar.utn.ba.dds.front_tp.dto.hechos;
+package ar.utn.ba.dds.front_tp.dto.input;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -11,7 +11,7 @@ import java.math.BigDecimal;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class UbicacionDTO {
+public class UbicacionInputDTO {
   private String provincia;
   private String municipio;
   private String departamento;

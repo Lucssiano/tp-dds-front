@@ -1,0 +1,338 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Admin - Editar Hecho</title>
+    <link rel="stylesheet" th:href="@{/css/global.css}">
+    <link rel="stylesheet" th:href="@{/css/admin.css}">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" />
+
+    <style>
+        /* ==========================================
+           ESTILOS DEL HTML "LINDO" (USER VIEW)
+           ========================================== */
+        body {
+            background-color: #f4f6f8;
+            font-family: 'Inter', sans-serif;
+        }
+
+        /* Ajuste para que encaje en el layout admin */
+        .detail-container {
+            max-width: 900px;
+            margin: 0 auto;
+            padding-bottom: 40px;
+        }
+
+        .stat-card {
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+            padding: 40px;
+            margin-top: 20px;
+        }
+
+        .section-title {
+            font-size: 2rem;
+            font-weight: 700;
+            color: #1a202c;
+            margin-bottom: 0.5rem;
+            margin-top: 0;
+        }
+
+        .content-block {
+            margin-bottom: 24px;
+            padding-bottom: 24px;
+            border-bottom: 1px solid #e2e8f0;
+        }
+
+        .content-block:last-child {
+            border-bottom: none;
+        }
+
+        .content-title {
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: #64748b;
+            font-weight: 600;
+            margin-bottom: 8px;
+            display: block;
+        }
+
+        /* Tablas de detalle (NOMBRE CAMBIADO para evitar conflicto con admin.css) */
+        .detail-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        .detail-table th, .detail-table td {
+            text-align: left;
+            padding: 12px 0;
+            border-bottom: 1px solid #edf2f7;
+            border-top: none;
+            border-left: none;
+            border-right: none;
+            background: transparent;
+        }
+        .detail-table th {
+            width: 30%;
+            color: #64748b;
+            font-weight: 500;
+        }
+
+        /* Galería */
+        .gallery-container {
+            display: flex;
+            overflow-x: auto;
+            gap: 15px;
+            padding-bottom: 15px;
+            scroll-snap-type: x mandatory;
+        }
+        .gallery-item {
+            flex: 0 0 auto;
+            width: 300px;
+            height: 200px;
+            border-radius: 8px;
+            overflow: hidden;
+            scroll-snap-align: start;
+            border: 1px solid #eee;
+        }
+        .gallery-item img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        /* ==========================================
+           ESTILOS NUEVOS PARA LA EDICIÓN (ADAPTADOS)
+           ========================================== */
+
+        .id-display {
+            color: #111; /* Negro casi puro */
+            font-weight: 800;
+        }
+
+        .clean-input {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #cbd5e0;
+            border-radius: 6px;
+            font-family: 'Inter', sans-serif;
+            font-size: 1rem;
+            color: #2d3748;
+            background: #fff;
+        }
+        .clean-input:focus {
+            border-color: #3182ce;
+            outline: none;
+            box-shadow: 0 0 0 3px rgba(49, 130, 206, 0.1);
+        }
+
+        /* Input deshabilitado (Loading) */
+        .clean-input:disabled {
+            background-color: #f7fafc;
+            color: #a0aec0;
+            cursor: wait;
+        }
+
+        .btn-reject {
+            background-color: #e53e3e;
+            color: #ffffff;
+            border: none;
+            padding: 10px 24px;
+            border-radius: 6px;
+            font-weight: 600;
+            cursor: pointer;
+            text-decoration: none;
+            display: inline-block;
+            font-size: 1rem;
+        }
+        .btn-reject:hover { background-color: #c53030; }
+
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+        }
+
+        /* Errores */
+        .api-error-alert { background-color: #fef2f2; border: 1px solid #fecaca; border-left: 5px solid #dc2626; color: #991b1b; padding: 20px; border-radius: 6px; margin-bottom: 20px; }
+        .input-error { border-color: #dc2626 !important; background-color: #fff5f5 !important; }
+        .field-error-msg { color: #dc2626; font-size: 0.85rem; margin-top: 5px; display: block; }
+    </style>
+</head>
+<body>
+<div class="admin-layout">
+    <aside class="sidebar">
+        <a th:href="@{/}" class="logo">MetaMapa Admin</a>
+        <nav class="sidebar__nav">
+            <a th:href="@{/admin/dashboard}" class="sidebar__link">Dashboard</a>
+            <a th:href="@{/admin/colecciones}" class="sidebar__link">Colecciones</a>
+            <a th:href="@{/admin/revisiones}" class="sidebar__link sidebar__link--active">Revisiones</a>
+        </nav>
+        <a th:href="@{/auth/logout}" class="btn btn--secondary sidebar__logout">Cerrar Sesión</a>
+    </aside>
+
+    <div class="main-content">
+        <div class="detail-container">
+
+            <div class="stat-card">
+
+                <form th:object="${hecho}"
+                      th:action="@{/admin/revisiones/hechos/{id}/editar(id=${id})}"
+                      method="post" enctype="multipart/form-data">
+
+                    <div style="margin-bottom: 20px;">
+                        <h1 class="section-title">Editar Hecho</h1>
+                    </div>
+
+                    <div th:if="${globalError}" class="api-error-alert">
+                        <strong th:text="${globalError}"></strong>
+                        <ul th:if="${errorDetails}">
+                            <li th:each="det : ${errorDetails}" th:text="${det}"></li>
+                        </ul>
+                    </div>
+
+                    <div class="content-block">
+                        <label class="content-title">Imágenes</label>
+                        <div class="gallery-container" th:if="${not #lists.isEmpty(hecho.multimedia)}">
+                            <div th:each="img, stat : *{multimedia}" class="gallery-item-wrapper" th:id="'img-wrapper-' + ${stat.index}">
+                                <div class="gallery-item"><img th:src="@{'/hechos/uploads/' + ${img}}"></div>
+                                <button type="button" class="btn-delete-img" th:onclick="'removeImage(' + ${stat.index} + ')'">×</button>
+                                <input type="hidden" th:field="*{multimedia[__${stat.index}__]}" th:id="'input-img-' + ${stat.index}">
+                            </div>
+                        </div>
+                        <input type="file" name="nuevasImagenes" multiple class="clean-input" accept="image/*" style="margin-top: 10px;">
+                    </div>
+
+                    <div class="content-block">
+                        <label class="content-title">Título</label>
+                        <input class="clean-input" type="text" th:field="*{titulo}"
+                               th:classappend="${errores != null and errores.containsKey('titulo')} ? 'input-error' : ''">
+                        <span class="field-error-msg" th:if="${errores != null and errores.containsKey('titulo')}" th:text="${errores['titulo']}"></span>
+                    </div>
+
+                    <div class="content-block">
+                        <label class="content-title">Descripción</label>
+                        <textarea class="clean-input" th:field="*{descripcion}" rows="6"
+                                  th:classappend="${errores != null and errores.containsKey('descripcion')} ? 'input-error' : ''"></textarea>
+                        <span class="field-error-msg" th:if="${errores != null and errores.containsKey('descripcion')}" th:text="${errores['descripcion']}"></span>
+                    </div>
+
+                    <div class="content-block">
+                        <label class="content-title">Categoría</label>
+                        <input class="clean-input" type="text" th:field="*{categoria}"
+                               th:classappend="${errores != null and errores.containsKey('categoria')} ? 'input-error' : ''">
+                        <span class="field-error-msg" th:if="${errores != null and errores.containsKey('categoria')}" th:text="${errores['categoria']}"></span>
+                    </div>
+
+                    <div class="content-block">
+                        <label class="content-title">Fecha</label>
+                        <input class="clean-input" type="datetime-local" name="fecha"
+                               th:value="${#temporals.format(hecho.fecha, 'yyyy-MM-dd''T''HH:mm')}"
+                               th:classappend="${errores != null and errores.containsKey('fecha')} ? 'input-error' : ''">
+                        <span class="field-error-msg" th:if="${errores != null and errores.containsKey('fecha')}" th:text="${errores['fecha']}"></span>
+                    </div>
+
+                    <div class="content-block" style="border-bottom: none;">
+                        <label class="content-title">Ubicación (Click en el mapa para corregir automáticamente)</label>
+
+                        <div style="display: flex; gap: 10px; margin-bottom: 15px;">
+                            <input type="text" id="address-input" class="clean-input" placeholder="Buscar dirección...">
+                            <button type="button" class="btn btn--secondary" id="geocode-btn">Buscar</button>
+                        </div>
+
+                        <div id="map-editable" style="height: 400px; border-radius: 8px;"></div>
+
+                        <input type="hidden" id="lat-input" th:field="*{latitud}">
+                        <input type="hidden" id="lng-input" th:field="*{longitud}">
+
+                        <div th:if="${errores != null}">
+                            <span class="field-error-msg" th:if="${errores.containsKey('latitud')}" th:text="${errores['latitud']}"></span>
+                            <span class="field-error-msg" th:if="${errores.containsKey('longitud')}" th:text="${errores['longitud']}"></span>
+                        </div>
+                    </div>
+
+                    <div style="margin-top: 40px; display: flex; gap: 15px; justify-content: center;">
+                        <button class="btn btn--primary" type="submit">Guardar Cambios</button>
+                        <a th:href="@{/admin/revisiones/hechos/{id}/detalle(id=${id})}" class="btn btn--secondary">Cancelar</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
+<script th:inline="javascript">
+    function removeImage(index) { document.getElementById('img-wrapper-' + index).remove(); }
+
+    document.addEventListener('DOMContentLoaded', function() {
+        /* Configuración Inicial */
+        // Usamos los campos planos del EditarHechoDTO
+        const latInicial = /*[[${hecho.latitud ?: -34.6037}]]*/ -34.6037;
+        const lngInicial = /*[[${hecho.longitud ?: -58.3816}]]*/ -58.3816;
+
+        // Elementos del DOM
+        const mapElement = document.getElementById('map-editable');
+        const latInput = document.getElementById('lat-input');
+        const lngInput = document.getElementById('lng-input');
+        const addressInput = document.getElementById('address-input');
+        const geocodeBtn = document.getElementById('geocode-btn');
+
+        if (mapElement) {
+            const map = L.map('map-editable').setView([latInicial, lngInicial], 14);
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution: '&copy; OpenStreetMap' }).addTo(map);
+            let marker = L.marker([latInicial, lngInicial]).addTo(map);
+
+            function updateMapAndInputs(lat, lng) {
+                if (marker) map.removeLayer(marker);
+                marker = L.marker([lat, lng]).addTo(map);
+                latInput.value = lat;
+                lngInput.value = lng;
+            }
+
+            // 1. Click en mapa -> Actualiza marker y busca dirección (Reverse Geo)
+            map.on('click', (e) => {
+                const { lat, lng } = e.latlng;
+                updateMapAndInputs(lat, lng);
+
+                addressInput.value = "Buscando dirección exacta...";
+                addressInput.disabled = true;
+
+                const url = `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}`;
+                fetch(url)
+                    .then(r => r.json())
+                    .then(data => {
+                        if(data && data.display_name) {
+                            addressInput.value = data.display_name;
+                        } else {
+                            addressInput.value = "Ubicación seleccionada";
+                        }
+                    })
+                    .catch(() => addressInput.value = "Error al obtener calle")
+                    .finally(() => addressInput.disabled = false);
+            });
+
+            // 2. Botón Buscar -> Busca coordenadas por texto
+            if(geocodeBtn) {
+                geocodeBtn.addEventListener('click', () => {
+                    const address = addressInput.value.trim();
+                    if (!address) { alert("Ingresá una dirección."); return; }
+
+                    const url = `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(address)}&format=json&limit=1`;
+                    fetch(url).then(r => r.json()).then(data => {
+                        if (data && data.length > 0) {
+                            const { lat, lon } = data[0];
+                            updateMapAndInputs(parseFloat(lat), parseFloat(lon));
+                            map.setView([lat, lon], 16);
+                        } else { alert("No se encontraron resultados."); }
+                    }).catch(() => alert("Error buscando dirección."));
+                });
+            }
+        }
+    });
+</script>
+</body>
+</html>

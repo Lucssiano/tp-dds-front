@@ -28,8 +28,8 @@ public class SolicitudesModificacionApiService {
         .categoria(hechoInputDTO.getCategoria())
         .multimedia(hechoInputDTO.getMultimedia())
         .fecha(hechoInputDTO.getFechaHecho())
-        .latitud(hechoInputDTO.getUbicacionOutputDTO().getLatitud())
-        .longitud(hechoInputDTO.getUbicacionOutputDTO().getLongitud())
+        .latitud(hechoInputDTO.getUbicacionDTO().getLatitud())
+        .longitud(hechoInputDTO.getUbicacionDTO().getLongitud())
         .usuario(hechoInputDTO.getUsuario())
         .build();
 

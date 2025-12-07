@@ -1,10 +1,7 @@
 package ar.utn.ba.dds.front_tp.dto.output;
 
-import ar.utn.ba.dds.front_tp.dto.hechos.UbicacionDTO;
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
-import com.fasterxml.jackson.datatype.jsr310.deser.LocalDateTimeDeserializer;
 import jakarta.validation.constraints.PastOrPresent;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -13,8 +10,6 @@ import lombok.NoArgsConstructor;
 import jakarta.validation.constraints.NotNull;
 
 import java.math.BigDecimal;
-import java.nio.file.Path;
-import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 

@@ -117,7 +117,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     if (hechos.length > 0) {
         hechos.forEach(fact => {
-            const ubicacion = fact.ubicacionOutputDTO;
+            const ubicacion = fact.ubicacionDTO;
             if (ubicacion && ubicacion.latitud != null) {
                 const marker = L.marker([parseFloat(ubicacion.latitud), parseFloat(ubicacion.longitud)]).addTo(map);
                 marker.bindPopup(`<b>${fact.titulo}</b>`);

@@ -1,6 +1,5 @@
 package ar.utn.ba.dds.front_tp.dto.input;
 
-import ar.utn.ba.dds.front_tp.dto.hechos.UbicacionDTO;
 import com.fasterxml.jackson.annotation.JsonFormat;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -24,8 +23,7 @@ public class HechoInputDTO {
   private List<FuenteInputDTO> fuentes;
   @JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss")
   private LocalDateTime fechaHecho;
-  private UbicacionDTO ubicacionOutputDTO;
-  private List<String> etiquetas; // no me llegan parece
+  private UbicacionInputDTO ubicacionDTO;
   private String estado;
   private String usuario;
 }
