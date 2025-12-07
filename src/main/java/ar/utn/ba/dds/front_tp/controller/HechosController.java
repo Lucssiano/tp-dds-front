@@ -404,12 +404,22 @@ public class HechosController {
   }
 
   @GetMapping("/{id}/editar")
-  public String editarHecho(@PathVariable Long id, Model model, Authentication authentication) {
+  public String editarHecho(@PathVariable Long id,
+                            Model model,
+                            RedirectAttributes redirectAttributes) {
+    try {
+      // Usamos HechoInputDTO (con estructura anidada ubicacionInputDTO)
+      HechoInputDTO hecho = this.hechosApiService.obtenerHecho(id);
 
-    HechoInputDTO hecho = hechosApiService.obtenerHecho(id);
+      model.addAttribute("hecho", hecho);
+      model.addAttribute("id", id);
 
-    model.addAttribute("hecho", hecho);
-    return "editar-hecho";
+      return "editar-hecho";
+
+    } catch (Exception e) {
+      redirectAttributes.addFlashAttribute("error", "No se pudo cargar el hecho.");
+      return "redirect:/mis-hechos";
+    }
   }
 
   @PostMapping("/{id}/editar")

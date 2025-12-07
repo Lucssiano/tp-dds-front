@@ -5,212 +5,10 @@
     <title>Admin - Detalle del Hecho</title>
     <link rel="stylesheet" th:href="@{/css/global.css}">
     <link rel="stylesheet" th:href="@{/css/admin.css}">
+    <link rel="stylesheet" th:href="@{/css/hecho.css}">
+
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" />
-    <style>
-        /* ==========================================
-           ESTILOS DEL HTML "LINDO" (USER VIEW)
-           ========================================== */
-        body {
-            background-color: #f4f6f8;
-            font-family: 'Inter', sans-serif;
-        }
-
-        /* Ajuste para que encaje en el layout admin */
-        .detail-container {
-            max-width: 900px;
-            margin: 0 auto;
-            padding-bottom: 40px;
-        }
-
-        .stat-card {
-            background: white;
-            border-radius: 8px;
-            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-            padding: 40px;
-            margin-top: 20px;
-        }
-
-        .section-title {
-            font-size: 2rem;
-            font-weight: 700;
-            color: #1a202c;
-            margin-bottom: 0.5rem;
-            margin-top: 0;
-        }
-
-        .content-block {
-            margin-bottom: 24px;
-            padding-bottom: 24px;
-            border-bottom: 1px solid #e2e8f0;
-        }
-
-        .content-block:last-child {
-            border-bottom: none;
-        }
-
-        .content-title {
-            font-size: 0.875rem;
-            text-transform: uppercase;
-            letter-spacing: 0.05em;
-            color: #64748b;
-            font-weight: 600;
-            margin-bottom: 8px;
-            display: block;
-        }
-
-        /* Tablas de detalle (NOMBRE CAMBIADO para evitar conflicto con admin.css) */
-        .detail-table {
-            width: 100%;
-            border-collapse: collapse;
-        }
-        .detail-table th, .detail-table td {
-            text-align: left;
-            padding: 12px 0;
-            border-bottom: 1px solid #edf2f7;
-            border-top: none;
-            border-left: none;
-            border-right: none;
-            background: transparent;
-        }
-        .detail-table th {
-            width: 30%;
-            color: #64748b;
-            font-weight: 500;
-        }
-
-        /* Badges */
-        .estado-badge {
-            display: inline-block;
-            padding: 4px 12px;
-            border-radius: 9999px;
-            font-size: 0.75rem;
-            font-weight: 700;
-            color: white;
-            text-transform: uppercase;
-            margin-bottom: 15px;
-        }
-        .estado-ACEPTADO { background-color: #28a745; }
-        .estado-RECHAZADO { background-color: #dc3545; }
-        .estado-PENDIENTE { background-color: #ffc107; color: #333; }
-
-        /* Galería */
-        /* Ventana principal (Máscara) */
-        .carousel-wrapper {
-            position: relative;
-            width: 100%;
-            max-width: 800px;
-            margin: 0 auto;
-            background-color: #fff;
-            border-radius: 8px;
-            border: 1px solid #e2e8f0;
-            overflow: hidden;
-        }
-
-        /* La cinta larga que contiene las fotos */
-        .gallery-track {
-            display: flex;
-            height: 450px;
-            width: 100%;
-            /* La magia del movimiento la haremos con transform en JS */
-        }
-
-        /* Cada slide */
-        .gallery-item {
-            flex: 0 0 100%;
-            width: 100%;
-            height: 100%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            background-color: #fff;
-        }
-
-        /* La imagen */
-        .gallery-item img {
-            max-width: 100%;
-            max-height: 100%;
-            width: auto;
-            height: auto;
-            object-fit: contain;
-            display: block;
-        }
-
-        /* Botones de navegación */
-        .carousel-btn {
-            position: absolute;
-            top: 50%;
-            transform: translateY(-50%);
-            background-color: rgba(30, 30, 30, 0.6);
-            color: white;
-            border: none;
-            width: 50px;
-            height: 50px;
-            border-radius: 50%;
-            font-size: 1.5rem;
-            cursor: pointer;
-            z-index: 10;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            transition: background 0.3s;
-            user-select: none;
-        }
-
-        .carousel-btn:hover { background-color: rgba(0, 0, 0, 0.9); }
-        .carousel-btn.prev { left: 15px; }
-        .carousel-btn.next { right: 15px; }
-
-        .id-display {
-            color: #111; /* Negro casi puro */
-            font-weight: 800;
-        }
-
-        .clean-input {
-            width: 100%;
-            padding: 10px;
-            border: 1px solid #cbd5e0;
-            border-radius: 6px;
-            font-family: 'Inter', sans-serif;
-            font-size: 1rem;
-            color: #2d3748;
-            background: #fff;
-        }
-        .clean-input:focus {
-            border-color: #3182ce;
-            outline: none;
-            box-shadow: 0 0 0 3px rgba(49, 130, 206, 0.1);
-        }
-
-        /* Input deshabilitado (Loading) */
-        .clean-input:disabled {
-            background-color: #f7fafc;
-            color: #a0aec0;
-            cursor: wait;
-        }
-
-        .btn-reject {
-            background-color: #e53e3e;
-            color: #ffffff;
-            border: none;
-            padding: 10px 24px;
-            border-radius: 6px;
-            font-weight: 600;
-            cursor: pointer;
-            text-decoration: none;
-            display: inline-block;
-            font-size: 1rem;
-        }
-        .btn-reject:hover { background-color: #c53030; }
-
-        .btn {
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            font-weight: 600;
-        }
-
-    </style>
 </head>
 <body>
 <div class="admin-layout">
@@ -328,7 +126,6 @@
 </div>
 
 <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
-<!-- MAPA -->
 <script th:inline="javascript">
     document.addEventListener('DOMContentLoaded', function() {
         const latInicial = /*[[${hecho.ubicacionDTO?.latitud ?: -34.6037}]]*/ -34.6037;
@@ -340,7 +137,6 @@
     });
 </script>
 
-<!-- CARRUSEL IMAGENES -->
 <script th:inline="javascript">
     document.addEventListener('DOMContentLoaded', function() {
 

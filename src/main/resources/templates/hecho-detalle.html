@@ -1,120 +1,16 @@
 <!DOCTYPE html>
-<html lang="es" xmlns:th="http://www.thymeleaf.org"
-      xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
 
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title th:text="${hecho.titulo} ?: 'Detalle del Hecho'">MetaMapa - Detalle del Hecho</title>
+  <title th:text="${hecho.titulo} ?: ' - Detalle del Hecho'">MetaMapa - Detalle del Hecho</title>
 
   <link rel="stylesheet" th:href="@{/css/global.css}">
   <link rel="stylesheet" th:href="@{/css/landing.css}">
+  <link rel="stylesheet" th:href="@{/css/hecho.css}">
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" />
-
-  <style>
-    /* Estilos copiados del Admin para mantener la consistencia visual */
-    body {
-      background-color: #f4f6f8; /* Fondo gris suave */
-    }
-
-    .detail-container {
-      max-width: 900px;
-      margin: 40px auto;
-      padding: 0 20px;
-    }
-
-    .stat-card {
-      background: white;
-      border-radius: 8px;
-      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-      padding: 40px;
-    }
-
-    .section-title {
-      font-size: 2rem;
-      font-weight: 700;
-      color: #1a202c;
-      margin-bottom: 0.5rem;
-      margin-top: 0;
-    }
-
-    .content-block {
-      margin-bottom: 24px;
-      padding-bottom: 24px;
-      border-bottom: 1px solid #e2e8f0;
-    }
-
-    .content-block:last-child {
-      border-bottom: none;
-    }
-
-    .content-title {
-      font-size: 0.875rem;
-      text-transform: uppercase;
-      letter-spacing: 0.05em;
-      color: #64748b;
-      font-weight: 600;
-      margin-bottom: 8px;
-    }
-
-    .data-table {
-      width: 100%;
-      border-collapse: collapse;
-    }
-
-    .data-table th, .data-table td {
-      text-align: left;
-      padding: 12px 0;
-      border-bottom: 1px solid #edf2f7;
-    }
-
-    .data-table th {
-      width: 30%;
-      color: #64748b;
-      font-weight: 500;
-    }
-
-    /* Badges de Estado */
-    .estado-badge {
-      display: inline-block;
-      padding: 4px 12px;
-      border-radius: 9999px;
-      font-size: 0.75rem;
-      font-weight: 700;
-      color: white;
-      text-transform: uppercase;
-      margin-bottom: 15px;
-    }
-    .estado-ACEPTADO { background-color: #28a745; }
-    .estado-RECHAZADO { background-color: #dc3545; }
-    .estado-PENDIENTE { background-color: #ffc107; color: #333; }
-
-    /* Galería de Imágenes (Scroll Horizontal Moderno) */
-    .gallery-container {
-      display: flex;
-      overflow-x: auto;
-      gap: 15px;
-      padding-bottom: 15px;
-      scroll-snap-type: x mandatory;
-    }
-
-    .gallery-item {
-      flex: 0 0 auto;
-      width: 300px;
-      height: 200px;
-      border-radius: 8px;
-      overflow: hidden;
-      scroll-snap-align: start;
-      border: 1px solid #eee;
-    }
-
-    .gallery-item img {
-      width: 100%;
-      height: 100%;
-      object-fit: cover;
-    }
-  </style>
 </head>
 
 <body>
@@ -123,94 +19,96 @@
 
 <main class="detail-container">
 
-  <div class="stat-card">
-
-    <div style="margin-bottom: 20px;">
-      <span class="estado-badge"
-            th:if="${hecho.estado != null && esPropietario}"
-            th:classappend="'estado-' + ${hecho.estado}"
-            th:text="${hecho.estado}">
-          ESTADO
-      </span>
-
-      <h1 class="section-title" th:text="${hecho.titulo}">Título del hecho</h1>
-    </div>
-
-    <div class="content-block" th:if="${not #lists.isEmpty(imagenes)}">
-      <h3 class="content-title">Imágenes</h3>
-      <div class="gallery-container">
-        <div th:each="imagen : ${imagenes}" class="gallery-item">
-          <img th:if="${imagen}"
-               th:src="@{'/hechos/uploads/' + ${imagen}}"
-               th:alt="'Imagen de ' + ${hecho.titulo}">
-        </div>
-      </div>
-    </div>
-
-    <div class="content-block">
-      <h3 class="content-title">Descripción</h3>
-      <p th:text="${hecho.descripcion}" style="font-weight: 500;">
-        Descripción del hecho.
-      </p>
-    </div>
-
-    <div class="content-block">
-      <div>
-        <h3 class="content-title">Categoría</h3>
-        <p th:text="${hecho.categoria}" style="font-weight: 500;">Categoría</p>
-      </div>
-    </div>
-
-    <div class="content-block">
-      <div>
-        <h3 class="content-title">Fecha del Acontecimiento</h3>
-        <p th:text="${#temporals.format(hecho.fechaHecho, 'dd/MM/yyyy HH:mm')}" style="font-weight: 500;">
-          01/01/2024 12:00
-        </p>
-      </div>
-    </div>
-
-    <div class="content-block">
-      <h3 class="content-title">Fuentes</h3>
-
-      <div th:if="${not #lists.isEmpty(hecho.fuentes)}" style="display: flex; flex-wrap: wrap; gap: 8px;">
-        <span th:each="fuente : ${hecho.fuentes}"
-              th:text="${fuente.nombre}"
-              style="background-color: #f1f5f9; border: 1px solid #cbd5e1; padding: 4px 12px; border-radius: 16px; font-size: 0.85em; color: #475569; font-weight: 500;">
-            Nombre Fuente
-        </span>
+      <div th:if="${mensaje}" style="background-color: #d1fae5; border: 1px solid #34d399; color: #065f46; padding: 15px; border-radius: 6px; margin-bottom: 20px;">
+          <span th:text="${mensaje}"></span>
       </div>
 
-      <p th:if="${#lists.isEmpty(hecho.fuentes)}" style="color: #94a3b8; font-style: italic;">
-        No se han especificado fuentes.
-      </p>
-    </div>
+      <div class="stat-card">
 
-    <div class="content-block">
-      <h3 class="content-title">Detalles de Ubicación</h3>
-      <table class="data-table">
-        <tbody>
-        <tr>
-          <th>Provincia</th>
-          <td th:text="${hecho.getUbicacionDTO.provincia}">Provincia</td>
-        </tr>
-        <tr>
-          <th>Municipio</th>
-          <td th:text="${hecho.getUbicacionDTO.municipio}">Municipio</td>
-        </tr>
-        <tr>
-          <th>Departamento</th>
-          <td th:text="${hecho.getUbicacionDTO.departamento}">Departamento</td>
-        </tr>
-        </tbody>
-      </table>
-    </div>
+          <div style="margin-bottom: 20px;">
+              <span class="estado-badge"
+                    th:if="${hecho.estado != null && esPropietario}"
+                    th:classappend="'estado-' + ${hecho.estado}"
+                    th:text="${hecho.estado}">
+                  ESTADO
+              </span>
 
-    <div class="content-block" style="border-bottom: none;">
-      <h3 class="content-title">Ubicación en Mapa</h3>
-      <div id="map-preview"
-           style="height: 400px; border-radius: 8px; margin-bottom: 10px; width: 100%; z-index: 1;"></div>
-    </div>
+              <h1 class="section-title" th:text="${hecho.titulo}">Título</h1>
+          </div>
+
+          <div class="content-block" th:if="${not #lists.isEmpty(hecho.multimedia)}">
+              <h3 class="content-title">Imágenes</h3>
+
+              <div class="carousel-wrapper" id="carousel-container">
+                  <button type="button" class="carousel-btn prev" id="btn-prev">&#10094;</button>
+
+                  <div class="gallery-track" id="carousel-track">
+                      <div th:each="imagen : ${hecho.multimedia}" class="gallery-item">
+                          <img th:src="@{'/hechos/uploads/' + ${imagen}}" th:alt="'Evidencia'">
+                      </div>
+                  </div>
+
+                  <button type="button" class="carousel-btn next" id="btn-next">&#10095;</button>
+              </div>
+          </div>
+
+          <div class="content-block">
+              <h3 class="content-title">Descripción</h3>
+              <p th:text="${hecho.descripcion}" style="font-weight: 500;">
+                  Descripción del hecho.
+              </p>
+          </div>
+
+          <div class="content-block">
+              <h3 class="content-title">Categoría</h3>
+              <p th:text="${hecho.categoria}" style="font-weight: 500;">Categoría</p>
+          </div>
+
+          <div class="content-block">
+              <h3 class="content-title">Fecha del hecho</h3>
+              <p th:text="${#temporals.format(hecho.fechaHecho, 'dd/MM/yyyy HH:mm')}" style="font-weight: 500;">
+                  01/01/2024 12:00
+              </p>
+          </div>
+
+          <div class="content-block">
+              <h3 class="content-title">Fuentes</h3>
+              <div th:if="${not #lists.isEmpty(hecho.fuentes)}" style="display: flex; flex-wrap: wrap; gap: 8px;">
+                      <span th:each="fuente : ${hecho.fuentes}"
+                            th:text="${fuente.nombre}"
+                            style="background-color: #f1f5f9; border: 1px solid #cbd5e1; padding: 4px 12px; border-radius: 16px; font-size: 0.85em; color: #475569; font-weight: 500;">
+                          Fuente
+                      </span>
+              </div>
+              <p th:if="${#lists.isEmpty(hecho.fuentes)}" style="color: #94a3b8; font-style: italic;">
+                  No se han especificado fuentes.
+              </p>
+          </div>
+
+          <div class="content-block">
+              <h3 class="content-title">Detalles de Ubicación</h3>
+              <table class="detail-table">
+                  <tbody>
+                  <tr>
+                      <th>Provincia</th>
+                      <td th:text="${hecho.getUbicacionDTO != null ? hecho.getUbicacionDTO.provincia : '-'}">Provincia</td>
+                  </tr>
+                  <tr>
+                      <th>Municipio</th>
+                      <td th:text="${hecho.getUbicacionDTO != null ? hecho.getUbicacionDTO.municipio : '-'}">Municipio</td>
+                  </tr>
+                  <tr>
+                      <th>Departamento</th>
+                      <td th:text="${hecho.getUbicacionDTO != null ? hecho.getUbicacionDTO.departamento : '-'}">Departamento</td>
+                  </tr>
+                  </tbody>
+              </table>
+          </div>
+
+          <div class="content-block" style="border-bottom: none;">
+              <h3 class="content-title">Ubicación en mapa</h3>
+              <div id="map-readonly" style="height: 400px; border-radius: 8px;"></div>
+          </div>
 
     <div style="margin-top: 40px; display: flex; gap: 15px; justify-content: center; flex-wrap: wrap;">
 
@@ -237,22 +135,97 @@
 <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
 
 <script th:inline="javascript">
-  document.addEventListener('DOMContentLoaded', function() {
-    /* Mapa centrado en la ubicación del hecho */
-    const latInicial = /*[[${hecho.ubicacionDTO.latitud}]]*/ -34.6037;
-    const lngInicial = /*[[${hecho.ubicacionDTO.longitud}]]*/ -58.3816;
+    document.addEventListener('DOMContentLoaded', function() {
+        const latInicial = /*[[${hecho.ubicacionDTO?.latitud ?: -34.6037}]]*/ -34.6037;
+        const lngInicial = /*[[${hecho.ubicacionDTO?.longitud ?: -58.3816}]]*/ -58.3816;
 
-    if(latInicial && lngInicial) {
-      const map = L.map('map-preview').setView([latInicial, lngInicial], 14);
-      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-        attribution: '&copy; OpenStreetMap contributors'
-      }).addTo(map);
+        const map = L.map('map-readonly').setView([latInicial, lngInicial], 14);
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution: '&copy; OpenStreetMap' }).addTo(map);
+        L.marker([latInicial, lngInicial]).addTo(map).bindPopup("Ubicación del hecho").openPopup();
+    });
+</script>
 
-      L.marker([latInicial, lngInicial]).addTo(map)
-              .bindPopup("Ubicación del hecho")
-              .openPopup();
-    }
-  });
+<script th:inline="javascript">
+    document.addEventListener('DOMContentLoaded', function() {
+
+        // --- INICIO LÓGICA CARRUSEL INFINITO ---
+        const track = document.getElementById('carousel-track');
+        const btnPrev = document.getElementById('btn-prev');
+        const btnNext = document.getElementById('btn-next');
+
+        if (!track || track.children.length === 0) return;
+
+        // Si solo hay 1 imagen, ocultamos flechas y no hacemos lógica
+        const slidesOriginales = Array.from(track.children);
+        if (slidesOriginales.length < 2) {
+            if(btnPrev) btnPrev.style.display = 'none';
+            if(btnNext) btnNext.style.display = 'none';
+            return;
+        }
+
+        // 1. Clonar primera y última diapositiva para el efecto infinito
+        const firstClone = slidesOriginales[0].cloneNode(true);
+        const lastClone = slidesOriginales[slidesOriginales.length - 1].cloneNode(true);
+
+        // Identificadores para depuración (opcional)
+        firstClone.id = 'first-clone';
+        lastClone.id = 'last-clone';
+
+        // 2. Insertar clones en el DOM
+        track.append(firstClone);
+        track.prepend(lastClone);
+
+        const slides = track.children; // Ahora incluye clones
+        let counter = 1; // Empezamos en 1 porque el 0 es el lastClone
+        let size = slidesOriginales[0].clientWidth; // Ancho inicial
+
+        // Posicionar en la primera imagen real (saltando el clon inicial)
+        track.style.transform = 'translateX(' + (-size * counter) + 'px)';
+
+        // Actualizar tamaño si se redimensiona la ventana
+        window.addEventListener('resize', () => {
+            size = track.clientWidth; // El wrapper controla el ancho visible
+            track.style.transition = "none"; // Sin animación al redimensionar
+            track.style.transform = 'translateX(' + (-size * counter) + 'px)';
+        });
+
+        // --- MOVIMIENTO ---
+
+        const moveToNext = () => {
+            if (counter >= slides.length - 1) return;
+            track.style.transition = "transform 0.4s ease-in-out";
+            counter++;
+            track.style.transform = 'translateX(' + (-size * counter) + 'px)';
+        };
+
+        const moveToPrev = () => {
+            if (counter <= 0) return;
+            track.style.transition = "transform 0.4s ease-in-out";
+            counter--;
+            track.style.transform = 'translateX(' + (-size * counter) + 'px)';
+        };
+
+        // Listeners Botones
+        if(btnNext) btnNext.addEventListener('click', moveToNext);
+        if(btnPrev) btnPrev.addEventListener('click', moveToPrev);
+
+        // --- EL SALTO MÁGICO (LOOP) ---
+        // Se ejecuta cuando termina la transición
+        track.addEventListener('transitionend', () => {
+            // Si estamos en el clon de la primera (al final)
+            if (slides[counter].id === 'first-clone') {
+                track.style.transition = "none"; // Quitamos animación
+                counter = 1; // Saltamos a la imagen 1 real
+                track.style.transform = 'translateX(' + (-size * counter) + 'px)';
+            }
+            // Si estamos en el clon de la última (al principio)
+            if (slides[counter].id === 'last-clone') {
+                track.style.transition = "none"; // Quitamos animación
+                counter = slides.length - 2; // Saltamos a la última imagen real
+                track.style.transform = 'translateX(' + (-size * counter) + 'px)';
+            }
+        });
+    });
 </script>
 
 </body>

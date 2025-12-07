@@ -5,181 +5,10 @@
     <title>Admin - Editar Hecho</title>
     <link rel="stylesheet" th:href="@{/css/global.css}">
     <link rel="stylesheet" th:href="@{/css/admin.css}">
+    <link rel="stylesheet" th:href="@{/css/hecho.css}">
+
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" />
-
-    <style>
-        /* ==========================================
-           ESTILOS DEL HTML "LINDO" (USER VIEW)
-           ========================================== */
-        body {
-            background-color: #f4f6f8;
-            font-family: 'Inter', sans-serif;
-        }
-
-        /* Ajuste para que encaje en el layout admin */
-        .detail-container {
-            max-width: 900px;
-            margin: 0 auto;
-            padding-bottom: 40px;
-        }
-
-        .stat-card {
-            background: white;
-            border-radius: 8px;
-            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-            padding: 40px;
-            margin-top: 20px;
-        }
-
-        .section-title {
-            font-size: 2rem;
-            font-weight: 700;
-            color: #1a202c;
-            margin-bottom: 0.5rem;
-            margin-top: 0;
-        }
-
-        .content-block {
-            margin-bottom: 24px;
-            padding-bottom: 24px;
-            border-bottom: 1px solid #e2e8f0;
-        }
-
-        .content-block:last-child {
-            border-bottom: none;
-        }
-
-        .content-title {
-            font-size: 0.875rem;
-            text-transform: uppercase;
-            letter-spacing: 0.05em;
-            color: #64748b;
-            font-weight: 600;
-            margin-bottom: 8px;
-            display: block;
-        }
-
-        /* Tablas de detalle (NOMBRE CAMBIADO para evitar conflicto con admin.css) */
-        .detail-table {
-            width: 100%;
-            border-collapse: collapse;
-        }
-        .detail-table th, .detail-table td {
-            text-align: left;
-            padding: 12px 0;
-            border-bottom: 1px solid #edf2f7;
-            border-top: none;
-            border-left: none;
-            border-right: none;
-            background: transparent;
-        }
-        .detail-table th {
-            width: 30%;
-            color: #64748b;
-            font-weight: 500;
-        }
-
-        /* Galería */
-        .gallery-container {
-            display: flex;
-            overflow-x: auto;
-            gap: 15px;
-            padding-bottom: 15px;
-            scroll-snap-type: x mandatory;
-        }
-        .gallery-item {
-            flex: 0 0 auto;
-            width: 300px;
-            height: 200px;
-            border-radius: 8px;
-            overflow: hidden;
-            scroll-snap-align: start;
-            border: 1px solid #eee;
-        }
-        .gallery-item img {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-        }
-
-        /* Badge para indicar que una foto es "NUEVA" */
-        .badge-new {
-            position: absolute;
-            bottom: 5px;
-            right: 5px;
-            background-color: #3182ce;
-            color: white;
-            font-size: 0.7rem;
-            padding: 2px 6px;
-            border-radius: 4px;
-            font-weight: bold;
-            z-index: 5;
-        }
-
-        /* Contenedor de previsualización (para que se pegue al lado de las viejas) */
-        #preview-container {
-            display: contents; /* Hace que los hijos se comporten como si fueran parte del contenedor padre */
-        }
-
-        /* ==========================================
-           ESTILOS NUEVOS PARA LA EDICIÓN (ADAPTADOS)
-           ========================================== */
-
-        .id-display {
-            color: #111; /* Negro casi puro */
-            font-weight: 800;
-        }
-
-        .clean-input {
-            width: 100%;
-            padding: 10px;
-            border: 1px solid #cbd5e0;
-            border-radius: 6px;
-            font-family: 'Inter', sans-serif;
-            font-size: 1rem;
-            color: #2d3748;
-            background: #fff;
-        }
-        .clean-input:focus {
-            border-color: #3182ce;
-            outline: none;
-            box-shadow: 0 0 0 3px rgba(49, 130, 206, 0.1);
-        }
-
-        /* Input deshabilitado (Loading) */
-        .clean-input:disabled {
-            background-color: #f7fafc;
-            color: #a0aec0;
-            cursor: wait;
-        }
-
-        .btn-reject {
-            background-color: #e53e3e;
-            color: #ffffff;
-            border: none;
-            padding: 10px 24px;
-            border-radius: 6px;
-            font-weight: 600;
-            cursor: pointer;
-            text-decoration: none;
-            display: inline-block;
-            font-size: 1rem;
-        }
-        .btn-reject:hover { background-color: #c53030; }
-
-        .btn {
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            font-weight: 600;
-        }
-
-        /* Errores */
-        .api-error-alert { background-color: #fef2f2; border: 1px solid #fecaca; border-left: 5px solid #dc2626; color: #991b1b; padding: 20px; border-radius: 6px; margin-bottom: 20px; }
-        .input-error { border-color: #dc2626 !important; background-color: #fff5f5 !important; }
-        .field-error-msg { color: #dc2626; font-size: 0.85rem; margin-top: 5px; display: block; }
-    </style>
 </head>
 <body>
 <div class="admin-layout">
@@ -216,11 +45,11 @@
                     <div class="content-block">
                         <label class="content-title">Imágenes</label>
 
-                        <div class="gallery-container" id="main-gallery">
+                        <div class="gallery-container editable-gallery" id="main-gallery">
 
                             <div th:if="${not #lists.isEmpty(hecho.multimedia)}"
                                  th:each="img, stat : *{multimedia}"
-                                 class="gallery-item-wrapper"
+                                 class="gallery-item-wrapper existing-item"
                                  th:id="'img-wrapper-' + ${stat.index}">
 
                                 <div class="gallery-item">
@@ -228,19 +57,19 @@
                                 </div>
 
                                 <button type="button" class="btn-delete-img"
-                                        th:onclick="'removeImage(' + ${stat.index} + ')'"
+                                        th:onclick="'removeExistingImage(' + ${stat.index} + ')'"
                                         title="Eliminar">×</button>
 
                                 <input type="hidden" th:field="*{multimedia[__${stat.index}__]}" th:id="'input-img-' + ${stat.index}">
                             </div>
 
-                            <div id="preview-container"></div>
+                            <div id="preview-container" style="display: contents;"></div>
 
                         </div>
 
                         <div style="margin-top: 15px;">
                             <input type="file" id="file-input" name="nuevasImagenes" multiple accept="image/*"
-                                   style="display: none;" onchange="previewFiles()">
+                                   onchange="handleFileSelect()">
 
                             <button type="button" class="btn btn--secondary" onclick="document.getElementById('file-input').click()">
                                 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right: 5px;"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><polyline points="21 15 16 10 5 21"></polyline></svg>
@@ -272,7 +101,7 @@
                     </div>
 
                     <div class="content-block">
-                        <label class="content-title">Fecha</label>
+                        <label class="content-title">Fecha del hecho</label>
                         <input class="clean-input" type="datetime-local" name="fecha"
                                th:value="${#temporals.format(hecho.fecha, 'yyyy-MM-dd''T''HH:mm')}"
                                th:classappend="${errores != null and errores.containsKey('fecha')} ? 'input-error' : ''">
@@ -310,50 +139,118 @@
 
 <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
 <script th:inline="javascript">
-    function previewFiles() {
-        const previewContainer = document.getElementById('preview-container');
-        const fileInput = document.getElementById('file-input');
-        const fileCount = document.getElementById('file-count');
-        const files = fileInput.files;
+    // Variable global para acumular archivos
+    let dt = new DataTransfer();
 
-        // Limpiamos previsualizaciones anteriores si el usuario vuelve a seleccionar
+    function handleFileSelect() {
+        const fileInput = document.getElementById('file-input');
+        const newFiles = fileInput.files;
+
+        // 1. Agregamos archivos al acumulador
+        for (let i = 0; i < newFiles.length; i++) {
+            if (newFiles[i].type.startsWith('image/')) {
+                // Chequeo simple de duplicados por nombre y tamaño
+                let exists = false;
+                for(let j=0; j<dt.files.length; j++){
+                    if(dt.files[j].name === newFiles[i].name && dt.files[j].size === newFiles[i].size){
+                        exists = true; break;
+                    }
+                }
+                if(!exists) dt.items.add(newFiles[i]);
+            }
+        }
+
+        // 2. Sincronizamos el input real
+        fileInput.files = dt.files;
+
+        // 3. Renderizamos
+        renderNewPreviews();
+        updateGalleryVisibility();
+    }
+
+    function renderNewPreviews() {
+        const previewContainer = document.getElementById('preview-container');
+        const fileCount = document.getElementById('file-count');
+
+        // Limpiamos lo visual anterior
         previewContainer.innerHTML = '';
 
-        if (files.length > 0) {
-            fileCount.textContent = `${files.length} imagen(es) seleccionada(s)`;
-
-            // Iteramos los archivos seleccionados
-            Array.from(files).forEach(file => {
-                // Validamos que sea imagen
-                if (!file.type.startsWith('image/')){ return; }
-
-                const reader = new FileReader();
-
-                // Cuando termine de leer el archivo, crea el HTML
-                reader.onload = function(e) {
-                    const wrapper = document.createElement('div');
-                    wrapper.className = 'gallery-item-wrapper';
-
-                    // Estructura HTML idéntica a las existentes
-                    wrapper.innerHTML = `
-                    <div class="gallery-item" style="border: 2px dashed #3182ce;">
-                        <img src="${e.target.result}" alt="Nueva">
-                    </div>
-                    <span class="badge-new">NUEVA</span>
-                `;
-
-                    previewContainer.appendChild(wrapper);
-                };
-
-                // Leer archivo como URL de datos (base64)
-                reader.readAsDataURL(file);
-            });
+        // Texto del contador
+        if (dt.files.length > 0) {
+            fileCount.textContent = `${dt.files.length} imagen(es) nueva(s)`;
         } else {
             fileCount.textContent = '';
         }
+
+        // Generamos el HTML para cada foto nueva
+        Array.from(dt.files).forEach((file, index) => {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const wrapper = document.createElement('div');
+                wrapper.className = 'gallery-item-wrapper';
+
+                // AQUI ESTÁ LA MAGIA:
+                // Usamos la clase 'gallery-item-new' que definimos en CSS para el borde punteado
+                wrapper.innerHTML = `
+                <div class="gallery-item gallery-item-new">
+                    <img src="${e.target.result}" alt="Nueva">
+                </div>
+                <span class="badge-new">NUEVA</span>
+
+                <button type="button" class="btn-delete-img"
+                        onclick="removeNewFile(${index})"
+                        title="Quitar esta foto">×</button>
+            `;
+                previewContainer.appendChild(wrapper);
+            };
+            reader.readAsDataURL(file);
+        });
     }
 
-    function removeImage(index) { document.getElementById('img-wrapper-' + index).remove(); }
+    function removeNewFile(index) {
+        const fileInput = document.getElementById('file-input');
+
+        // Creamos un DataTransfer nuevo excluyendo el borrado
+        const newDt = new DataTransfer();
+        Array.from(dt.files).forEach((file, i) => {
+            if (i !== index) newDt.items.add(file);
+        });
+
+        // Actualizamos global e input
+        dt = newDt;
+        fileInput.files = dt.files;
+
+        renderNewPreviews();
+        updateGalleryVisibility();
+    }
+
+    function removeExistingImage(index) {
+        // Borramos el wrapper del DOM
+        const wrapper = document.getElementById('img-wrapper-' + index);
+        if(wrapper) {
+            wrapper.remove();
+            // Borramos también el input hidden para que Spring sepa que se fue
+            const inputHidden = document.getElementById('input-img-' + index);
+            if(inputHidden) inputHidden.remove();
+
+            updateGalleryVisibility();
+        }
+    }
+
+    function updateGalleryVisibility() {
+        const gallery = document.getElementById('main-gallery');
+        // Buscamos clases "existing-item" que sigan vivas en el DOM
+        const existingItems = document.querySelectorAll('.existing-item');
+        const newItemsCount = dt.files.length;
+
+        // Si no hay viejas Y no hay nuevas -> Ocultamos el contenedor gris (opcional)
+        // Si preferís que el contenedor gris quede siempre visible, borrá este IF.
+        if (existingItems.length === 0 && newItemsCount === 0) {
+            gallery.style.display = 'none';
+        } else {
+            gallery.style.display = 'flex';
+        }
+    }
 
     document.addEventListener('DOMContentLoaded', function() {
         /* Configuración Inicial */
