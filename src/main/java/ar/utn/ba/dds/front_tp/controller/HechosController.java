@@ -1,8 +1,10 @@
 package ar.utn.ba.dds.front_tp.controller;
 
 import ar.utn.ba.dds.front_tp.Utils.JwtUtils;
+import ar.utn.ba.dds.front_tp.dto.editar.EditarHechoDTO;
 import ar.utn.ba.dds.front_tp.dto.hechos.CategoriaDTO;
 import ar.utn.ba.dds.front_tp.dto.hechos.CrearHechoDTO;
+import ar.utn.ba.dds.front_tp.dto.input.ApiError;
 import ar.utn.ba.dds.front_tp.dto.input.ColeccionInputDTO;
 import ar.utn.ba.dds.front_tp.dto.input.HechoInputDTO;
 import ar.utn.ba.dds.front_tp.dto.hechos.input.SolicitudEliminacionInputDTO;
@@ -10,6 +12,8 @@ import ar.utn.ba.dds.front_tp.dto.output.ColeccionOutputDTO;
 import ar.utn.ba.dds.front_tp.dto.output.HechoOutputDTO;
 import ar.utn.ba.dds.front_tp.dto.output.SoliOutputDTO;
 import ar.utn.ba.dds.front_tp.dto.usuarios.AuthResponseDTO;
+import ar.utn.ba.dds.front_tp.exceptions.api.ValidationException;
+import ar.utn.ba.dds.front_tp.mappers.HechoMapper;
 import ar.utn.ba.dds.front_tp.services.*;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.servlet.http.HttpSession;
@@ -17,6 +21,8 @@ import java.io.IOException;
 import java.net.MalformedURLException;
 import java.security.Principal;
 import java.time.LocalDate;
+
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -39,7 +45,9 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import org.springframework.security.core.Authentication;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import org.springframework.security.authentication.AnonymousAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -54,9 +62,7 @@ public class HechosController {
   @Autowired
   private  final UploadFileService imagenesService;
   private final ObjectMapper objectMapper;
-  @Autowired
-  private HttpSession session;
-  private SecurityContextHolder securityContextHolder;
+  private final HechoMapper hechoMapper;
 
   private final ColeccionesApiService coleccionesApiService; // <--- AGREGAR
   private final FuentesApiService fuentesApiService;         // <--- AGREGAR
@@ -409,7 +415,10 @@ public class HechosController {
                             RedirectAttributes redirectAttributes) {
     try {
       // Usamos HechoInputDTO (con estructura anidada ubicacionInputDTO)
-      HechoInputDTO hecho = this.hechosApiService.obtenerHecho(id);
+      HechoInputDTO inputOriginal = this.hechosApiService.obtenerHecho(id);
+
+      // Mapeamos a EditarHechoDTO (plano)
+      EditarHechoDTO hecho = this.hechoMapper.toEditarHechoDTO(inputOriginal);
 
       model.addAttribute("hecho", hecho);
       model.addAttribute("id", id);
@@ -418,28 +427,81 @@ public class HechosController {
 
     } catch (Exception e) {
       redirectAttributes.addFlashAttribute("error", "No se pudo cargar el hecho.");
-      return "redirect:/mis-hechos";
+      return "redirect:/hechos/mis-hechos";
     }
   }
 
   @PostMapping("/{id}/editar")
-  public String subirHechoEditado(@PathVariable Long id, @ModelAttribute("hecho") HechoInputDTO hechoInputDTO, Authentication authentication) {
-    try{this.solicitudesModificacionApiService.crearSolicitudModificacion(id, hechoInputDTO);
-    } catch (Exception e){
-      log.error(e.getMessage());
+  public String subirHechoEditado(@PathVariable Long id,
+                                  @ModelAttribute("hecho") @Valid EditarHechoDTO hecho,
+                                  BindingResult bindingResult,
+                                  @RequestParam(value = "nuevasImagenes", required = false) List<MultipartFile> multipartFiles,
+                                  Model model,
+                                  RedirectAttributes redirectAttributes) {
+    Map<String, String> erroresVista = new HashMap<>();
+
+    // A. VALIDACIÓN LOCAL
+    if (bindingResult.hasErrors()) {
+      bindingResult.getFieldErrors().forEach(e -> erroresVista.put(e.getField(), e.getDefaultMessage()));
+
+      model.addAttribute("hecho", hecho); // 'hecho' ya tiene la lista multimedia gracias a los hidden inputs
+      model.addAttribute("id", id);
+      model.addAttribute("errores", erroresVista);
+
+      return "editar-hecho";
     }
-    return "redirect:/hechos/mis-hechos";
-  }
-    @GetMapping(value = "/uploads/{filename}")
-    public ResponseEntity<Resource> goImage(@PathVariable String filename) {
-        Resource resource = null;
-        try {
-            resource = imagenesService.load(filename);
-        } catch (MalformedURLException e) {
-            e.printStackTrace();
+
+    // B. PROCESAR FOTOS NUEVAS
+    if (hecho.getMultimedia() == null) hecho.setMultimedia(new ArrayList<>());
+
+    if (multipartFiles != null) {
+      for (MultipartFile file : multipartFiles) {
+        if (!file.isEmpty()) {
+          try {
+            String name = imagenesService.copy(file);
+            hecho.getMultimedia().add(name);
+          } catch (IOException e) {
+            model.addAttribute("errorGlobal", "Error al subir imagen: " + file.getOriginalFilename());
+            model.addAttribute("hecho", hecho);
+            model.addAttribute("id", id);
+            return "editar-hecho";
+          }
         }
-        return ResponseEntity.ok()
-                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + resource.getFilename() + "\"")
-                .body(resource);
+      }
     }
+
+    // C. LLAMADA AL SERVICIO
+    try {
+      this.solicitudesModificacionApiService.crearSolicitudModificacion(id, hecho);
+
+      redirectAttributes.addFlashAttribute("mensaje", "Solicitud de edición creada con éxito.");
+      return "redirect:/hechos/" + id + "/detalle";
+
+    } catch (ValidationException ex) {
+      // D. ERROR DE NEGOCIO (ApiError)
+      ApiError apiError = ex.getApiError();
+      if (apiError.fields() != null) erroresVista.putAll(apiError.fields());
+      if (apiError.message() != null) model.addAttribute("globalError", apiError.message());
+      if (apiError.details() != null) model.addAttribute("errorDetails", apiError.details());
+
+      model.addAttribute("hecho", hecho);
+      model.addAttribute("id", id);
+      model.addAttribute("errores", erroresVista);
+
+      return "editar-hecho";
+    }
+  }
+
+  @GetMapping(value = "/uploads/{filename}")
+  public ResponseEntity<Resource> goImage(@PathVariable String filename) {
+      Resource resource = null;
+      try {
+          resource = imagenesService.load(filename);
+      } catch (MalformedURLException e) {
+          e.printStackTrace();
+      }
+      return ResponseEntity.ok()
+              .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + resource.getFilename() + "\"")
+              .body(resource);
+  }
 }

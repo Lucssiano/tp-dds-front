@@ -48,5 +48,6 @@ public class EditarHechoDTO {
   @PastOrPresent(message = "La fecha no puede ser posterior a la fecha y hora actual.")
   private LocalDateTime fecha;
 
+  private String estado;
   private String usuario;
 }

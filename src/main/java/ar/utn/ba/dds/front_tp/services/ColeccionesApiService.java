@@ -10,7 +10,9 @@ import ar.utn.ba.dds.front_tp.exceptions.api.InternalServerErrorException;
 import ar.utn.ba.dds.front_tp.exceptions.api.ResourceNotFoundException;
 import ar.utn.ba.dds.front_tp.exceptions.api.ValidationException;
 import ar.utn.ba.dds.front_tp.mappers.ColeccionMapper;
+import ar.utn.ba.dds.front_tp.services.internal.HandlerExceptions;
 import ar.utn.ba.dds.front_tp.services.internal.WebApiCallerService;
+import lombok.extern.slf4j.Slf4j;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpHeaders;
@@ -24,70 +26,19 @@ import java.util.Collections;
 import java.util.List;
 
 @Service
+@Slf4j
 public class ColeccionesApiService {
-
-  private static final Logger log = LoggerFactory.getLogger(ColeccionesApiService.class);
   private String coleccionesServiceUrl = "http://localhost:8081/metamapa";
   private final WebApiCallerService webApiCallerService;
   private final ColeccionMapper coleccionMapper;
   private final WebClient webClient;
+  private final HandlerExceptions handlerExceptions;
 
-  public ColeccionesApiService(WebApiCallerService webApiCallerService, ColeccionMapper coleccionMapper){
+  public ColeccionesApiService(WebApiCallerService webApiCallerService, ColeccionMapper coleccionMapper, HandlerExceptions handlerExceptions){
     this.webClient = WebClient.builder().baseUrl("http://localhost:8081/metamapa/colecciones").build();
     this.webApiCallerService = webApiCallerService;
     this.coleccionMapper = coleccionMapper;
-  }
-
-  // TODO: HAY 2 OPCIONES: generar un BaseApiClient donde se tengan estos 2 metodos y que todos lo hereden O copiar y pegar esto en todos los lugares que se utilice
-  private Mono<Throwable> manejarError(ClientResponse response) {
-    int status = response.statusCode().value();
-    log.info("🌐 Iniciando manejo de error HTTP. Status recibido: {}", status);
-
-    return response.bodyToMono(ApiError.class)
-        // CASO A: El backend devolvió un JSON con el error
-        .flatMap(apiError -> {
-          log.info("API Error Body deserializado (Código/Mensaje): {} / {}",
-              apiError.code(), apiError.message());
-          return mapToExceptionWithLogs(status, apiError);
-        })
-        // CASO B: El backend falló sin body (o body vacío)
-        .switchIfEmpty(Mono.defer(() -> {
-          log.warn("API Error Body vacío. Generando error genérico.");
-          ApiError fallbackError = ApiError.of(
-              String.valueOf(status),
-              "Error sin detalle del servidor"
-          );
-          return mapToExceptionWithLogs(status, fallbackError);
-        }));
-  }
-
-  private Mono<Throwable> mapToExceptionWithLogs(int status, ApiError err) {
-    String apiCode = err.code() != null ? err.code() : "N/A";
-
-    if (status == 400 || status == 422) {
-      log.error("Lanzando ValidationException (Status {}). Código API: {}", status, apiCode);
-      return Mono.error(new ValidationException(status, err));
-    }
-    else if (status == 401) {
-      log.error("Lanzando AutenticationException (Status 401).");
-      return Mono.error(new AutenticationException(status, err));
-    }
-    else if (status == 403) {
-      log.error("Lanzando AuthorizationException (Status 403).");
-      return Mono.error(new AuthorizationException(status, err));
-    }
-    else if (status == 404) {
-      log.error("Lanzando ResourceNotFoundException (Status 404).");
-      return Mono.error(new ResourceNotFoundException(status, err));
-    }
-    else if (status >= 500) {
-      log.error("Lanzando InternalServerErrorException (Status {}).", status);
-      return Mono.error(new InternalServerErrorException(status, err));
-    }
-    else {
-      log.error("Lanzando GeneralApiException (Status {}).", status);
-      return Mono.error(new GeneralApiException(status, err));
-    }
+    this.handlerExceptions = handlerExceptions;
   }
 
   public List<ColeccionInputDTO> obtenerColecciones() {
@@ -140,7 +91,7 @@ public class ColeccionesApiService {
         .retrieve()
         .onStatus(HttpStatusCode::isError, response -> {
           log.warn("Error recibido. Status: {}", response.statusCode().value());
-          return this.manejarError(response); // Llama al método centralizado (que mapea 4xx)
+          return this.handlerExceptions.manejarError(response);
         })
         .bodyToMono(ColeccionInputDTO.class);
   }

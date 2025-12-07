@@ -45,7 +45,9 @@
                     <div class="content-block">
                         <label class="content-title">Imágenes</label>
 
-                        <div class="gallery-container editable-gallery" id="main-gallery">
+                        <div class="gallery-container editable-gallery" id="main-gallery"
+                             th:style="${#lists.isEmpty(hecho.multimedia)} ? 'display: none;' : ''"
+                        >
 
                             <div th:if="${not #lists.isEmpty(hecho.multimedia)}"
                                  th:each="img, stat : *{multimedia}"

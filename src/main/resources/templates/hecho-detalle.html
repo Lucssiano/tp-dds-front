@@ -19,7 +19,7 @@
 
 <main class="detail-container">
 
-      <div th:if="${mensaje}" style="background-color: #d1fae5; border: 1px solid #34d399; color: #065f46; padding: 15px; border-radius: 6px; margin-bottom: 20px;">
+      <div th:if="${mensaje}" style="background-color: #d1fae5; border: 1px solid #34d399; color: #065f46; padding: 15px; border-radius: 6px; margin-bottom: 20px; margin-top: 20px;">
           <span th:text="${mensaje}"></span>
       </div>
 
@@ -118,7 +118,7 @@
         Ir al mapa
       </a>
 
-      <a th:if="${esPropietario}"
+      <a th:if="${esPropietario && hecho.estado == 'ACEPTADO'}"
          th:href="@{|/hechos/${hecho.id}/editar|}"
          class="btn btn--primary"
          style="min-width: 150px; text-align: center;">

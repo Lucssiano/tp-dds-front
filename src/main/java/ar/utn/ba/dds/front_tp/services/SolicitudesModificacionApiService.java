@@ -1,11 +1,14 @@
 package ar.utn.ba.dds.front_tp.services;
 
-import ar.utn.ba.dds.front_tp.dto.input.HechoInputDTO;
+import ar.utn.ba.dds.front_tp.dto.editar.EditarHechoDTO;
 import ar.utn.ba.dds.front_tp.dto.hechos.input.SolicitudModificacionInputDTO;
 import ar.utn.ba.dds.front_tp.dto.output.HechoOutputDTO;
 import ar.utn.ba.dds.front_tp.dto.output.SolicitudModificacionOutputDTO;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import ar.utn.ba.dds.front_tp.mappers.HechoMapper;
+import ar.utn.ba.dds.front_tp.services.internal.HandlerExceptions;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatusCode;
 import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;
 
@@ -13,34 +16,35 @@ import java.util.Collections;
 import java.util.List;
 
 @Service
+@Slf4j
 public class SolicitudesModificacionApiService {
   private final WebClient webClient;
-  private static final Logger log = LoggerFactory.getLogger(SolicitudesApiService.class);
+
+  @Autowired
+  private HechoMapper hechoMapper;
+
+  @Autowired
+  private HandlerExceptions handlerExceptions;
 
   public SolicitudesModificacionApiService(){
     this.webClient = WebClient.builder().baseUrl("http://localhost:8081/metamapa/solicitudes-modif").build();
   }
 
-  public SolicitudModificacionOutputDTO crearSolicitudModificacion(Long id, HechoInputDTO hechoInputDTO){
-    HechoOutputDTO hechoOutputDTO = HechoOutputDTO.builder()
-        .titulo(hechoInputDTO.getTitulo())
-        .descripcion(hechoInputDTO.getDescripcion())
-        .categoria(hechoInputDTO.getCategoria())
-        .multimedia(hechoInputDTO.getMultimedia())
-        .fecha(hechoInputDTO.getFechaHecho())
-        .latitud(hechoInputDTO.getUbicacionDTO().getLatitud())
-        .longitud(hechoInputDTO.getUbicacionDTO().getLongitud())
-        .usuario(hechoInputDTO.getUsuario())
-        .build();
+  public void crearSolicitudModificacion(Long id, EditarHechoDTO editarHechoDTO){
+    HechoOutputDTO hechoOutputDTO = this.hechoMapper.toHechoOutputDTO(editarHechoDTO);
 
     SolicitudModificacionOutputDTO solicitudModificacionOutputDTO = SolicitudModificacionOutputDTO.builder()
         .hechoId(id)
         .hecho(hechoOutputDTO)
         .build();
 
-    return webClient.post()
+    webClient.post()
         .bodyValue(solicitudModificacionOutputDTO)
         .retrieve()
+        .onStatus(HttpStatusCode::isError, response -> {
+          log.warn("Error recibido. Status: {}", response.statusCode().value());
+          return this.handlerExceptions.manejarError(response);
+        })
         .bodyToMono(SolicitudModificacionOutputDTO.class)
         .block();
   }

@@ -16,6 +16,7 @@ public class HechoMapper {
         .latitud(hechoInputDTO.getUbicacionDTO().getLatitud())
         .longitud(hechoInputDTO.getUbicacionDTO().getLongitud())
         .fecha(hechoInputDTO.getFechaHecho())
+        .estado(hechoInputDTO.getEstado())
         .usuario(hechoInputDTO.getUsuario())
         .build();
   }
