@@ -95,31 +95,71 @@
         .estado-PENDIENTE { background-color: #ffc107; color: #333; }
 
         /* Galería */
-        .gallery-container {
-            display: flex;
-            overflow-x: auto;
-            gap: 15px;
-            padding-bottom: 15px;
-            scroll-snap-type: x mandatory;
-        }
-        .gallery-item {
-            flex: 0 0 auto;
-            width: 300px;
-            height: 200px;
-            border-radius: 8px;
-            overflow: hidden;
-            scroll-snap-align: start;
-            border: 1px solid #eee;
-        }
-        .gallery-item img {
+        /* Ventana principal (Máscara) */
+        .carousel-wrapper {
+            position: relative;
             width: 100%;
-            height: 100%;
-            object-fit: cover;
+            max-width: 800px;
+            margin: 0 auto;
+            background-color: #fff;
+            border-radius: 8px;
+            border: 1px solid #e2e8f0;
+            overflow: hidden;
         }
 
-        /* ==========================================
-           ESTILOS NUEVOS PARA LA EDICIÓN (ADAPTADOS)
-           ========================================== */
+        /* La cinta larga que contiene las fotos */
+        .gallery-track {
+            display: flex;
+            height: 450px;
+            width: 100%;
+            /* La magia del movimiento la haremos con transform en JS */
+        }
+
+        /* Cada slide */
+        .gallery-item {
+            flex: 0 0 100%;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background-color: #fff;
+        }
+
+        /* La imagen */
+        .gallery-item img {
+            max-width: 100%;
+            max-height: 100%;
+            width: auto;
+            height: auto;
+            object-fit: contain;
+            display: block;
+        }
+
+        /* Botones de navegación */
+        .carousel-btn {
+            position: absolute;
+            top: 50%;
+            transform: translateY(-50%);
+            background-color: rgba(30, 30, 30, 0.6);
+            color: white;
+            border: none;
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            font-size: 1.5rem;
+            cursor: pointer;
+            z-index: 10;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: background 0.3s;
+            user-select: none;
+        }
+
+        .carousel-btn:hover { background-color: rgba(0, 0, 0, 0.9); }
+        .carousel-btn.prev { left: 15px; }
+        .carousel-btn.next { right: 15px; }
 
         .id-display {
             color: #111; /* Negro casi puro */
@@ -199,10 +239,17 @@
 
                 <div class="content-block" th:if="${not #lists.isEmpty(hecho.multimedia)}">
                     <h3 class="content-title">Imágenes</h3>
-                    <div class="gallery-container">
-                        <div th:each="imagen : ${hecho.multimedia}" class="gallery-item">
-                            <img th:src="@{'/hechos/uploads/' + ${imagen}}" th:alt="'Imagen de ' + ${hecho.titulo}">>
+
+                    <div class="carousel-wrapper" id="carousel-container">
+                        <button type="button" class="carousel-btn prev" id="btn-prev">&#10094;</button>
+
+                        <div class="gallery-track" id="carousel-track">
+                            <div th:each="imagen : ${hecho.multimedia}" class="gallery-item">
+                                <img th:src="@{'/hechos/uploads/' + ${imagen}}" th:alt="'Evidencia'">
+                            </div>
                         </div>
+
+                        <button type="button" class="carousel-btn next" id="btn-next">&#10095;</button>
                     </div>
                 </div>
 
@@ -219,7 +266,7 @@
                 </div>
 
                 <div class="content-block">
-                    <h3 class="content-title">Fecha</h3>
+                    <h3 class="content-title">Fecha del hecho</h3>
                     <p th:text="${#temporals.format(hecho.fechaHecho, 'dd/MM/yyyy HH:mm')}" style="font-weight: 500;">
                         01/01/2024 12:00
                     </p>
@@ -260,7 +307,7 @@
                 </div>
 
                 <div class="content-block" style="border-bottom: none;">
-                    <h3 class="content-title">Mapa</h3>
+                    <h3 class="content-title">Ubicación en mapa</h3>
                     <div id="map-readonly" style="height: 400px; border-radius: 8px;"></div>
                 </div>
 
@@ -281,6 +328,7 @@
 </div>
 
 <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
+<!-- MAPA -->
 <script th:inline="javascript">
     document.addEventListener('DOMContentLoaded', function() {
         const latInicial = /*[[${hecho.ubicacionDTO?.latitud ?: -34.6037}]]*/ -34.6037;
@@ -288,7 +336,91 @@
 
         const map = L.map('map-readonly').setView([latInicial, lngInicial], 14);
         L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution: '&copy; OpenStreetMap' }).addTo(map);
-        L.marker([latInicial, lngInicial]).addTo(map).bindPopup("Ubicación").openPopup();
+        L.marker([latInicial, lngInicial]).addTo(map).bindPopup("Ubicación del hecho").openPopup();
+    });
+</script>
+
+<!-- CARRUSEL IMAGENES -->
+<script th:inline="javascript">
+    document.addEventListener('DOMContentLoaded', function() {
+
+        // --- INICIO LÓGICA CARRUSEL INFINITO ---
+        const track = document.getElementById('carousel-track');
+        const btnPrev = document.getElementById('btn-prev');
+        const btnNext = document.getElementById('btn-next');
+
+        if (!track || track.children.length === 0) return;
+
+        // Si solo hay 1 imagen, ocultamos flechas y no hacemos lógica
+        const slidesOriginales = Array.from(track.children);
+        if (slidesOriginales.length < 2) {
+            if(btnPrev) btnPrev.style.display = 'none';
+            if(btnNext) btnNext.style.display = 'none';
+            return;
+        }
+
+        // 1. Clonar primera y última diapositiva para el efecto infinito
+        const firstClone = slidesOriginales[0].cloneNode(true);
+        const lastClone = slidesOriginales[slidesOriginales.length - 1].cloneNode(true);
+
+        // Identificadores para depuración (opcional)
+        firstClone.id = 'first-clone';
+        lastClone.id = 'last-clone';
+
+        // 2. Insertar clones en el DOM
+        track.append(firstClone);
+        track.prepend(lastClone);
+
+        const slides = track.children; // Ahora incluye clones
+        let counter = 1; // Empezamos en 1 porque el 0 es el lastClone
+        let size = slidesOriginales[0].clientWidth; // Ancho inicial
+
+        // Posicionar en la primera imagen real (saltando el clon inicial)
+        track.style.transform = 'translateX(' + (-size * counter) + 'px)';
+
+        // Actualizar tamaño si se redimensiona la ventana
+        window.addEventListener('resize', () => {
+            size = track.clientWidth; // El wrapper controla el ancho visible
+            track.style.transition = "none"; // Sin animación al redimensionar
+            track.style.transform = 'translateX(' + (-size * counter) + 'px)';
+        });
+
+        // --- MOVIMIENTO ---
+
+        const moveToNext = () => {
+            if (counter >= slides.length - 1) return;
+            track.style.transition = "transform 0.4s ease-in-out";
+            counter++;
+            track.style.transform = 'translateX(' + (-size * counter) + 'px)';
+        };
+
+        const moveToPrev = () => {
+            if (counter <= 0) return;
+            track.style.transition = "transform 0.4s ease-in-out";
+            counter--;
+            track.style.transform = 'translateX(' + (-size * counter) + 'px)';
+        };
+
+        // Listeners Botones
+        if(btnNext) btnNext.addEventListener('click', moveToNext);
+        if(btnPrev) btnPrev.addEventListener('click', moveToPrev);
+
+        // --- EL SALTO MÁGICO (LOOP) ---
+        // Se ejecuta cuando termina la transición
+        track.addEventListener('transitionend', () => {
+            // Si estamos en el clon de la primera (al final)
+            if (slides[counter].id === 'first-clone') {
+                track.style.transition = "none"; // Quitamos animación
+                counter = 1; // Saltamos a la imagen 1 real
+                track.style.transform = 'translateX(' + (-size * counter) + 'px)';
+            }
+            // Si estamos en el clon de la última (al principio)
+            if (slides[counter].id === 'last-clone') {
+                track.style.transition = "none"; // Quitamos animación
+                counter = slides.length - 2; // Saltamos a la última imagen real
+                track.style.transform = 'translateX(' + (-size * counter) + 'px)';
+            }
+        });
     });
 </script>
 </body>
