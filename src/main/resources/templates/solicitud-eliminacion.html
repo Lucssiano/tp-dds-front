@@ -73,7 +73,7 @@
                       method="post"
                       class="form">
 
-                    <input type="hidden" th:field="*{tituloHecho}" th:value="${hecho.titulo}"/>
+                    <input type="hidden" class="form-control" th:value="${hecho.titulo}" readonly>
 
                     <div class="form-group">
                         <label for="justificacion">
@@ -89,7 +89,8 @@
 
 
                         <small class="help-text" th:if="${esAnonimo}">
-                            Como no estás logueado, la justificación debe tener al menos 500 caracteres.
+                            La justificación debe tener al menos 500 caracteres.
+                        <!-- decia:  como no estas logueado, la justificación debe tener al menos 500 caracteres.  -->
                         </small>
                         <small class="help-text" th:unless="${esAnonimo}">
                             Puedes escribir una justificación de cualquier extensión.

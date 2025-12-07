@@ -349,6 +349,7 @@ public class HechosController {
       } else {
         solicitud.setUsuario("VISUALIZADOR");
       }
+      solicitud.setIdHecho(id);
 
       log.info("USUARIO justito antes de mandar" + solicitud.getUsuario());
 
