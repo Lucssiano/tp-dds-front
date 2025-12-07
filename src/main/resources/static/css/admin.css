@@ -175,5 +175,13 @@
     font-weight: 600;
     margin-bottom: 8px;
 }
+/* Clase utilitaria para celdas con mucho texto */
+.cell-wrap {
+    white-space: normal !important; /* Fuerza al texto a bajar de renglón */
+    word-wrap: break-word;          /* Rompe palabras muy largas si es necesario */
+    max-width: 350px;               /* El ancho máximo que permites antes de bajar */
+    min-width: 200px;               /* Un ancho mínimo para que no se aplaste */
+    line-height: 1.4;               /* Un poco de aire entre líneas para leer mejor */
+}
 
 
