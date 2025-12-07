@@ -10,6 +10,7 @@ import java.nio.file.Paths;
 import java.util.UUID;
 
 
+import jakarta.annotation.PostConstruct;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.UrlResource;
 import org.springframework.stereotype.Service;
@@ -19,7 +20,15 @@ import org.springframework.web.multipart.MultipartFile;
 public class UploadFileService {
     private final static String  UPLOADS_FOLDER = "uploads";  // fuera del jar
 
-
+    @PostConstruct
+    public void init() {
+        try {
+            Files.createDirectories(Paths.get(UPLOADS_FOLDER));
+            System.out.println("📂 Carpeta de uploads lista en: " + Paths.get(UPLOADS_FOLDER).toAbsolutePath());
+        } catch (IOException e) {
+            throw new RuntimeException("No se pudo crear la carpeta uploads!");
+        }
+    }
 
     public Resource load(String filename) throws MalformedURLException {
         Path path = getPath(filename);
