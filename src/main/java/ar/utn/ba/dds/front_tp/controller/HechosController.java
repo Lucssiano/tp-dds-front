@@ -6,6 +6,7 @@ import ar.utn.ba.dds.front_tp.dto.hechos.CrearHechoDTO;
 import ar.utn.ba.dds.front_tp.dto.input.ColeccionInputDTO;
 import ar.utn.ba.dds.front_tp.dto.input.HechoInputDTO;
 import ar.utn.ba.dds.front_tp.dto.hechos.input.SolicitudEliminacionInputDTO;
+import ar.utn.ba.dds.front_tp.dto.output.ColeccionOutputDTO;
 import ar.utn.ba.dds.front_tp.dto.output.HechoOutputDTO;
 import ar.utn.ba.dds.front_tp.dto.output.SoliOutputDTO;
 import ar.utn.ba.dds.front_tp.dto.usuarios.AuthResponseDTO;
@@ -57,14 +58,37 @@ public class HechosController {
   private HttpSession session;
   private SecurityContextHolder securityContextHolder;
 
+  private final ColeccionesApiService coleccionesApiService; // <--- AGREGAR
+  private final FuentesApiService fuentesApiService;         // <--- AGREGAR
+
+  private void cargarFiltrosEnModelo(Model model) {
+    // 1. Cargar Top 3 Colecciones
+    List<ColeccionOutputDTO> todasCols = coleccionesApiService.obtenerColeccionesOutput();
+    if (todasCols != null) {
+      int limite = Math.min(todasCols.size(), 3);
+      model.addAttribute("listaColecciones", todasCols.subList(0, limite));
+    }
+
+    // 2. Cargar Fuentes
+    model.addAttribute("listaFuentes", fuentesApiService.obtenerFuentes());
+
+    // 3. Cargar Categorías
+    model.addAttribute("listaCategorias", hechosApiService.obtenerCategoriasOutput());
+  }
+
   @GetMapping("/mapa")
   public String mostrarMapa(
       @RequestParam(required = false, defaultValue = "CURADA") String modo,
       @RequestParam(required = false, name = "fechaAcontecimientoDesde") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate fechaDesde,
       @RequestParam(required = false, name = "fechaAcontecimientoHasta") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate fechaHasta,
+      @RequestParam(required = false) List<Long> categorias, // <--- NUEVO
+      @RequestParam(required = false) List<Long> fuentes,    // <--- NUEVO
       Model model) {
     try {
-      List<HechoInputDTO> hechos = hechosApiService.obtenerHechos(modo, fechaDesde, fechaHasta);
+      // Cargamos los datos para los dropdowns y sidebar
+      cargarFiltrosEnModelo(model);
+
+      List<HechoInputDTO> hechos = hechosApiService.obtenerHechos(modo, fechaDesde, fechaHasta, categorias, fuentes);
       log.info("Cantidad de hechos recibidos: {}", hechos.size());
 
       // Convertimos la lista a un String JSON
@@ -75,6 +99,8 @@ public class HechosController {
       model.addAttribute("modoActual", modo);
       model.addAttribute("fechaDesde", fechaDesde != null ? fechaDesde.toString() : "");
       model.addAttribute("fechaHasta", fechaHasta != null ? fechaHasta.toString() : "");
+      model.addAttribute("categoriasSeleccionadas", categorias);
+      model.addAttribute("fuentesSeleccionadas", fuentes);
     } catch (Exception e) {
       log.error("Error al obtener hechos o al convertirlos a JSON", e);
       model.addAttribute("hechosJson", "[]"); // Pasamos un array vacío en caso de error
@@ -109,15 +135,23 @@ public class HechosController {
                                    @RequestParam(required = false, defaultValue = "CURADA") String modoNavegacion,
                                    @RequestParam(required = false, name = "fechaAcontecimientoDesde") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate fechaDesde,
                                    @RequestParam(required = false, name = "fechaAcontecimientoHasta") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate fechaHasta,
+                                   @RequestParam(required = false) List<Long> categorias, // <--- NUEVO
+                                   @RequestParam(required = false) List<Long> fuentes,    // <--- NUEVO
                                    Model model) {
     try {
-      List<HechoInputDTO> hechos = hechosApiService.obtenerHechosColeccion(coleccion.getId(), modoNavegacion, fechaDesde, fechaHasta);
+      cargarFiltrosEnModelo(model);
+
+      // Usamos el ID de la colección (asumo que 'coleccion' tiene el ID populado, sino usa @PathVariable)
+      List<HechoInputDTO> hechos = hechosApiService.obtenerHechosColeccion(coleccion.getId(), modoNavegacion, fechaDesde, fechaHasta, categorias, fuentes);
+
       String hechosJson = objectMapper.writeValueAsString(hechos);
 
       model.addAttribute("hechosJson", hechosJson);
       model.addAttribute("modoActual", modoNavegacion);
       model.addAttribute("fechaDesde", fechaDesde != null ? fechaDesde.toString() : "");
       model.addAttribute("fechaHasta", fechaHasta != null ? fechaHasta.toString() : "");
+      model.addAttribute("categoriasSeleccionadas", categorias);
+      model.addAttribute("fuentesSeleccionadas", fuentes);
 
       return "mapa";
     } catch (Exception e) {

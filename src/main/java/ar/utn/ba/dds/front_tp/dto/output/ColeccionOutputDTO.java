@@ -7,6 +7,8 @@ import java.util.List;
 
 @Data
 public class ColeccionOutputDTO {
+  private Long id; // <--- IMPRESCINDIBLE PARA LOS LINKS
+
   private String titulo;
 
   private String descripcion;

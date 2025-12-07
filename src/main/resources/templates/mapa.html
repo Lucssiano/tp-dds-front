@@ -10,49 +10,62 @@
     <link rel="stylesheet" th:href="@{/css/modals.css}">
 
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
-
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" />
 </head>
 
 <body>
 
-<!--<header class="header header&#45;&#45;map">-->
-<!--    <div class="container">-->
-<!--        <a th:href="@{/}" class="logo">MetaMapa</a>-->
-<!--        <nav class="nav">-->
-<!--            <a th:href="@{/colecciones}" class="nav__link">Colecciones</a>-->
-<!--            <a th:href="@{/hechos/subir-hecho}" class="btn btn&#45;&#45;primary">Subir Hecho</a>-->
-<!--        </nav>-->
-<!--    </div>-->
-<!--</header>-->
-<div th:replace="fragments/header :: header"></div>
+<div th:replace="~{fragments/header :: header}"></div>
+
 <div class="map-layout">
     <aside class="sidebar">
         <div class="filter-panel">
             <h3 class="filter-panel__title">Colecciones</h3>
             <ul class="collection-list">
-                <li><a th:href="@{/mapa(collection=1)}">Rutas de la Revolución</a></li>
-                <li><a th:href="@{/mapa(collection=2)}">Eventos Naturales Históricos</a></li>
-                <li><a th:href="@{/mapa(collection=3)}">Monumentos de la República</a></li>
+                <li th:each="col : ${listaColecciones}">
+                    <a th:href="@{'/hechos/mapa/coleccion/' + ${col.id}}"
+                       th:text="${col.titulo}"
+                       th:classappend="${coleccion != null and col.id == coleccion.id} ? 'active' : ''">
+                        Nombre Colección
+                    </a>
+                </li>
             </ul>
-            <a th:href="@{/colecciones}" class="btn btn--secondary btn--small">Ver Todas las Colecciones</a>
+            <a th:href="@{/colecciones}" class="btn btn--secondary btn--small">Ver Todas</a>
         </div>
 
         <div class="filter-panel">
             <h3 class="filter-panel__title">Filtros de Hechos</h3>
+
             <div class="form-group">
                 <label for="category">Categoría</label>
-                <select id="category" class="form-control"><option value="">Todas</option></select>
+                <select id="category" class="form-control">
+                    <option value="">Todas</option>
+                    <option th:each="cat : ${listaCategorias}"
+                            th:value="${cat.id}"
+                            th:text="${cat.nombre}"
+                            th:selected="${categoriasSeleccionadas != null and categoriasSeleccionadas.contains(cat.id)}">
+                    </option>
+                </select>
             </div>
+
             <div class="form-group">
                 <label for="date-range">Rango de Fecha</label>
                 <input type="text" id="date-range" class="form-control" placeholder="Seleccionar rango...">
             </div>
+
             <div class="form-group">
                 <label for="source">Fuente</label>
-                <select id="source" class="form-control"><option value="">Todas</option></select>
+                <select id="source" class="form-control">
+                    <option value="">Todas</option>
+                    <option th:each="fuente : ${listaFuentes}"
+                            th:value="${fuente.id}"
+                            th:text="${fuente.nombre}"
+                            th:selected="${fuentesSeleccionadas != null and fuentesSeleccionadas.contains(fuente.id)}">
+                    </option>
+                </select>
             </div>
+
             <div class="toggle-switch">
                 <span>Modo Curado</span>
                 <label class="switch">
@@ -74,7 +87,6 @@
 
 <div th:replace="~{fragments/modals :: fact-modal}"></div>
 <div th:replace="~{fragments/modals :: report-modal}"></div>
-<!--<div th:replace="fragments/footer :: footer"></div>-->
 <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
 <script src="https://npmcdn.com/flatpickr/dist/l10n/es.js"></script>

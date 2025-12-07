@@ -207,4 +207,15 @@ public class ColeccionesApiService {
       return List.of();
     }
   }
+
+  public List<ColeccionOutputDTO> obtenerColeccionesOutput() {
+    // Asumiendo que webApiCallerService puede manejar el cambio de clase
+    // O usa webClient directo como en FuentesApiService
+    return webClient.get()
+        .uri(coleccionesServiceUrl + "/colecciones") // Ajusta la URL si es necesario
+        .retrieve()
+        .bodyToFlux(ColeccionOutputDTO.class)
+        .collectList()
+        .block();
+  }
 }

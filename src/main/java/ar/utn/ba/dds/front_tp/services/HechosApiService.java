@@ -6,6 +6,7 @@ import ar.utn.ba.dds.front_tp.dto.hechos.EditarHechoDTO;
 import ar.utn.ba.dds.front_tp.dto.input.ApiError;
 import ar.utn.ba.dds.front_tp.dto.input.HechoInputDTO;
 import ar.utn.ba.dds.front_tp.dto.input.PageInputDTO;
+import ar.utn.ba.dds.front_tp.dto.output.CategoriaOutputDTO;
 import ar.utn.ba.dds.front_tp.dto.output.HechoOutputDTO;
 import ar.utn.ba.dds.front_tp.exceptions.api.AutenticationException;
 import ar.utn.ba.dds.front_tp.exceptions.api.AuthorizationException;
@@ -113,7 +114,7 @@ public class HechosApiService {
    * @param fechaHasta La fecha de fin del rango.
    * @return Una lista de HechoInputDTO.
    */
-  public List<HechoInputDTO> obtenerHechos(String modo, LocalDate fechaDesde, LocalDate fechaHasta) {
+  public List<HechoInputDTO> obtenerHechos(String modo, LocalDate fechaDesde, LocalDate fechaHasta, List<Long> categorias, List<Long> fuentes) {
     UriComponentsBuilder builder = UriComponentsBuilder.fromUriString(hechosServiceUrl + "/hechos/paginado")
         .queryParam("page", 0)
         .queryParam("size", 100);
@@ -131,6 +132,10 @@ public class HechosApiService {
       // Usamos el nombre que el backend final espera
       builder.queryParam("fechaAcontecimientoHasta", fechaHasta.format(DateTimeFormatter.ISO_LOCAL_DATE));
     }
+
+    // NUEVO: Agregamos las listas si no son nulas
+    if (categorias != null && !categorias.isEmpty()) builder.queryParam("categorias", categorias);
+    if (fuentes != null && !fuentes.isEmpty()) builder.queryParam("fuentes", fuentes);
 
     String urlFinal = builder.toUriString();
     log.info("Llamando a la URL de hechos: {}", urlFinal);
@@ -161,7 +166,7 @@ public class HechosApiService {
     }
   }
 
-  public List<HechoInputDTO> obtenerHechosColeccion(Long id, String modo, LocalDate fechaDesde, LocalDate fechaHasta) {
+  public List<HechoInputDTO> obtenerHechosColeccion(Long id, String modo, LocalDate fechaDesde, LocalDate fechaHasta, List<Long> categorias, List<Long> fuentes) {
     try {
       // 1. Construimos la URI de forma explícita usando fromHttpUrl
       // Esto parsea correctamente "http://tuservidor.com"
@@ -178,6 +183,9 @@ public class HechosApiService {
       if (fechaHasta != null) {
         builder.queryParam("fechaAcontecimientoHasta", fechaHasta);
       }
+      // NUEVO
+      if (categorias != null && !categorias.isEmpty()) builder.queryParam("categorias", categorias);
+      if (fuentes != null && !fuentes.isEmpty()) builder.queryParam("fuentes", fuentes);
 
       // 3. Generamos el objeto URI final (aquí se reemplaza el {id})
       URI uriFinal = builder.buildAndExpand(id).toUri();
@@ -232,6 +240,13 @@ public class HechosApiService {
         })
         .bodyToMono(Void.class)
         .block();
+  }
+
+  public List<CategoriaOutputDTO> obtenerCategoriasOutput(){
+    // Lógica igual a la que tenías, pero mapeando a CategoriaOutputDTO
+    // Si usas el mismo endpoint, Spring lo mapeará bien si los nombres coinciden
+    return webClient.get().uri(hechosServiceUrl +"/hechos/categorias")
+        .retrieve().bodyToFlux(CategoriaOutputDTO.class).collectList().block();
   }
 
   public List<CategoriaDTO> obtenerCategorias(){
