@@ -10,6 +10,7 @@ import ar.utn.ba.dds.front_tp.dto.input.FuenteInputDTO;
 import ar.utn.ba.dds.front_tp.dto.input.HechoInputDTO;
 import ar.utn.ba.dds.front_tp.dto.hechos.input.SolicitudModificacionInputDTO;
 import ar.utn.ba.dds.front_tp.dto.output.ColeccionOutputDTO;
+import ar.utn.ba.dds.front_tp.dto.output.CriterioDePertenenciaOutputDTO;
 import ar.utn.ba.dds.front_tp.dto.output.HechoOutputDTO;
 import ar.utn.ba.dds.front_tp.dto.usuarios.AuthResponseDTO;
 import ar.utn.ba.dds.front_tp.dto.admin.DashboardSummaryDTO;
@@ -33,7 +34,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
-
+import com.fasterxml.jackson.databind.ObjectMapper;
 import java.io.IOException;
 import java.util.*;
 
@@ -150,58 +151,85 @@ public class AdminController {
                                          Model model,
                                          RedirectAttributes redirectAttributes) {
     try {
+      // Traemos la colección desde el backend (InputDTO)
       ColeccionInputDTO existente = coleccionesApiService.obtenerColeccionPorId(id);
 
-      ColeccionInputDTO form = new ColeccionInputDTO();
+      // Ahora creamos el DTO que el formulario realmente necesita (OutputDTO)
+      ColeccionOutputDTO form = new ColeccionOutputDTO();
+
+      form.setId(existente.getId());
       form.setTitulo(existente.getTitulo());
       form.setDescripcion(existente.getDescripcion());
       form.setAlgoritmoConsenso(existente.getAlgoritmoConsenso());
 
-      // Fuentes ya seleccionadas (las que vienen del backend)
-      form.setFuentes(
-          existente.getFuentes() != null
-              ? new ArrayList<>(existente.getFuentes())
-              : new ArrayList<>()
-      );
+      // --- FUENTES ---
+      if (existente.getFuentes() != null) {
+        List<Long> ids = existente.getFuentes()
+            .stream()
+            .map(FuenteInputDTO::getId)
+            .toList();
+        form.setFuentesIds(ids);
+      } else {
+        form.setFuentesIds(new ArrayList<>());
+      }
 
-      // Criterios existentes (incluye tipoCriterio + parametros)
+      // --- CRITERIOS ---
       if (existente.getCriteriosDePertenencias() != null) {
-        existente.getCriteriosDePertenencias().forEach(c -> {
-          if (c.getParametros() == null) {
-            c.setParametros(new HashMap<>()); // por si acaso
-          }
-        });
-        form.setCriteriosDePertenencias(new ArrayList<>(existente.getCriteriosDePertenencias()));
+        List<CriterioDePertenenciaOutputDTO> criteriosOutput = existente.getCriteriosDePertenencias().stream()
+            .map(c -> {
+              CriterioDePertenenciaOutputDTO out = new CriterioDePertenenciaOutputDTO();
+              out.setId(c.getId());
+              out.setNombreCriterio(c.getNombreCriterio());
+              out.setTipoCriterio(c.getTipoCriterio());
+              out.setParametros(
+                  c.getParametros() != null ? c.getParametros() : new HashMap<>()
+              );
+              return out;
+            })
+            .toList();
+        form.setCriteriosDePertenencias(criteriosOutput);
       } else {
         form.setCriteriosDePertenencias(new ArrayList<>());
       }
 
+      // Mandamos al HTML el DTO correcto
       model.addAttribute("coleccion", form);
       model.addAttribute("idColeccion", id);
 
-      // Fuentes disponibles para checkboxes
+      // Lista de fuentes disponibles
       List<FuenteInputDTO> fuentesDisponibles = fuentesApiService.obtenerFuentes();
       model.addAttribute("fuentesDisponibles", fuentesDisponibles);
 
       return "admin-editar-coleccion";
+
     } catch (Exception e) {
       redirectAttributes.addFlashAttribute("error", "Error: " + e.getMessage());
       return "redirect:/admin/colecciones";
     }
   }
 
-
   // POST: Guardar los cambios luego de modificar una colección.
   @PostMapping("/colecciones/editar/{id}")
   public String procesarEdicion(@PathVariable Long id,
-                                @ModelAttribute("coleccion") ColeccionInputDTO coleccionInput,
+                                @ModelAttribute("coleccion") ColeccionOutputDTO coleccionOutput,
                                 Authentication authentication,
                                 RedirectAttributes redirectAttributes) {
+
+    System.out.println("==== JSON ENVIADO AL BACK (coleccionOutput) ====");
+    try {
+      ObjectMapper mapper = new ObjectMapper();
+      String json = mapper.writeValueAsString(coleccionOutput);
+      System.out.println(json);
+    } catch (Exception e) {
+      System.out.println("Error serializando DTO: " + e.getMessage());
+    }
 
     AuthResponseDTO authData = (AuthResponseDTO) authentication.getDetails();
 
     try {
-      coleccionesApiService.modificarColeccion(id, coleccionInput, authData.getAccessToken());
+      System.out.println("==== FUENTES ENVIADAS ====");
+      coleccionOutput.getFuentesIds().forEach(System.out::println);
+      coleccionesApiService.modificarColeccion(id, coleccionOutput, authData.getAccessToken());
       redirectAttributes.addFlashAttribute("mensaje", "Colección modificada con éxito.");
     } catch (Exception e) {
       redirectAttributes.addFlashAttribute("error", "Error al modificar: " + e.getMessage());

@@ -55,16 +55,16 @@
                         <label>
                             <!-- Las que ya están en coleccion.fuentes aparecen tildadas solo con esto -->
                             <input type="checkbox"
-                                   th:field="*{fuentes}"
-                                   th:value="${fuente}">
-                            <span th:text="${fuente}">Nombre de fuente</span>
+                                   th:field="*{fuentesIds}"
+                                   th:value="${fuente.id}">
+                            <span th:text="${fuente.nombre}">Nombre de fuente</span>
                         </label>
                     </div>
                     <small class="form-hint">Podés seleccionar varias fuentes.</small>
-                </div>
 
-                <div id="fuentes-error" class="text-danger" style="display:none;"></div>
-            </div>
+                    <div id="fuentes-error" class="text-danger" style="display:none;"></div>
+
+                </div>
 
             <!-- ALGORITMO CONSENSO -->
             <div class="form-group">
@@ -152,6 +152,7 @@
             <div class="form-actions">
                 <button type="submit" class="btn btn--primary">Guardar Cambios</button>
                 <a th:href="@{/admin/colecciones}" class="btn btn--secondary">Cancelar</a>
+            </div>
             </div>
         </form>
     </main>

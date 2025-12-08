@@ -128,11 +128,11 @@ public class ColeccionesApiService {
   }
 
 
-  public void modificarColeccion(Long id, ColeccionInputDTO coleccionInput, String token) {
+  public void modificarColeccion(Long id, ColeccionOutputDTO coleccionOutput, String token) {
     try {
-      String url = coleccionesServiceUrl + "/colecciones?id=" + id;
+      String url = coleccionesServiceUrl + "/colecciones/" + id;
       // Usamos el nuevo método que acepta el token explícito
-      webApiCallerService.putWithAuth(url, coleccionInput, Void.class, token);
+      webApiCallerService.putWithAuth(url, coleccionOutput, Void.class, token);
     } catch (Exception e) {
       throw new RuntimeException("Error al modificar la colección: " + e.getMessage());
     }
