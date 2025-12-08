@@ -31,6 +31,8 @@
                       th:action="@{/admin/revisiones/hechos/{id}/editar(id=${id})}"
                       method="post" enctype="multipart/form-data">
 
+                    <input type="hidden" th:field="*{usuario}">
+
                     <div style="margin-bottom: 20px;">
                         <h1 class="section-title">Editar Hecho</h1>
                     </div>
