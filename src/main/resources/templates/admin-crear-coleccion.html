@@ -106,41 +106,47 @@
 
     // 1️⃣ Validar criterios de pertenencia
     const criterios = document.querySelectorAll(".criterio-item");
+    const errorDiv = document.getElementById("criterios-error");
+
     if (criterios.length === 0) {
       e.preventDefault();
-      document.getElementById("criterios-error").textContent = "Debés agregar al menos un criterio de pertenencia.";
-      document.getElementById("criterios-error").style.display = "block";
+      errorDiv.textContent = "Debés agregar al menos un criterio de pertenencia.";
+      errorDiv.style.display = "block";
       return;
     } else {
-      document.getElementById("criterios-error").style.display = "none";
+      errorDiv.style.display = "none";
     }
 
     // Validar parámetros de cada criterio
     for (const criterio of criterios) {
-      const tipo = criterio.querySelector("select").value;
+      // Buscamos el select del tipo de criterio
+      const tipoSelect = criterio.querySelector("select[name*='tipoCriterio']");
+      const tipo = tipoSelect ? tipoSelect.value : "";
 
       if (tipo === "FECHA") {
         const inicio = criterio.querySelector("input[name*='fechaInicio']").value;
-        const fin = criterio.querySelector("input[name*='fechaFinal']").value;
+        const fin = criterio.querySelector("input[name*='fechaFin']").value;
         if (!inicio || !fin) {
           e.preventDefault();
-          document.getElementById("criterios-error").textContent = "Debés completar ambas fechas en cada criterio de tipo FECHA.";
-          document.getElementById("criterios-error").style.display = "block";
+          errorDiv.textContent = "Debés completar ambas fechas en cada criterio de tipo FECHA.";
+          errorDiv.style.display = "block";
           return;
         }
       }
 
       if (tipo === "CATEGORIA") {
-        const cat = criterio.querySelector("input[name*='categoria']").value;
-        if (!cat) {
+        // Buscamos el Select de Categoría (validación para el nuevo dropdown)
+        const catSelect = criterio.querySelector("select[name*='categoria']");
+
+        // La validación es: Si existe el select Y su valor es la opción por defecto ("")
+        if (catSelect && catSelect.value === "") {
           e.preventDefault();
-          document.getElementById("criterios-error").textContent = "Debés completar la categoría en cada criterio de tipo CATEGORIA.";
-          document.getElementById("criterios-error").style.display = "block";
+          errorDiv.textContent = "Debés seleccionar una categoría válida.";
+          errorDiv.style.display = "block";
           return;
         }
       }
     }
-    document.getElementById("criterios-error").style.display = "none";
 
     // 2️⃣ Validar fuentes, solo si hay checkboxes
     const todasLasFuentes = document.querySelectorAll("input[name='fuentes']");
@@ -158,9 +164,13 @@
   });
 </script>
 
-<!-- Script de agregar criterios -->
-<script>
+<<!-- Script dinámico de agregar criterios -->
+<script th:inline="javascript">
   let criterioIndex = 0;
+
+  // 1. Obtenemos las categorías desde Java (Thymeleaf las inyecta aquí)
+  /*[[${categoriasDisponibles}]]*/
+  const categoriasBackend = [[${categoriasDisponibles}]] || [];
 
   function agregarCriterio() {
     const container = document.getElementById('criterios-container');
@@ -170,7 +180,7 @@
     wrapper.innerHTML = `
       <div class="form-subgroup">
         <label>Nombre del Criterio</label>
-        <input type="text" name="criteriosDePertenencias[${criterioIndex}].nombreCriterio" placeholder="Ej: Fecha reciente" class="form-control" required>
+        <input type="text" name="criteriosDePertenencias[${criterioIndex}].nombreCriterio" placeholder="Ej: Filtro por Tema" class="form-control" required>
       </div>
 
       <div class="form-subgroup">
@@ -204,9 +214,22 @@
             <input type="date" name="criteriosDePertenencias[${index}].parametros[fechaFin]" class="form-control" required>
         `;
     } else if (tipo === "CATEGORIA") {
+
+      // 2. Construimos el SELECT dinámico usando las categorías
+      let optionsHtml = '<option value="">Seleccioná una categoría</option>';
+
+      categoriasBackend.forEach(cat => {
+        // Usamos 'nombre' o 'categoria' dependiendo de cómo esté mapeado tu CategoriaDTO
+        let nombreCat = cat.nombre || cat.categoria || "Sin nombre";
+        optionsHtml += `<option value="${nombreCat}">${nombreCat}</option>`;
+      });
+
+      // Insertamos el Select
       paramsContainer.innerHTML = `
             <label>Categoría</label>
-            <input type="text" name="criteriosDePertenencias[${index}].parametros[categoria]" placeholder="Ej: Ambiental, Histórico..." class="form-control" required>
+            <select name="criteriosDePertenencias[${index}].parametros[categoria]" class="form-control" required>
+                ${optionsHtml}
+            </select>
         `;
     }
   }

@@ -64,6 +64,8 @@ public class AdminController {
     model.addAttribute("coleccion", new ColeccionOutputDTO());
     List<FuenteInputDTO> fuentesDisponibles = fuentesApiService.obtenerFuentes();
     model.addAttribute("fuentesDisponibles", fuentesDisponibles);
+    List<ar.utn.ba.dds.front_tp.dto.hechos.CategoriaDTO> categorias = hechosApiService.obtenerCategorias();
+    model.addAttribute("categoriasDisponibles", categorias);
     log.info("Fuentes disponibles: " + fuentesDisponibles);
     return "admin-crear-coleccion";
   }
@@ -114,6 +116,7 @@ public class AdminController {
       model.addAttribute("errors", ex.getApiError().fields());
       model.addAttribute("coleccion", coleccionOutputDTO);
       model.addAttribute("fuentesDisponibles", fuentesApiService.obtenerFuentes());
+      model.addAttribute("categoriasDisponibles", hechosApiService.obtenerCategorias());
       return "admin-crear-coleccion";
     }
   }
