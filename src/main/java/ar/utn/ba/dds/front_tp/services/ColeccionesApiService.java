@@ -1,23 +1,13 @@
 package ar.utn.ba.dds.front_tp.services;
 
 import ar.utn.ba.dds.front_tp.dto.input.ColeccionInputDTO;
-import ar.utn.ba.dds.front_tp.dto.input.ApiError;
 import ar.utn.ba.dds.front_tp.dto.output.ColeccionOutputDTO;
-import ar.utn.ba.dds.front_tp.exceptions.api.AutenticationException;
-import ar.utn.ba.dds.front_tp.exceptions.api.AuthorizationException;
-import ar.utn.ba.dds.front_tp.exceptions.api.GeneralApiException;
-import ar.utn.ba.dds.front_tp.exceptions.api.InternalServerErrorException;
-import ar.utn.ba.dds.front_tp.exceptions.api.ResourceNotFoundException;
-import ar.utn.ba.dds.front_tp.exceptions.api.ValidationException;
 import ar.utn.ba.dds.front_tp.mappers.ColeccionMapper;
 import ar.utn.ba.dds.front_tp.services.internal.HandlerExceptions;
 import ar.utn.ba.dds.front_tp.services.internal.WebApiCallerService;
 import lombok.extern.slf4j.Slf4j;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpHeaders;
 import org.springframework.stereotype.Service;
-import org.springframework.web.reactive.function.client.ClientResponse;
 import org.springframework.web.reactive.function.client.WebClient;
 import reactor.core.publisher.Mono;
 import org.springframework.http.HttpStatusCode;

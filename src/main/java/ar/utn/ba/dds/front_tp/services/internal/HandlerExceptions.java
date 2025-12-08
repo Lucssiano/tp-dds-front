@@ -4,9 +4,10 @@ import ar.utn.ba.dds.front_tp.dto.input.ApiError;
 import ar.utn.ba.dds.front_tp.exceptions.api.AutenticationException;
 import ar.utn.ba.dds.front_tp.exceptions.api.AuthorizationException;
 import ar.utn.ba.dds.front_tp.exceptions.api.GeneralApiException;
+import ar.utn.ba.dds.front_tp.exceptions.api.GlobalBusinessException;
 import ar.utn.ba.dds.front_tp.exceptions.api.InternalServerErrorException;
 import ar.utn.ba.dds.front_tp.exceptions.api.ResourceNotFoundException;
-import ar.utn.ba.dds.front_tp.exceptions.api.ValidationException;
+import ar.utn.ba.dds.front_tp.exceptions.api.ValidationBusinessException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 import org.springframework.web.reactive.function.client.ClientResponse;
@@ -41,8 +42,8 @@ public class HandlerExceptions {
     String apiCode = err.code() != null ? err.code() : "N/A";
 
     if (status == 400 || status == 422) {
-      log.error("Lanzando ValidationException (Status {}). Código API: {}", status, apiCode);
-      return Mono.error(new ValidationException(status, err));
+      log.error("Lanzando ValidationBusinessException (Status {}). Código API: {}", status, apiCode);
+      return Mono.error(new ValidationBusinessException(status, err));
     }
     else if (status == 401) {
       log.error("Lanzando AutenticationException (Status 401).");
@@ -55,6 +56,10 @@ public class HandlerExceptions {
     else if (status == 404) {
       log.error("Lanzando ResourceNotFoundException (Status 404).");
       return Mono.error(new ResourceNotFoundException(status, err));
+    }
+    else if (status == 409) {
+      log.error("Lanzando GlobalBusinessException (Status 404).");
+      return Mono.error(new GlobalBusinessException(status, err));
     }
     else if (status >= 500) {
       log.error("Lanzando InternalServerErrorException (Status {}).", status);

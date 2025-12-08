@@ -84,36 +84,44 @@
                     </div>
 
                     <div class="content-block">
-                        <label class="content-title">Título</label>
-                        <input class="clean-input" type="text" th:field="*{titulo}"
-                               th:classappend="${errores != null and errores.containsKey('titulo')} ? 'input-error' : ''">
-                        <span class="field-error-msg" th:if="${errores != null and errores.containsKey('titulo')}" th:text="${errores['titulo']}"></span>
+                        <label class="content-title" for="titulo">Título</label>
+                        <input id="titulo" class="clean-input" type="text" th:field="*{titulo}"
+                               th:classappend="${errores != null and errores.containsKey('titulo')} ? 'input-error' : ''"
+                               placeholder="Título..."
+                        >
+                        <span class="field-error-msg"
+                              th:if="${errores != null and errores.containsKey('titulo')}"
+                              th:text="${errores['titulo']}"></span>
                     </div>
 
                     <div class="content-block">
                         <label class="content-title">Descripción</label>
                         <textarea class="clean-input" th:field="*{descripcion}" rows="6"
-                                  th:classappend="${errores != null and errores.containsKey('descripcion')} ? 'input-error' : ''"></textarea>
+                                  th:classappend="${errores != null and errores.containsKey('descripcion')} ? 'input-error' : ''"
+                                  placeholder="Descripción...">
+                        </textarea>
                         <span class="field-error-msg" th:if="${errores != null and errores.containsKey('descripcion')}" th:text="${errores['descripcion']}"></span>
                     </div>
 
                     <div class="content-block">
-                        <label class="content-title">Categoría</label>
-                        <input class="clean-input" type="text" th:field="*{categoria}"
-                               th:classappend="${errores != null and errores.containsKey('categoria')} ? 'input-error' : ''">
+                        <label class="content-title" for="categoria">Categoría</label>
+                        <input id="categoria" class="clean-input" type="text" th:field="*{categoria}"
+                               th:classappend="${errores != null and errores.containsKey('categoria')} ? 'input-error' : ''"
+                               placeholder="Categoría..."
+                        >
                         <span class="field-error-msg" th:if="${errores != null and errores.containsKey('categoria')}" th:text="${errores['categoria']}"></span>
                     </div>
 
                     <div class="content-block">
-                        <label class="content-title">Fecha del hecho</label>
-                        <input class="clean-input" type="datetime-local" name="fecha"
+                        <label class="content-title" for="fecha">Fecha del hecho</label>
+                        <input id="fecha" class="clean-input" type="datetime-local" name="fecha"
                                th:value="${#temporals.format(hecho.fecha, 'yyyy-MM-dd''T''HH:mm')}"
                                th:classappend="${errores != null and errores.containsKey('fecha')} ? 'input-error' : ''">
                         <span class="field-error-msg" th:if="${errores != null and errores.containsKey('fecha')}" th:text="${errores['fecha']}"></span>
                     </div>
 
                     <div class="content-block" style="border-bottom: none;">
-                        <label class="content-title">Ubicación (Click en el mapa para corregir automáticamente)</label>
+                        <label class="content-title" for="address-input">Ubicación (Click en el mapa para corregir automáticamente)</label>
 
                         <div style="display: flex; gap: 10px; margin-bottom: 15px;">
                             <input type="text" id="address-input" class="clean-input" placeholder="Buscar dirección...">

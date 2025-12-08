@@ -2,18 +2,12 @@ package ar.utn.ba.dds.front_tp.services;
 
 import ar.utn.ba.dds.front_tp.dto.editar.EditarHechoDTO;
 import ar.utn.ba.dds.front_tp.dto.hechos.CategoriaDTO;
-import ar.utn.ba.dds.front_tp.dto.hechos.CrearHechoDTO;
 import ar.utn.ba.dds.front_tp.dto.input.ApiError;
 import ar.utn.ba.dds.front_tp.dto.input.HechoInputDTO;
 import ar.utn.ba.dds.front_tp.dto.input.PageInputDTO;
 import ar.utn.ba.dds.front_tp.dto.output.CategoriaOutputDTO;
 import ar.utn.ba.dds.front_tp.dto.output.HechoOutputDTO;
-import ar.utn.ba.dds.front_tp.exceptions.api.AutenticationException;
-import ar.utn.ba.dds.front_tp.exceptions.api.AuthorizationException;
-import ar.utn.ba.dds.front_tp.exceptions.api.GeneralApiException;
-import ar.utn.ba.dds.front_tp.exceptions.api.InternalServerErrorException;
-import ar.utn.ba.dds.front_tp.exceptions.api.ResourceNotFoundException;
-import ar.utn.ba.dds.front_tp.exceptions.api.ValidationException;
+import ar.utn.ba.dds.front_tp.exceptions.api.GlobalBusinessException;
 import ar.utn.ba.dds.front_tp.mappers.HechoMapper;
 import ar.utn.ba.dds.front_tp.services.internal.HandlerExceptions;
 import ar.utn.ba.dds.front_tp.services.internal.WebApiCallerService;
@@ -24,19 +18,18 @@ import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 
 import lombok.extern.slf4j.Slf4j;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.ParameterizedTypeReference;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatusCode;
 import org.springframework.stereotype.Service;
-import org.springframework.web.reactive.function.client.ClientResponse;
 import org.springframework.web.reactive.function.client.WebClient;
 
 import java.util.Collections;
 import java.util.List;
+
+import org.springframework.web.reactive.function.client.WebClientRequestException;
 import org.springframework.web.util.UriComponentsBuilder;
-import reactor.core.publisher.Mono;
 
 @Service
 @Slf4j
@@ -44,7 +37,7 @@ public class HechosApiService {
   private final WebClient webClient;
   private final WebApiCallerService webApiCallerService;
   private final String hechosServiceUrl = "http://localhost:8081/metamapa";
-  private final String fuenteDinamicaUrl = "http://localhost:8083/fuente-dinamica/hechos";
+  private final String fuenteDinamicaUrl = "http://localhost:8083/fuente-dinamica";
   private final HechoMapper hechoMapper;
   private final HandlerExceptions handlerExceptions;
 
@@ -167,33 +160,58 @@ public class HechosApiService {
         .block();
   }
 
-  public HechoOutputDTO crearHecho(CrearHechoDTO payload, String token) {
+  public HechoOutputDTO crearHecho(EditarHechoDTO editarHechoDTO, String token) {
+    HechoOutputDTO hechoOutputDTO = this.hechoMapper.toHechoOutputDTO(editarHechoDTO);
 
-    log.info("Enviando hecho. Título: {}", payload.getHecho().getTitulo());
-    log.info("Lat: {}, Long: {}", payload.getHecho().getLatitud(), payload.getHecho().getLongitud());
-    log.info("Token incluido en body: {}", payload.getAccessToken() != null ? "SI" : "NO");
-    //log.info("Primer imagen: {} ", payload.getHecho().getMultimedia().get(0));
-    return webApiCallerService.postWithAuth(
-        fuenteDinamicaUrl,        // URL 8083
-        payload.getHecho(),       // Body: HechoOutputDTO
-        HechoOutputDTO.class,     // Respuesta esperada
-        token                     // Token para el Header
-    );
+    try {
+      return webClient.post()
+          .uri(fuenteDinamicaUrl + "/hechos")
+          .header(HttpHeaders.AUTHORIZATION, "Bearer " + token)
+          .bodyValue(hechoOutputDTO)
+          .retrieve()
+          .onStatus(HttpStatusCode::isError, response -> {
+            log.warn("Error HTTP recibido. Status: {}", response.statusCode().value());
+            return this.handlerExceptions.manejarError(response);
+          })
+          .bodyToMono(HechoOutputDTO.class)
+          .block(); // <--- Aquí explota si está caído
+
+    } catch (WebClientRequestException e) {
+      log.error("🔥 Error de conexión con módulo externo: {}", e.getMessage());
+
+      throw new GlobalBusinessException(
+          503,
+          "SERVICE_UNAVAILABLE", // Código para identificarlo
+          "El sistema externo no responde. No se pudo guardar el hecho.",
+          List.of(e.getMessage())
+      );
+    }
   }
 
   public Void editarHecho(Long id, EditarHechoDTO editarHechoDTO) {
     HechoOutputDTO hechoOutputDTO = this.hechoMapper.toHechoOutputDTO(editarHechoDTO);
 
-    return webClient.put()
-        .uri(hechosServiceUrl + "/hechos/" + id)
-        .bodyValue(hechoOutputDTO)
-        .retrieve()
-        .onStatus(HttpStatusCode::isError, response -> {
-          log.warn("Error recibido. Status: {}", response.statusCode().value());
-          return this.handlerExceptions.manejarError(response);
-        })
-        .bodyToMono(Void.class)
-        .block();
+    try {
+      return webClient.put()
+          .uri(hechosServiceUrl + "/hechos/" + id)
+          .bodyValue(hechoOutputDTO)
+          .retrieve()
+          .onStatus(HttpStatusCode::isError, response -> {
+            log.warn("Error recibido. Status: {}", response.statusCode().value());
+            return this.handlerExceptions.manejarError(response);
+          })
+          .bodyToMono(Void.class)
+          .block();
+    } catch (WebClientRequestException e) {
+      log.error("🔥 Error de conexión con módulo externo: {}", e.getMessage());
+
+      throw new GlobalBusinessException(
+          503,
+          "SERVICE_UNAVAILABLE", // Código para identificarlo
+          "El sistema externo no responde. No se pudo guardar el hecho.",
+          List.of(e.getMessage())
+      );
+    }
   }
 
   public List<CategoriaOutputDTO> obtenerCategoriasOutput(){

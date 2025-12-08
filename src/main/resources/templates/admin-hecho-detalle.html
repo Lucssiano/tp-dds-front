@@ -53,19 +53,19 @@
 
                 <div class="content-block">
                     <h3 class="content-title">Descripción</h3>
-                    <p th:text="${hecho.descripcion}" style="font-weight: 500;">
+                    <p th:text="${hecho.descripcion}">
                         Descripción del hecho.
                     </p>
                 </div>
 
                 <div class="content-block">
                     <h3 class="content-title">Categoría</h3>
-                    <p th:text="${hecho.categoria}" style="font-weight: 500;">Categoría</p>
+                    <p th:text="${hecho.categoria}">Categoría</p>
                 </div>
 
                 <div class="content-block">
                     <h3 class="content-title">Fecha del hecho</h3>
-                    <p th:text="${#temporals.format(hecho.fechaHecho, 'dd/MM/yyyy HH:mm')}" style="font-weight: 500;">
+                    <p th:text="${#temporals.format(hecho.fechaHecho, 'dd/MM/yyyy HH:mm')}">
                         01/01/2024 12:00
                     </p>
                 </div>

@@ -2,21 +2,19 @@ package ar.utn.ba.dds.front_tp.controller;
 
 import ar.utn.ba.dds.front_tp.Utils.JwtUtils;
 import ar.utn.ba.dds.front_tp.dto.editar.EditarHechoDTO;
-import ar.utn.ba.dds.front_tp.dto.hechos.CategoriaDTO;
-import ar.utn.ba.dds.front_tp.dto.hechos.CrearHechoDTO;
 import ar.utn.ba.dds.front_tp.dto.input.ApiError;
 import ar.utn.ba.dds.front_tp.dto.input.ColeccionInputDTO;
 import ar.utn.ba.dds.front_tp.dto.input.HechoInputDTO;
 import ar.utn.ba.dds.front_tp.dto.hechos.input.SolicitudEliminacionInputDTO;
 import ar.utn.ba.dds.front_tp.dto.output.ColeccionOutputDTO;
-import ar.utn.ba.dds.front_tp.dto.output.HechoOutputDTO;
 import ar.utn.ba.dds.front_tp.dto.output.SoliOutputDTO;
 import ar.utn.ba.dds.front_tp.dto.usuarios.AuthResponseDTO;
-import ar.utn.ba.dds.front_tp.exceptions.api.ValidationException;
+import ar.utn.ba.dds.front_tp.exceptions.api.GlobalBusinessException;
+import ar.utn.ba.dds.front_tp.exceptions.api.ValidationBusinessException;
 import ar.utn.ba.dds.front_tp.mappers.HechoMapper;
 import ar.utn.ba.dds.front_tp.services.*;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import jakarta.servlet.http.HttpSession;
+
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.security.Principal;
@@ -115,25 +113,260 @@ public class HechosController {
     return "mapa";
   }
 
+  @GetMapping("/mis-hechos")
+  public String verMisHechos(Model model,
+                             Authentication authentication,
+                             RedirectAttributes redirectAttributes) {
+    if (authentication == null || !(authentication.getDetails() instanceof AuthResponseDTO token)) {
+      redirectAttributes.addFlashAttribute("errorLogin",
+          "Para ver tus hechos debes iniciar sesión.");
+      return "redirect:/auth";
+    }
+
+    try {
+      // Email del usuario desde el token JWT
+      String email = JwtUtils.validarToken(token.getAccessToken());
+
+      // Llamamos al backend para traer los hechos del usuario
+      var hechosUsuario = hechosApiService.obtenerHechosUsuario(email);
+      try {
+        log.info("Hechos que me traje edl usuario cantidad: " + hechosUsuario.size());
+      } catch (Exception e) {
+        log.info("Bardie por lista nula " + hechosUsuario.size());
+        throw new RuntimeException(e);
+      }
+      model.addAttribute("hechos", hechosUsuario);
+      model.addAttribute("usuarioEmail", email);
+
+      return "mis-hechos";  // => templates/mis-hechos.html
+    } catch (Exception e) {
+      log.error("Error al obtener hechos del usuario", e);
+      model.addAttribute("errorGlobal", "Ocurrió un error al obtener tus hechos. Intenta más tarde.");
+      return "mis-hechos"; // Mostramos la vista igual pero vacía
+    }
+  }
+
+  @GetMapping("/{id}/detalle")
+  public String verDetalleHecho(@PathVariable Long id,
+                                Model model,
+                                Authentication authentication) {
+    try {
+      var hecho = hechosApiService.obtenerHecho(id);
+      model.addAttribute("hecho", hecho);
+      List<String> rutasMultimedia = hecho.getMultimedia();
+      // Nombrar la variable en el modelo como 'imagenes' para que coincida con la vista
+      model.addAttribute("imagenes", rutasMultimedia);
+
+      boolean esPropietario = false;
+
+      if (authentication != null && authentication.getDetails() instanceof AuthResponseDTO token) {
+        String email = JwtUtils.validarToken(token.getAccessToken());
+        if (email != null && hecho.getUsuario() != null) {
+          esPropietario = email.equalsIgnoreCase(hecho.getUsuario());
+        }
+      }
+
+      model.addAttribute("esPropietario", esPropietario);
+
+      return "hecho-detalle";
+
+
+    } catch (Exception e) {
+      log.error(e.getMessage(), e);
+      model.addAttribute("errorGlobal", "Ocurrió un error inesperado: " + e.getMessage());
+      return "home";
+    }
+  }
+
   @GetMapping("/subir-hecho")
   public String subirHecho(Model model) {
-    model.addAttribute("hecho", HechoOutputDTO.builder().build());
-      try {
-          // 1. Obtener las categorías del servicio
-          List<CategoriaDTO> categorias = hechosApiService.obtenerCategorias();
-
-          // 2. Agregar la lista de categorías al Model
-          // Este atributo se usa en el th:each de la vista
-          log.info("Cantidadcategorias"+ categorias.size());
-          model.addAttribute("categorias", categorias);
-
-      } catch (Exception e) {
-          log.error("Error al obtener categorías para subir-hecho", e);
-          // En caso de error, pasamos una lista vacía para evitar errores en la vista.
-          model.addAttribute("categorias", new ArrayList<CategoriaDTO>());
-          model.addAttribute("errorGlobal", "Error al cargar las categorías. Intente más tarde.");
-      }
+    model.addAttribute("hecho", EditarHechoDTO.builder().build());
     return "subir-hecho";
+  }
+
+  @PostMapping("/crear-hecho")
+  public String crearHecho(@ModelAttribute("hecho") @Valid EditarHechoDTO hecho,
+                           BindingResult bindingResult,
+                           @RequestParam(value = "nuevasImagenes", required = false) List<MultipartFile> multipartFiles,
+                           Model model,
+                           RedirectAttributes redirectAttributes,
+                           Principal principal) { // Usamos Principal para obtener el nombre de usuario de forma segura
+
+    String token = null;
+    String usuarioEmail = "VISUALIZADOR/ANÓNIMO";
+
+    Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+
+    // LÓGICA DE EXTRACCIÓN DE USUARIO SEGURO (Mantenemos el código original)
+    if (principal != null) {
+      usuarioEmail = principal.getName();
+      if (authentication != null && !(authentication instanceof AnonymousAuthenticationToken)) {
+        try {
+          AuthResponseDTO authData = (AuthResponseDTO) authentication.getDetails();
+          token = authData.getAccessToken();
+        } catch (Exception e) {
+          System.err.println("Advertencia: Fallo al castear token para usuario: " + principal.getName());
+        }
+      }
+    }
+
+    hecho.setUsuario(usuarioEmail);
+
+    Map<String, String> erroresVista = new HashMap<>();
+
+    // A. VALIDACIÓN LOCAL
+    if (bindingResult.hasErrors()) {
+      bindingResult.getFieldErrors().forEach(e -> erroresVista.put(e.getField(), e.getDefaultMessage()));
+
+      model.addAttribute("hecho", hecho);
+      model.addAttribute("errores", erroresVista);
+
+      return "subir-hecho";
+    }
+
+    // B. PROCESAR FOTOS NUEVAS
+    if (hecho.getMultimedia() == null) hecho.setMultimedia(new ArrayList<>());
+
+    if (multipartFiles != null) {
+      for (MultipartFile file : multipartFiles) {
+        if (!file.isEmpty()) {
+          try {
+            String name = imagenesService.copy(file);
+            hecho.getMultimedia().add(name);
+          } catch (IOException e) {
+            model.addAttribute("errorGlobal", "Error al subir imagen: " + file.getOriginalFilename());
+            model.addAttribute("hecho", hecho);
+            return "subir-hecho";
+          }
+        }
+      }
+    }
+
+    // C. LLAMADA AL SERVICIO
+    try {
+      this.hechosApiService.crearHecho(hecho, token);
+
+      redirectAttributes.addFlashAttribute("mensaje", "¡Hecho creado con éxito! Se ha enviado a moderación.");
+      return "redirect:/hechos/subir-hecho";
+
+    } catch (ValidationBusinessException ex) {
+      // D. ERROR DE NEGOCIO (ApiError)
+      ApiError apiError = ex.getApiError();
+      if (apiError.fields() != null) erroresVista.putAll(apiError.fields());
+      if (apiError.message() != null) model.addAttribute("globalError", apiError.message());
+      if (apiError.details() != null) model.addAttribute("errorDetails", apiError.details());
+
+      model.addAttribute("hecho", hecho);
+      model.addAttribute("errores", erroresVista);
+
+      return "subir-hecho";
+    } catch (GlobalBusinessException ex) {
+      // E. Errores de Negocio/Sistema (409, 503, Connection Refused)
+      // El usuario hizo todo bien, pero el sistema lo rechaza
+      ApiError apiError = ex.getApiError();
+
+      if (apiError.message() != null) model.addAttribute("globalError", apiError.message());
+      if (apiError.details() != null) model.addAttribute("errorDetails", apiError.details());
+
+      model.addAttribute("hecho", hecho);
+
+      return "subir-hecho";
+    }
+  }
+
+  @GetMapping("/{id}/editar")
+  public String editarHecho(@PathVariable Long id,
+                            Model model,
+                            RedirectAttributes redirectAttributes) {
+    try {
+      // Usamos HechoInputDTO (con estructura anidada ubicacionInputDTO)
+      HechoInputDTO inputOriginal = this.hechosApiService.obtenerHecho(id);
+
+      // Mapeamos a EditarHechoDTO (plano)
+      EditarHechoDTO hecho = this.hechoMapper.toEditarHechoDTO(inputOriginal);
+
+      model.addAttribute("hecho", hecho);
+      model.addAttribute("id", id);
+
+      return "editar-hecho";
+
+    } catch (Exception e) {
+      redirectAttributes.addFlashAttribute("error", "No se pudo cargar el hecho.");
+      return "redirect:/hechos/mis-hechos";
+    }
+  }
+
+  @PostMapping("/{id}/editar")
+  public String subirHechoEditado(@PathVariable Long id,
+                                  @ModelAttribute("hecho") @Valid EditarHechoDTO hecho,
+                                  BindingResult bindingResult,
+                                  @RequestParam(value = "nuevasImagenes", required = false) List<MultipartFile> multipartFiles,
+                                  Model model,
+                                  RedirectAttributes redirectAttributes) {
+    Map<String, String> erroresVista = new HashMap<>();
+
+    // A. VALIDACIÓN LOCAL
+    if (bindingResult.hasErrors()) {
+      bindingResult.getFieldErrors().forEach(e -> erroresVista.put(e.getField(), e.getDefaultMessage()));
+
+      model.addAttribute("hecho", hecho); // 'hecho' ya tiene la lista multimedia gracias a los hidden inputs
+      model.addAttribute("id", id);
+      model.addAttribute("errores", erroresVista);
+
+      return "editar-hecho";
+    }
+
+    // B. PROCESAR FOTOS NUEVAS
+    if (hecho.getMultimedia() == null) hecho.setMultimedia(new ArrayList<>());
+
+    if (multipartFiles != null) {
+      for (MultipartFile file : multipartFiles) {
+        if (!file.isEmpty()) {
+          try {
+            String name = imagenesService.copy(file);
+            hecho.getMultimedia().add(name);
+          } catch (IOException e) {
+            model.addAttribute("errorGlobal", "Error al subir imagen: " + file.getOriginalFilename());
+            model.addAttribute("hecho", hecho);
+            model.addAttribute("id", id);
+            return "editar-hecho";
+          }
+        }
+      }
+    }
+
+    // C. LLAMADA AL SERVICIO
+    try {
+      this.solicitudesModificacionApiService.crearSolicitudModificacion(id, hecho);
+
+      redirectAttributes.addFlashAttribute("mensaje", "¡Solicitud de edición creada con éxito!");
+      return "redirect:/hechos/" + id + "/detalle";
+
+    } catch (ValidationBusinessException ex) {
+      // D. ERROR DE NEGOCIO (ApiError)
+      ApiError apiError = ex.getApiError();
+      if (apiError.fields() != null) erroresVista.putAll(apiError.fields());
+      if (apiError.message() != null) model.addAttribute("globalError", apiError.message());
+      if (apiError.details() != null) model.addAttribute("errorDetails", apiError.details());
+
+      model.addAttribute("hecho", hecho);
+      model.addAttribute("id", id);
+      model.addAttribute("errores", erroresVista);
+
+      return "editar-hecho";
+    } catch (GlobalBusinessException ex) {
+      // E. Errores de Negocio/Sistema (409, 503, Connection Refused)
+      // El usuario hizo todo bien, pero el sistema lo rechaza
+      ApiError apiError = ex.getApiError();
+
+      if (apiError.message() != null) model.addAttribute("globalError", apiError.message());
+      if (apiError.details() != null) model.addAttribute("errorDetails", apiError.details());
+
+      model.addAttribute("hecho", hecho);
+      model.addAttribute("id", id);
+
+      return "editar-hecho";
+    }
   }
 
   @GetMapping("/mapa/coleccion/{id}")
@@ -166,125 +399,6 @@ public class HechosController {
         return "home";
       }
     }
-
-    @PostMapping("/crear-hecho")
-    public String crearHecho(@ModelAttribute("hecho") HechoOutputDTO hecho, //habia un @Valid que quite, tal vez tenga que volver a ponerlo y la dependencia
-                             BindingResult bindingResult,
-                             @RequestParam("multimediaFiles") List<MultipartFile> multipartFiles,
-                             Model model,
-                             RedirectAttributes redirectAttributes,
-                             Principal principal) { // Usamos Principal para obtener el nombre de usuario de forma segura
-
-        String token = null;
-        String usuarioEmail = "VISUALIZADOR/ANÓNIMO";
-
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-
-        // 1. LÓGICA DE EXTRACCIÓN DE USUARIO SEGURO (Mantenemos el código original)
-        if (principal != null) {
-            usuarioEmail = principal.getName();
-            if (authentication != null && !(authentication instanceof AnonymousAuthenticationToken)) {
-                try {
-                    AuthResponseDTO authData = (AuthResponseDTO) authentication.getDetails();
-                    token = authData.getAccessToken();
-                } catch (Exception e) {
-                    System.err.println("Advertencia: Fallo al castear token para usuario: " + principal.getName());
-                    token = null;
-                }
-            }
-        }
-        // -------------------------------------------------------------------
-
-        // 2. VALIDACIÓN DEL LADO DEL SERVIDOR (SI FALLA, SE QUEDA en la vista POST)
-        if (bindingResult.hasErrors()) {
-            log.warn("Errores de validación encontrados.");
-            // Devuelve el formulario con los errores de Thymeleaf
-            return "subir-hecho";
-        }
-        // ----------------------------------------------------------------------
-
-        // 3. PROCESAMIENTO DE ARCHIVOS (Mantenemos el código original)
-        if (multipartFiles != null && !multipartFiles.isEmpty()) {
-            List<String> nombresGuardados = new ArrayList<>();
-            multipartFiles.forEach(f -> System.out.println(" - " + f.getOriginalFilename()));
-            for (MultipartFile file : multipartFiles) {
-                if (!file.isEmpty()) {
-                    try {
-                        String uniqueFileName = imagenesService.copy(file);
-                        nombresGuardados.add(uniqueFileName);
-                    } catch (IOException e) {
-                        // Si falla el guardado de archivos, manejamos como un error del servicio.
-                        redirectAttributes.addFlashAttribute("errorGlobal", "Error al guardar archivos multimedia: " + e.getMessage());
-                        return "redirect:/hechos/subir-hecho";
-                    }
-                }
-            }
-            hecho.setMultimedia(nombresGuardados);
-        }
-
-        hecho.setUsuario(usuarioEmail);
-
-
-        try {
-            CrearHechoDTO payload = new CrearHechoDTO();
-            payload.setHecho(hecho);
-            payload.setAccessToken(token);
-
-            // LLAMADA AL SERVICIO
-            hechosApiService.crearHecho(payload, token);
-
-            // 🚨 CAMINO DE ÉXITO (PRG) 🚨
-            // Usamos Flash Attributes para llevar el mensaje a la siguiente petición GET
-            redirectAttributes.addFlashAttribute("mensaje", "¡Hecho creado con éxito! Se ha enviado a moderación.");
-            redirectAttributes.addFlashAttribute("tipoMensaje", "success");
-
-            // Redirecciona al GET de la página del formulario
-            return "redirect:/hechos/subir-hecho";
-
-        } catch (Exception e) {
-            log.error("Error al crear hecho (Redireccionando con error)", e);
-
-            // 🚨 CAMINO DE ERROR DEL SERVICIO (PRG) 🚨
-            // Usamos Flash Attributes para llevar el mensaje de error del servicio
-            redirectAttributes.addFlashAttribute("errorGlobal", "Error al guardar el hecho: " + e.getMessage());
-            redirectAttributes.addFlashAttribute("tipoMensaje", "danger");
-
-            // Redirecciona al GET para mostrar el error sin el problema de recarga
-            return "redirect:/hechos/subir-hecho";
-        }
-    }
-
-  @GetMapping("/{id}/detalle")
-  public String verDetalleHecho(@PathVariable Long id,
-                                Model model,
-                                Authentication authentication) {
-    try {
-      var hecho = hechosApiService.obtenerHecho(id);
-      model.addAttribute("hecho", hecho);
-        List<String> rutasMultimedia = hecho.getMultimedia();
-        // Nombrar la variable en el modelo como 'imagenes' para que coincida con la vista
-        model.addAttribute("imagenes", rutasMultimedia);
-
-        boolean esPropietario = false;
-
-      if (authentication != null && authentication.getDetails() instanceof AuthResponseDTO token) {
-        String email = JwtUtils.validarToken(token.getAccessToken());
-        if (email != null && hecho.getUsuario() != null) {
-          esPropietario = email.equalsIgnoreCase(hecho.getUsuario());
-        }
-      }
-
-      model.addAttribute("esPropietario", esPropietario);
-
-      return "hecho-detalle";
-
-
-    } catch (Exception e) {
-      log.error(e.getMessage(), e);
-      model.addAttribute("errorGlobal", "Ocurrió un error inesperado: " + e.getMessage());
-      return "home";
-    }
-  }
 
   @GetMapping("/{id}/solicitud-eliminacion")
   public String mostrarFormularioSolicitudEliminacion(@PathVariable Long id,
@@ -373,122 +487,6 @@ public class HechosController {
       model.addAttribute("esAnonimo", esAnonimo);
       model.addAttribute("errorGlobal", "Ocurrió un error al enviar la solicitud. Intenta nuevamente.");
       return "solicitud-eliminacion";
-    }
-  }
-
-  @GetMapping("/mis-hechos")
-  public String verMisHechos(Model model,
-                             Authentication authentication,
-                             RedirectAttributes redirectAttributes) {
-    if (authentication == null || !(authentication.getDetails() instanceof AuthResponseDTO token)) {
-      redirectAttributes.addFlashAttribute("errorLogin",
-          "Para ver tus hechos debes iniciar sesión.");
-      return "redirect:/auth";
-    }
-
-    try {
-      // Email del usuario desde el token JWT
-      String email = JwtUtils.validarToken(token.getAccessToken());
-
-      // Llamamos al backend para traer los hechos del usuario
-      var hechosUsuario = hechosApiService.obtenerHechosUsuario(email);
-        try {
-            log.info("Hechos que me traje edl usuario cantidad: " + hechosUsuario.size());
-        } catch (Exception e) {
-            log.info("Bardie por lista nula " + hechosUsuario.size());
-            throw new RuntimeException(e);
-        }
-        model.addAttribute("hechos", hechosUsuario);
-      model.addAttribute("usuarioEmail", email);
-
-      return "mis-hechos";  // => templates/mis-hechos.html
-    } catch (Exception e) {
-      log.error("Error al obtener hechos del usuario", e);
-      model.addAttribute("errorGlobal", "Ocurrió un error al obtener tus hechos. Intenta más tarde.");
-      return "mis-hechos"; // Mostramos la vista igual pero vacía
-    }
-  }
-
-  @GetMapping("/{id}/editar")
-  public String editarHecho(@PathVariable Long id,
-                            Model model,
-                            RedirectAttributes redirectAttributes) {
-    try {
-      // Usamos HechoInputDTO (con estructura anidada ubicacionInputDTO)
-      HechoInputDTO inputOriginal = this.hechosApiService.obtenerHecho(id);
-
-      // Mapeamos a EditarHechoDTO (plano)
-      EditarHechoDTO hecho = this.hechoMapper.toEditarHechoDTO(inputOriginal);
-
-      model.addAttribute("hecho", hecho);
-      model.addAttribute("id", id);
-
-      return "editar-hecho";
-
-    } catch (Exception e) {
-      redirectAttributes.addFlashAttribute("error", "No se pudo cargar el hecho.");
-      return "redirect:/hechos/mis-hechos";
-    }
-  }
-
-  @PostMapping("/{id}/editar")
-  public String subirHechoEditado(@PathVariable Long id,
-                                  @ModelAttribute("hecho") @Valid EditarHechoDTO hecho,
-                                  BindingResult bindingResult,
-                                  @RequestParam(value = "nuevasImagenes", required = false) List<MultipartFile> multipartFiles,
-                                  Model model,
-                                  RedirectAttributes redirectAttributes) {
-    Map<String, String> erroresVista = new HashMap<>();
-
-    // A. VALIDACIÓN LOCAL
-    if (bindingResult.hasErrors()) {
-      bindingResult.getFieldErrors().forEach(e -> erroresVista.put(e.getField(), e.getDefaultMessage()));
-
-      model.addAttribute("hecho", hecho); // 'hecho' ya tiene la lista multimedia gracias a los hidden inputs
-      model.addAttribute("id", id);
-      model.addAttribute("errores", erroresVista);
-
-      return "editar-hecho";
-    }
-
-    // B. PROCESAR FOTOS NUEVAS
-    if (hecho.getMultimedia() == null) hecho.setMultimedia(new ArrayList<>());
-
-    if (multipartFiles != null) {
-      for (MultipartFile file : multipartFiles) {
-        if (!file.isEmpty()) {
-          try {
-            String name = imagenesService.copy(file);
-            hecho.getMultimedia().add(name);
-          } catch (IOException e) {
-            model.addAttribute("errorGlobal", "Error al subir imagen: " + file.getOriginalFilename());
-            model.addAttribute("hecho", hecho);
-            model.addAttribute("id", id);
-            return "editar-hecho";
-          }
-        }
-      }
-    }
-
-    // C. LLAMADA AL SERVICIO
-    try {
-      this.solicitudesModificacionApiService.crearSolicitudModificacion(id, hecho);
-
-      redirectAttributes.addFlashAttribute("mensaje", "Solicitud de edición creada con éxito.");
-      return "redirect:/hechos/" + id + "/detalle";
-
-    } catch (ValidationException ex) {
-      // D. ERROR DE NEGOCIO (ApiError)
-      ApiError apiError = ex.getApiError();
-      if (apiError.fields() != null) erroresVista.putAll(apiError.fields());
-      if (apiError.message() != null) model.addAttribute("globalError", apiError.message());
-      if (apiError.details() != null) model.addAttribute("errorDetails", apiError.details());
-
-      model.addAttribute("hecho", hecho);
-      model.addAttribute("id", id);
-      model.addAttribute("errores", erroresVista);
-
-      return "editar-hecho";
     }
   }
 

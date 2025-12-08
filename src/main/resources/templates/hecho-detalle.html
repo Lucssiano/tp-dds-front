@@ -19,7 +19,7 @@
 
 <main class="detail-container">
 
-      <div th:if="${mensaje}" style="background-color: #d1fae5; border: 1px solid #34d399; color: #065f46; padding: 15px; border-radius: 6px; margin-bottom: 20px; margin-top: 20px;">
+      <div th:if="${mensaje}" style="background-color: #d1fae5; border: 1px solid #34d399; color: #065f46; padding: 15px; border-radius: 6px; margin-bottom: 20px;">
           <span th:text="${mensaje}"></span>
       </div>
 
@@ -66,7 +66,7 @@
 
           <div class="content-block">
               <h3 class="content-title">Fecha del hecho</h3>
-              <p th:text="${#temporals.format(hecho.fechaHecho, 'dd/MM/yyyy HH:mm')}" style="font-weight: 500;">
+              <p th:text="${#temporals.format(hecho.fechaHecho, 'dd/MM/yyyy HH:mm')}">
                   01/01/2024 12:00
               </p>
           </div>
@@ -110,24 +110,22 @@
               <div id="map-readonly" style="height: 400px; border-radius: 8px;"></div>
           </div>
 
-    <div style="margin-top: 40px; display: flex; gap: 15px; justify-content: center; flex-wrap: wrap;">
+          <div style="margin-top: 40px; display: flex; gap: 15px; justify-content: center; flex-wrap: wrap;">
+              <a th:href="@{/hechos/mapa}"
+                 class="btn btn--secondary"
+                 style="min-width: 150px; text-align: center;">
+                Ir al mapa
+              </a>
 
-      <a th:href="@{/hechos/mapa}"
-         class="btn btn--secondary"
-         style="min-width: 150px; text-align: center;">
-        Ir al mapa
-      </a>
+              <a th:if="${esPropietario && hecho.estado == 'ACEPTADO'}"
+                 th:href="@{|/hechos/${hecho.id}/editar|}"
+                 class="btn btn--primary"
+                 style="min-width: 150px; text-align: center;">
+                Editar Hecho
+              </a>
+          </div>
 
-      <a th:if="${esPropietario && hecho.estado == 'ACEPTADO'}"
-         th:href="@{|/hechos/${hecho.id}/editar|}"
-         class="btn btn--primary"
-         style="min-width: 150px; text-align: center;">
-        Editar Hecho
-      </a>
-
-    </div>
-
-  </div>
+      </div>
 </main>
 
 <div th:replace="fragments/footer :: footer"></div>

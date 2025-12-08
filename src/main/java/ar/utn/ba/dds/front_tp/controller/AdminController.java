@@ -11,10 +11,9 @@ import ar.utn.ba.dds.front_tp.dto.input.HechoInputDTO;
 import ar.utn.ba.dds.front_tp.dto.hechos.input.SolicitudModificacionInputDTO;
 import ar.utn.ba.dds.front_tp.dto.output.ColeccionOutputDTO;
 import ar.utn.ba.dds.front_tp.dto.output.CriterioDePertenenciaOutputDTO;
-import ar.utn.ba.dds.front_tp.dto.output.HechoOutputDTO;
 import ar.utn.ba.dds.front_tp.dto.usuarios.AuthResponseDTO;
 import ar.utn.ba.dds.front_tp.dto.admin.DashboardSummaryDTO;
-import ar.utn.ba.dds.front_tp.exceptions.api.ValidationException;
+import ar.utn.ba.dds.front_tp.exceptions.api.ValidationBusinessException;
 import ar.utn.ba.dds.front_tp.mappers.HechoMapper;
 import ar.utn.ba.dds.front_tp.services.*;
 import jakarta.validation.Valid;
@@ -113,7 +112,7 @@ public class AdminController {
       return "redirect:/admin/colecciones";
     }
     // Errores de Formulario (400/422)
-    catch (ValidationException ex) {
+    catch (ValidationBusinessException ex) {
       model.addAttribute("errors", ex.getApiError().fields());
       model.addAttribute("coleccion", coleccionOutputDTO);
       model.addAttribute("fuentesDisponibles", fuentesApiService.obtenerFuentes());
@@ -385,7 +384,7 @@ public class AdminController {
       redirectAttributes.addFlashAttribute("mensaje", "Hecho editado con éxito.");
       return "redirect:/admin/revisiones/hechos/" + id + "/detalle";
 
-    } catch (ValidationException ex) {
+    } catch (ValidationBusinessException ex) {
       // D. ERROR DE NEGOCIO (ApiError)
       ApiError apiError = ex.getApiError();
       if (apiError.fields() != null) erroresVista.putAll(apiError.fields());
