@@ -222,22 +222,29 @@ public class HechosApiService {
   }
 
   public List<CategoriaDTO> obtenerCategorias(){
-      try{
-        String url = hechosServiceUrl +"/hechos/categorias";
-        List<CategoriaDTO> categorias = webClient.get()
-                .uri(url)
-                .retrieve()
-                .bodyToFlux(CategoriaDTO.class)
-                .collectList()
-                .block();
+    try {
+      return webClient.get()
+          .uri(hechosServiceUrl +"/hechos/categorias")
+          .retrieve()
+          .onStatus(HttpStatusCode::isError, response -> {
+            log.warn("Error recibido. Status: {}", response.statusCode().value());
+            return this.handlerExceptions.manejarError(response);
+          })
+          .bodyToFlux(CategoriaDTO.class)
+          .collectList()
+          .block();
+    } catch (WebClientRequestException e) {
+      log.error("🔥 Error de conexión con módulo externo: {}", e.getMessage());
 
-        return categorias;
-
-      }catch (Exception e){
-          log.error("No se pudieron obtener las categorias {}", e.getMessage());
-          return null;
-      }
+      throw new GlobalBusinessException(
+          503,
+          "SERVICE_UNAVAILABLE", // Código para identificarlo
+          "El sistema externo no responde. No se pudieron obtener las categorías.",
+          List.of(e.getMessage())
+      );
+    }
   }
+
   public HechoInputDTO obtenerUltimoHecho() {
 
     try {

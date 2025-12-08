@@ -83,22 +83,57 @@
             <div class="content-block">
                 <label class="content-title" for="titulo">Título</label>
                 <input id="titulo" class="clean-input" type="text" th:field="*{titulo}"
-                       th:classappend="${errores != null and errores.containsKey('titulo')} ? 'input-error' : ''">
+                       th:classappend="${errores != null and errores.containsKey('titulo')} ? 'input-error' : ''"
+                       placeholder="Título...">
                 <span class="field-error-msg" th:if="${errores != null and errores.containsKey('titulo')}" th:text="${errores['titulo']}"></span>
             </div>
 
             <div class="content-block">
                 <label class="content-title" for="descripcion">Descripción</label>
                 <textarea id="descripcion" class="clean-input" th:field="*{descripcion}" rows="6"
-                          th:classappend="${errores != null and errores.containsKey('descripcion')} ? 'input-error' : ''"></textarea>
+                          th:classappend="${errores != null and errores.containsKey('descripcion')} ? 'input-error' : ''"
+                          placeholder="Descripción...">
+                </textarea>
                 <span class="field-error-msg" th:if="${errores != null and errores.containsKey('descripcion')}" th:text="${errores['descripcion']}"></span>
             </div>
 
             <div class="content-block">
                 <label class="content-title" for="categoria">Categoría</label>
-                <input id="categoria" class="clean-input" type="text" th:field="*{categoria}"
-                       th:classappend="${errores != null and errores.containsKey('categoria')} ? 'input-error' : ''">
+
+                <div class="autocomplete-wrapper" id="categoria-wrapper">
+
+                    <input id="categoria"
+                           class="clean-input"
+                           type="text"
+                           th:field="*{categoria}"
+                           placeholder="Escribe o selecciona..."
+                           autocomplete="off"
+                           oninput="filterCategories()"
+                           onfocus="showCategories()"
+                           th:classappend="${errores != null and errores.containsKey('categoria')} ? 'input-error' : ''">
+
+                    <ul id="categoria-list" class="autocomplete-list">
+                        <li th:each="cat : ${categorias}"
+                            class="autocomplete-item"
+                            th:text="${cat.nombre}"
+                            th:data-valor="${cat.nombre}"
+                            onclick="selectCategory(this.getAttribute('data-valor'))">
+                        </li>
+
+                        <li id="no-results"
+                            class="autocomplete-item"
+                            style="display:none; color: #2b6cb0; font-weight: 600;"
+                            onclick="selectCategory(document.getElementById('categoria').value)">
+                            Presiona Enter para crear nueva
+                        </li>
+                    </ul>
+                </div>
+
                 <span class="field-error-msg" th:if="${errores != null and errores.containsKey('categoria')}" th:text="${errores['categoria']}"></span>
+
+                <div th:if="${warningCategorias}" class="input-warning-msg">
+                    <span th:text="${warningCategorias}"></span>
+                </div>
             </div>
 
             <div class="content-block">
@@ -141,6 +176,7 @@
 <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
 
 <script th:inline="javascript">
+    // IMAGENES -----------------------------------
     // Variable global para acumular archivos
     let dt = new DataTransfer();
 
@@ -254,6 +290,7 @@
         }
     }
 
+    // MAPA -----------------------------------
     document.addEventListener('DOMContentLoaded', function() {
         /* Configuración Inicial */
         // Usamos los campos planos del EditarHechoDTO
@@ -319,7 +356,147 @@
             }
         }
     });
+
+    // CATEGORIAS -----------------------------------
+    /* ==========================================
+   LÓGICA DE AUTOCOMPLETE CON TECLADO
+   ========================================== */
+    const inputCat = document.getElementById('categoria');
+    const listCat = document.getElementById('categoria-list');
+    // Obtenemos todos los items originales
+    const allItems = listCat ? listCat.getElementsByClassName('autocomplete-item') : [];
+
+    let currentFocus = -1; // Índice del elemento seleccionado (-1 es ninguno)
+
+    // 1. Escuchar el teclado en el input
+    inputCat.addEventListener("keydown", function(e) {
+        if (!listCat.classList.contains('active')) return;
+
+        // Obtenemos solo los items que están VISIBLES actualmente
+        let visibleItems = getVisibleItems();
+
+        if (e.key === "ArrowDown") { // Flecha Abajo
+            currentFocus++;
+            addActive(visibleItems);
+        } else if (e.key === "ArrowUp") { // Flecha Arriba
+            currentFocus--;
+            addActive(visibleItems);
+        } else if (e.key === "Enter") { // Enter
+            if (currentFocus > -1) {
+                // Si hay un item marcado, simulamos el click
+                e.preventDefault(); // Evita que el form se envíe
+                if (visibleItems[currentFocus]) {
+                    visibleItems[currentFocus].click();
+                }
+            }
+        } else if (e.key === "Escape") { // Escape
+            closeList();
+        }
+    });
+
+    // Función auxiliar para obtener solo lo que se ve
+    function getVisibleItems() {
+        let visibles = [];
+        for (let i = 0; i < allItems.length; i++) {
+            // CAMBIO: Ahora SOLO ignoramos los que tienen display: none.
+            // Ya NO ignoramos el 'no-results', así podemos seleccionarlo con flechas.
+            if (allItems[i].style.display !== "none") {
+                visibles.push(allItems[i]);
+            }
+        }
+        return visibles;
+    }
+
+    // Función para pintar el item activo
+    function addActive(x) {
+        if (!x || x.length === 0) return false;
+
+        // Circular: si baja del último, vuelve al primero
+        if (currentFocus >= x.length) currentFocus = 0;
+        if (currentFocus < 0) currentFocus = (x.length - 1);
+
+        removeActive(x); // Limpiar estilo anterior
+
+        // Agregar clase activa
+        x[currentFocus].classList.add("autocomplete-active");
+
+        // Scroll automático: asegurarnos que el item sea visible
+        x[currentFocus].scrollIntoView({ block: 'nearest', inline: 'start' });
+    }
+
+    // Función para limpiar estilos
+    function removeActive(x) {
+        for (let i = 0; i < x.length; i++) {
+            x[i].classList.remove("autocomplete-active");
+        }
+    }
+
+    function showCategories() {
+        if(!listCat) return;
+        filterCategories();
+        listCat.classList.add('active');
+        inputCat.classList.add('dropdown-open');
+    }
+
+    function filterCategories() {
+        if(!listCat) return;
+        const filter = inputCat.value.toLowerCase();
+        let visibleCount = 0;
+
+        // RESETEAMOS el foco cada vez que escribe
+        currentFocus = -1;
+        // Quitamos la clase activa de todos
+        removeActive(allItems);
+
+        for (let i = 0; i < allItems.length; i++) {
+            const item = allItems[i];
+            if (item.id === 'no-results') continue;
+
+            const txtValue = item.textContent || item.innerText;
+
+            if (txtValue.toLowerCase().indexOf(filter) > -1) {
+                item.style.display = "";
+                visibleCount++;
+            } else {
+                item.style.display = "none";
+            }
+        }
+
+        const noResults = document.getElementById('no-results');
+        if (visibleCount === 0 && filter !== '') {
+            if(noResults) {
+                noResults.style.display = "block";
+                noResults.innerText = `Crear nueva: "${inputCat.value}"`;
+            }
+        } else {
+            if(noResults) noResults.style.display = "none";
+        }
+
+        listCat.classList.add('active');
+    }
+
+    function selectCategory(valor) {
+        inputCat.value = valor;
+        closeList();
+    }
+
+    function closeList() {
+        if(listCat) {
+            listCat.classList.remove('active');
+            inputCat.classList.remove('dropdown-open');
+            currentFocus = -1; // Resetear índice
+        }
+    }
+
+    // Cerrar click afuera
+    document.addEventListener('click', function(e) {
+        const wrapper = document.getElementById('categoria-wrapper');
+        if (wrapper && !wrapper.contains(e.target)) {
+            closeList();
+        }
+    });
 </script>
+
 </body>
 
 </html>

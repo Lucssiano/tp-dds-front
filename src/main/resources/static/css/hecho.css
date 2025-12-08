@@ -340,3 +340,114 @@
     margin-top: 5px;
     display: block;
 }
+
+/* ==========================================
+   ALERTA DE ADVERTENCIA (Input Warning)
+   ========================================== */
+.input-warning-msg {
+    color: #b45309;
+    background-color: #fffbeb;
+    font-size: 0.85rem;
+    margin-top: 8px;
+    padding: 8px 12px;
+    border-radius: 4px;
+    border: 1px solid #fcd34d;
+    display: block;
+}
+
+/* ==========================================
+   AUTOCOMPLETE CUSTOM & INPUTS CON ICONOS
+   ========================================== */
+
+/* 1. CONTENEDOR PRINCIPAL
+   Reemplaza al antiguo .input-group. Es vital para que la lista
+   y el ícono se posicionen relativos a este input. */
+.autocomplete-wrapper {
+    position: relative;
+    width: 100%;
+}
+
+/* 2. ESTILOS DEL ÍCONO (Lupa/Etiqueta) */
+.input-icon-left {
+    position: absolute;
+    left: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #a0aec0;       /* Gris suave */
+    pointer-events: none; /* El click atraviesa el ícono */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: color 0.2s;
+    z-index: 10;          /* Por encima del input */
+}
+
+/* 3. AJUSTES AL INPUT */
+/* Espacio a la izquierda para que el texto no pise el ícono */
+.clean-input.has-icon {
+    padding-left: 40px;
+}
+
+/* Fusión visual: cuando se abre la lista, quitamos el borde inferior redondeado */
+.clean-input.dropdown-open {
+    border-bottom-left-radius: 0;
+    border-bottom-right-radius: 0;
+    border-bottom-color: transparent;
+    z-index: 51; /* Para que quede por encima de la sombra */
+}
+
+/* Efecto: Cuando el input o el wrapper tienen foco, el ícono se pinta azul */
+.clean-input:focus + .input-icon-left,
+.autocomplete-wrapper:focus-within .input-icon-left {
+    color: #3182ce;
+}
+
+/* 4. LA LISTA DESPLEGABLE (CUSTOM) */
+.autocomplete-list {
+    position: absolute;
+    top: 100%;          /* Justo debajo del input */
+    left: 0;
+    right: 0;
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-radius: 0 0 8px 8px; /* Redondeado solo abajo */
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+    max-height: 200px;  /* Altura máxima antes de scroll */
+    overflow-y: auto;   /* Scroll vertical si hace falta */
+    z-index: 50;        /* Por encima de todo */
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: none;      /* Oculto inicialmente */
+    margin-top: -1px;   /* Para solapar el borde del input */
+}
+
+/* Clase para mostrar la lista (activada por JS) */
+.autocomplete-list.active {
+    display: block;
+}
+
+/* Items de la lista */
+.autocomplete-item {
+    padding: 10px 15px; /* 40px de indentación para alinear con el texto del input */
+    cursor: pointer;
+    font-size: 0.95rem;
+    color: #4a5568;
+    transition: background-color 0.2s;
+    border-bottom: 1px solid #edf2f7;
+}
+
+.autocomplete-item:last-child {
+    border-bottom: none;
+}
+
+.autocomplete-item:hover {
+    background-color: #ebf8ff; /* Azul muy clarito */
+    color: #2b6cb0;            /* Azul texto */
+}
+
+/* Clase para el ítem seleccionado por teclado */
+.autocomplete-item.autocomplete-active {
+    background-color: #ebf8ff; /* El mismo azul clarito del hover */
+    color: #2b6cb0;
+}

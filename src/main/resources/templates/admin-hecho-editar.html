@@ -87,8 +87,7 @@
                         <label class="content-title" for="titulo">Título</label>
                         <input id="titulo" class="clean-input" type="text" th:field="*{titulo}"
                                th:classappend="${errores != null and errores.containsKey('titulo')} ? 'input-error' : ''"
-                               placeholder="Título..."
-                        >
+                               placeholder="Título...">
                         <span class="field-error-msg"
                               th:if="${errores != null and errores.containsKey('titulo')}"
                               th:text="${errores['titulo']}"></span>
@@ -105,11 +104,25 @@
 
                     <div class="content-block">
                         <label class="content-title" for="categoria">Categoría</label>
+
                         <input id="categoria" class="clean-input" type="text" th:field="*{categoria}"
-                               th:classappend="${errores != null and errores.containsKey('categoria')} ? 'input-error' : ''"
-                               placeholder="Categoría..."
-                        >
-                        <span class="field-error-msg" th:if="${errores != null and errores.containsKey('categoria')}" th:text="${errores['categoria']}"></span>
+                               list="sugerencias-categorias"
+                               placeholder="Escribe o selecciona..."
+                               th:classappend="${errores != null and errores.containsKey('categoria')} ? 'input-error' : ''">
+
+                        <datalist id="sugerencias-categorias">
+                            <option th:each="cat : ${categorias}" th:value="${cat.nombre}"></option>
+                        </datalist>
+
+                        <span class="field-error-msg"
+                              th:if="${errores != null and errores.containsKey('categoria')}"
+                              th:text="${errores['categoria']}">
+                        </span>
+
+                        <div th:if="${warningCategorias}"
+                             style="color: #b45309; background-color: #fffbeb; font-size: 0.85rem; margin-top: 5px; padding: 5px; border-radius: 4px; border: 1px solid #fcd34d;">
+                            <span th:text="${warningCategorias}"></span>
+                        </div>
                     </div>
 
                     <div class="content-block">

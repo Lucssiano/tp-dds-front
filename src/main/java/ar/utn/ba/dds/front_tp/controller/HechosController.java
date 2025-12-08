@@ -2,6 +2,7 @@ package ar.utn.ba.dds.front_tp.controller;
 
 import ar.utn.ba.dds.front_tp.Utils.JwtUtils;
 import ar.utn.ba.dds.front_tp.dto.editar.EditarHechoDTO;
+import ar.utn.ba.dds.front_tp.dto.hechos.CategoriaDTO;
 import ar.utn.ba.dds.front_tp.dto.input.ApiError;
 import ar.utn.ba.dds.front_tp.dto.input.ColeccionInputDTO;
 import ar.utn.ba.dds.front_tp.dto.input.HechoInputDTO;
@@ -9,6 +10,7 @@ import ar.utn.ba.dds.front_tp.dto.hechos.input.SolicitudEliminacionInputDTO;
 import ar.utn.ba.dds.front_tp.dto.output.ColeccionOutputDTO;
 import ar.utn.ba.dds.front_tp.dto.output.SoliOutputDTO;
 import ar.utn.ba.dds.front_tp.dto.usuarios.AuthResponseDTO;
+import ar.utn.ba.dds.front_tp.exceptions.api.ApiException;
 import ar.utn.ba.dds.front_tp.exceptions.api.GlobalBusinessException;
 import ar.utn.ba.dds.front_tp.exceptions.api.ValidationBusinessException;
 import ar.utn.ba.dds.front_tp.mappers.HechoMapper;
@@ -78,6 +80,29 @@ public class HechosController {
 
     // 3. Cargar Categorías
     model.addAttribute("listaCategorias", hechosApiService.obtenerCategoriasOutput());
+  }
+
+  private void cargarCategoriasEnModelo(Model model) {
+    try {
+      List<CategoriaDTO> categorias = this.hechosApiService.obtenerCategorias();
+      model.addAttribute("categorias", categorias);
+    } catch (Exception ex) {
+      // Usamos 'Exception' para que sea una red de seguridad TOTAL.
+
+      if (ex instanceof ApiException) {
+        // Usamos WARN y solo mostramos el mensaje corto.
+        log.warn("⚠️ No se cargaron las categorías. Causa: {}", ex.getMessage());
+      } else {
+        // Usamos ERROR y pasamos 'ex' como segundo argumento para ver el Stack Trace completo.
+        log.error("🔥 BUG: Falló la carga de categorías por un error de código.", ex);
+      }
+
+      // Ponemos la lista vacía (CRÍTICO para que no rompa el HTML)
+      model.addAttribute("categorias", new ArrayList<CategoriaDTO>());
+
+      // Aviso visual amarillo
+      model.addAttribute("warningCategorias", "No se pudieron cargar las sugerencias, pero podés escribir manualmente.");
+    }
   }
 
   @GetMapping("/mapa")
@@ -150,37 +175,31 @@ public class HechosController {
   public String verDetalleHecho(@PathVariable Long id,
                                 Model model,
                                 Authentication authentication) {
-    try {
-      var hecho = hechosApiService.obtenerHecho(id);
-      model.addAttribute("hecho", hecho);
-      List<String> rutasMultimedia = hecho.getMultimedia();
-      // Nombrar la variable en el modelo como 'imagenes' para que coincida con la vista
-      model.addAttribute("imagenes", rutasMultimedia);
+    // NO AGREGO TRY-CATCH PARA Q EL ERROR LO ATRAPE EL CONTROLLER ADVICE
+    var hecho = hechosApiService.obtenerHecho(id);
+    model.addAttribute("hecho", hecho);
+    List<String> rutasMultimedia = hecho.getMultimedia();
+    // Nombrar la variable en el modelo como 'imagenes' para que coincida con la vista
+    model.addAttribute("imagenes", rutasMultimedia);
 
-      boolean esPropietario = false;
+    boolean esPropietario = false;
 
-      if (authentication != null && authentication.getDetails() instanceof AuthResponseDTO token) {
-        String email = JwtUtils.validarToken(token.getAccessToken());
-        if (email != null && hecho.getUsuario() != null) {
-          esPropietario = email.equalsIgnoreCase(hecho.getUsuario());
-        }
+    if (authentication != null && authentication.getDetails() instanceof AuthResponseDTO token) {
+      String email = JwtUtils.validarToken(token.getAccessToken());
+      if (email != null && hecho.getUsuario() != null) {
+        esPropietario = email.equalsIgnoreCase(hecho.getUsuario());
       }
-
-      model.addAttribute("esPropietario", esPropietario);
-
-      return "hecho-detalle";
-
-
-    } catch (Exception e) {
-      log.error(e.getMessage(), e);
-      model.addAttribute("errorGlobal", "Ocurrió un error inesperado: " + e.getMessage());
-      return "home";
     }
+
+    model.addAttribute("esPropietario", esPropietario);
+
+    return "hecho-detalle";
   }
 
   @GetMapping("/subir-hecho")
   public String subirHecho(Model model) {
     model.addAttribute("hecho", EditarHechoDTO.builder().build());
+    this.cargarCategoriasEnModelo(model);
     return "subir-hecho";
   }
 
@@ -190,41 +209,48 @@ public class HechosController {
                            @RequestParam(value = "nuevasImagenes", required = false) List<MultipartFile> multipartFiles,
                            Model model,
                            RedirectAttributes redirectAttributes,
-                           Principal principal) { // Usamos Principal para obtener el nombre de usuario de forma segura
+                           Principal principal) {
 
+    // -------------------------------------------------------------------
+    // 0. EXTRACCIÓN DE DATOS DE SESIÓN (Usuario y Token)
+    // -------------------------------------------------------------------
     String token = null;
     String usuarioEmail = "VISUALIZADOR/ANÓNIMO";
 
-    Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-
-    // LÓGICA DE EXTRACCIÓN DE USUARIO SEGURO (Mantenemos el código original)
+    // Lógica para obtener el token del SecurityContext
     if (principal != null) {
       usuarioEmail = principal.getName();
+      Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
       if (authentication != null && !(authentication instanceof AnonymousAuthenticationToken)) {
         try {
           AuthResponseDTO authData = (AuthResponseDTO) authentication.getDetails();
           token = authData.getAccessToken();
         } catch (Exception e) {
-          System.err.println("Advertencia: Fallo al castear token para usuario: " + principal.getName());
+          // Logueamos pero no rompemos el flujo, seguimos intentando
+          System.err.println("Advertencia: No se pudo extraer token de: " + principal.getName());
         }
       }
     }
-
     hecho.setUsuario(usuarioEmail);
 
     Map<String, String> erroresVista = new HashMap<>();
 
-    // A. VALIDACIÓN LOCAL
+    // -------------------------------------------------------------------
+    // A. VALIDACIÓN LOCAL (@NotNull, @Size, @NotEmpty)
+    // -------------------------------------------------------------------
     if (bindingResult.hasErrors()) {
       bindingResult.getFieldErrors().forEach(e -> erroresVista.put(e.getField(), e.getDefaultMessage()));
 
       model.addAttribute("hecho", hecho);
       model.addAttribute("errores", erroresVista);
 
+      this.cargarCategoriasEnModelo(model);
       return "subir-hecho";
     }
 
-    // B. PROCESAR FOTOS NUEVAS
+    // -------------------------------------------------------------------
+    // B. PROCESAR FOTOS NUEVAS (Subida local temporal)
+    // -------------------------------------------------------------------
     if (hecho.getMultimedia() == null) hecho.setMultimedia(new ArrayList<>());
 
     if (multipartFiles != null) {
@@ -234,42 +260,68 @@ public class HechosController {
             String name = imagenesService.copy(file);
             hecho.getMultimedia().add(name);
           } catch (IOException e) {
-            model.addAttribute("errorGlobal", "Error al subir imagen: " + file.getOriginalFilename());
+            log.error("Error I/O al guardar imagen", e);
+            model.addAttribute("globalError", "Error al subir imagen: " + file.getOriginalFilename());
+
             model.addAttribute("hecho", hecho);
+            this.cargarCategoriasEnModelo(model);
             return "subir-hecho";
           }
         }
       }
     }
 
+    // -------------------------------------------------------------------
     // C. LLAMADA AL SERVICIO
+    // -------------------------------------------------------------------
     try {
       this.hechosApiService.crearHecho(hecho, token);
 
       redirectAttributes.addFlashAttribute("mensaje", "¡Hecho creado con éxito! Se ha enviado a moderación.");
       return "redirect:/hechos/subir-hecho";
 
-    } catch (ValidationBusinessException ex) {
-      // D. ERROR DE NEGOCIO (ApiError)
-      ApiError apiError = ex.getApiError();
-      if (apiError.fields() != null) erroresVista.putAll(apiError.fields());
-      if (apiError.message() != null) model.addAttribute("globalError", apiError.message());
-      if (apiError.details() != null) model.addAttribute("errorDetails", apiError.details());
+    } catch (ApiException ex) {
+      // ---------------------------------------------------------------
+      // CASO UNIFICADO: Errores Controlados (400, 422, 409, 503)
+      // ---------------------------------------------------------------
+      // Atrapa ValidationException (campos) y GlobalBusinessException (servidor caído/reglas)
 
+      ApiError apiError = ex.getApiError();
+
+      if (apiError != null) {
+        // 1. Si hay errores de campos específicos (422)
+        if (apiError.fields() != null && !apiError.fields().isEmpty()) {
+          erroresVista.putAll(apiError.fields());
+        }
+
+        // 2. Si hay mensaje global (503, 409 o 422 con mensaje)
+        if (apiError.message() != null) {
+          model.addAttribute("globalError", apiError.message());
+        }
+
+        // 3. Detalles técnicos
+        if (apiError.details() != null && !apiError.details().isEmpty()) {
+          model.addAttribute("errorDetails", apiError.details());
+        }
+      }
+
+      // Restauramos estado
       model.addAttribute("hecho", hecho);
       model.addAttribute("errores", erroresVista);
 
+      this.cargarCategoriasEnModelo(model);
       return "subir-hecho";
-    } catch (GlobalBusinessException ex) {
-      // E. Errores de Negocio/Sistema (409, 503, Connection Refused)
-      // El usuario hizo todo bien, pero el sistema lo rechaza
-      ApiError apiError = ex.getApiError();
 
-      if (apiError.message() != null) model.addAttribute("globalError", apiError.message());
-      if (apiError.details() != null) model.addAttribute("errorDetails", apiError.details());
+    } catch (Exception ex) {
+      // ---------------------------------------------------------------
+      // CASO CATCH-ALL: Bugs inesperados (Red de seguridad)
+      // ---------------------------------------------------------------
+      log.error("💀 Error inesperado no controlado al crear hecho: ", ex);
 
+      model.addAttribute("globalError", "Ocurrió un error inesperado en la aplicación. Por favor, intente nuevamente.");
       model.addAttribute("hecho", hecho);
 
+      this.cargarCategoriasEnModelo(model);
       return "subir-hecho";
     }
   }

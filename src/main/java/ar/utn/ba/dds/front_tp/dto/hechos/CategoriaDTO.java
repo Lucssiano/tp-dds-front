@@ -8,5 +8,4 @@ import lombok.Data;
 public class CategoriaDTO {
      Long id;
      String nombre;
-
 }
