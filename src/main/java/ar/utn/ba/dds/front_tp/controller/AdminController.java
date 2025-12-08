@@ -192,6 +192,10 @@ public class AdminController {
         form.setCriteriosDePertenencias(new ArrayList<>());
       }
 
+      // cargar categorías desde el back
+      List<ar.utn.ba.dds.front_tp.dto.hechos.CategoriaDTO> categorias = hechosApiService.obtenerCategorias();
+      model.addAttribute("categorias", categorias);
+
       // Mandamos al HTML el DTO correcto
       model.addAttribute("coleccion", form);
       model.addAttribute("idColeccion", id);

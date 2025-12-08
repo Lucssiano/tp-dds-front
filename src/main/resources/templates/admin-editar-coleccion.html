@@ -77,75 +77,104 @@
                 </select>
             </div>
 
-            <!-- CRITERIOS EXISTENTES (editar nombre + parámetros) -->
-            <div class="form-group">
-                <label>Criterios de Pertenencia</label>
-                <div id="criterios-container" class="criterios-container">
+                <!-- CRITERIOS EXISTENTES (editar nombre + parámetros) -->
+                <div class="form-group">
+                    <label>Criterios de Pertenencia</label>
+                    <div id="criterios-container" class="criterios-container">
 
-                    <div th:each="criterio, stat : *{criteriosDePertenencias}" class="criterio-item">
-                        <!-- Nombre -->
-                        <div class="form-subgroup">
-                            <label>Nombre del Criterio</label>
-                            <input type="text"
-                                   th:field="*{criteriosDePertenencias[__${stat.index}__].nombreCriterio}"
-                                   class="form-control"
-                                   required>
+                        <!-- CRITERIOS YA EXISTENTES DEL BACKEND -->
+                        <div th:each="criterio, stat : *{criteriosDePertenencias}" class="criterio-item">
+
+                            <!-- Nombre -->
+                            <div class="form-subgroup">
+                                <label>Nombre del Criterio</label>
+                                <input type="text"
+                                       th:field="*{criteriosDePertenencias[__${stat.index}__].nombreCriterio}"
+                                       class="form-control"
+                                       required>
+                            </div>
+
+                            <!-- Tipo editable -->
+                            <div class="form-subgroup">
+                                <label>Tipo de Criterio</label>
+                                <select class="form-control"
+                                        th:name="|criteriosDePertenencias[${stat.index}].tipoCriterio|"
+                                        onchange="actualizarParametros(this, [[${stat.index}]])">
+
+                                    <option value="">Seleccionar tipo</option>
+
+                                    <option value="FECHA"
+                                            th:selected="${criterio.tipoCriterio.name() == 'FECHA'}">
+                                        Fecha
+                                    </option>
+
+                                    <option value="CATEGORIA"
+                                            th:selected="${criterio.tipoCriterio.name() == 'CATEGORIA'}">
+                                        Categoría
+                                    </option>
+
+                                </select>
+                            </div>
+
+                            <!-- Parámetros dinámicos -->
+                            <div class="form-subgroup"
+                                 th:id="|parametros-${stat.index}|">
+
+                                <!-- FECHA -->
+                                <div th:if="${criterio.tipoCriterio.name() == 'FECHA'}">
+                                    <label>Fecha mínima</label>
+                                    <input type="date"
+                                           th:name="|criteriosDePertenencias[${stat.index}].parametros[fechaInicio]|"
+                                           th:value="${criterio.parametros['fechaInicio']}"
+                                           class="form-control">
+
+                                    <label>Fecha máxima</label>
+                                    <input type="date"
+                                           th:name="|criteriosDePertenencias[${stat.index}].parametros[fechaFin]|"
+                                           th:value="${criterio.parametros['fechaFin']}"
+                                           class="form-control">
+                                </div>
+
+                                <!-- CATEGORIA -->
+                                <div th:if="${criterio.tipoCriterio.name() == 'CATEGORIA'}">
+                                    <label>Categoría</label>
+                                    <select class="form-control"
+                                            th:name="|criteriosDePertenencias[${stat.index}].parametros[categoria]|">
+
+                                        <option value="">Seleccione una categoría</option>
+
+                                        <option th:each="cat : ${categorias}"
+                                                th:value="${cat.nombre}"
+                                                th:text="${cat.nombre}"
+                                                th:selected="${criterio.parametros['categoria'] == cat.nombre}">
+                                        </option>
+
+                                    </select>
+                                </div>
+
+                            </div>
+
+                            <button type="button"
+                                    class="btn btn-danger btn--small mt-2"
+                                    onclick="eliminarCriterio(this)">
+                                Eliminar
+                            </button>
+
+                            <hr>
                         </div>
 
-                        <!-- Tipo (no editable, pero se manda hidden) -->
-                        <div class="form-subgroup">
-                            <label>Tipo (No editable)</label>
-                            <input type="text"
-                                   th:value="${criterio.tipoCriterio}"
-                                   class="form-control"
-                                   disabled>
-                            <input type="hidden"
-                                   th:field="*{criteriosDePertenencias[__${stat.index}__].tipoCriterio}">
-                        </div>
-
-                        <!-- Parámetros para FECHA -->
-                        <div class="form-subgroup"
-                             th:if="${criterio.tipoCriterio.name() == 'FECHA'}">
-                            <label>Fecha Inicio</label>
-                            <input type="date"
-                                   th:field="*{criteriosDePertenencias[__${stat.index}__].parametros['fechaInicio']}"
-                                   class="form-control">
-
-                            <label>Fecha Fin</label>
-                            <input type="date"
-                                   th:field="*{criteriosDePertenencias[__${stat.index}__].parametros['fechaFin']}"
-                                   class="form-control">
-                        </div>
-
-                        <!-- Parámetros para CATEGORIA -->
-                        <div class="form-subgroup"
-                             th:if="${criterio.tipoCriterio.name() == 'CATEGORIA'}">
-                            <label>Categoría</label>
-                            <input type="text"
-                                   th:field="*{criteriosDePertenencias[__${stat.index}__].parametros['categoria']}"
-                                   placeholder="Ej: Caída de aeronave"
-                                   class="form-control">
-                        </div>
-
-                        <button type="button"
-                                class="btn btn--third btn--small"
-                                onclick="this.parentElement.remove()">
-                            Eliminar
-                        </button>
-                        <hr>
                     </div>
 
+                    <!-- Botón para agregar nuevos criterios -->
+                    <button type="button"
+                            class="btn btn--secondary btn--small"
+                            onclick="agregarCriterio()">
+                        + Agregar Nuevo Criterio
+                    </button>
+
+                    <div class="text-danger" id="criterios-error" style="display:none;"></div>
                 </div>
 
-                <!-- Botón para agregar nuevos criterios -->
-                <button type="button"
-                        class="btn btn--secondary btn--small"
-                        onclick="agregarCriterio()">
-                    + Agregar Nuevo Criterio
-                </button>
-
-                <div class="text-danger" id="criterios-error" style="display:none;"></div>
-            </div>
 
 
             <!-- ACCIONES -->
@@ -157,6 +186,14 @@
         </form>
     </main>
 </div>
+
+<template id="opciones-categorias-template">
+    <option value="">Seleccione una categoría</option>
+    <option th:each="cat : ${categorias}"
+            th:value="${cat.nombre}"
+            th:text="${cat.nombre}">
+    </option>
+</template>
 
 <script th:inline="javascript">
     /* Arrancamos desde la cantidad de criterios que ya vienen del backend */
@@ -220,14 +257,47 @@
                        class="form-control">
             `;
         } else if (tipo === "CATEGORIA") {
+            const opciones = document.getElementById('opciones-categorias-template').innerHTML;
+
             paramsContainer.innerHTML = `
-                <label>Categoría</label>
-                <input type="text"
-                       name="criteriosDePertenencias[${index}].parametros[categoria]"
-                       placeholder="Ej: Caída de aeronave"
-                       class="form-control">
-            `;
+        <label>Categoría</label>
+        <select name="criteriosDePertenencias[${index}].parametros[categoria]"
+                class="form-control">
+            ${opciones}
+        </select>
+    `;
         }
+    }
+
+    function eliminarCriterio(btn) {
+        btn.parentElement.remove();
+        reindexarCriterios();
+    }
+
+    function reindexarCriterios() {
+        const items = document.querySelectorAll('.criterio-item');
+
+        items.forEach((item, index) => {
+            // Actualizar atributos name
+            item.querySelectorAll('[name]').forEach(el => {
+                el.name = el.name.replace(/criteriosDePertenencias\[\d+\]/, `criteriosDePertenencias[${index}]`);
+            });
+
+            // Actualizar id de los parámetros
+            const params = item.querySelector('[id^="parametros-"]');
+            if (params) {
+                params.id = `parametros-${index}`;
+            }
+
+            // Actualizar el onchange del select tipoCriterio
+            const selectTipo = item.querySelector('select[name$=".tipoCriterio"]');
+            if (selectTipo) {
+                selectTipo.setAttribute("onchange", `actualizarParametros(this, ${index})`);
+            }
+        });
+
+        // Actualizar el índice global
+        criterioIndex = items.length;
     }
 </script>
 
