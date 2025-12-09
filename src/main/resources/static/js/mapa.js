@@ -75,10 +75,13 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Restaurar estado del Switch
     if (toggleSwitch) {
-        const modoActual = mapElement.dataset.modo; // Viene del th:data-modo
-        // Validamos contra 'IRRESTRICTA' que es lo que manda el back
-        toggleSwitch.checked = (modoActual === 'IRRESTRICTA');
-        toggleSwitch.addEventListener('change', aplicarFiltros);
+        toggleSwitch.addEventListener('change', () => {
+            // Esperamos 400ms (un poco más que la transición CSS de 0.3s) para que la animación se vea fluida antes de recargar.
+            setTimeout(() => {
+                aplicarFiltros();
+            }, 400);
+        });
+        //
     }
 
     // Restaurar estado de Fechas

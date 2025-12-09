@@ -1,44 +1,91 @@
+/* modals.css */
+
+/* Animación de entrada */
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(-20px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
 .modal {
-    display: none; /* Mantiene los modales ocultos por defecto */
+    display: none;
     position: fixed;
-    z-index: 1000;
+    z-index: 2000; /* Muy encima de todo, incluido Leaflet */
     left: 0;
     top: 0;
     width: 100%;
     height: 100%;
     overflow: auto;
-    background-color: rgba(0, 0, 0, 0.5);
+    background-color: rgba(0, 0, 0, 0.6); /* Un poco más oscuro */
+    backdrop-filter: blur(2px); /* Efecto difuminado moderno */
 }
 
 .modal__content {
     background-color: var(--bg-white);
-    margin: 15vh auto;
-    padding: 30px;
-    border-radius: var(--radius);
+    margin: 10vh auto; /* 10% desde arriba */
+    padding: 0; /* Quitamos padding general para manejarlo por secciones */
+    border-radius: 12px;
     width: 90%;
-    max-width: 600px;
+    max-width: 550px;
     position: relative;
-    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
-    text-align: center;
-}
-.modal__content .fact-details, .fact-description {
-    padding: 10px 0;
+    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+    text-align: left;
+
+    /* Aplicar animación */
+    animation: fadeIn 0.3s ease-out;
 }
 
-.modal__close, .modal__close-report {
+/* Header del Modal */
+.modal__header {
+    padding: 20px 25px;
+    border-bottom: 1px solid #edf2f7;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.modal__title {
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: var(--primary-color);
+    margin: 0;
+}
+
+/* Cuerpo del Modal */
+.modal__body {
+    padding: 25px;
     color: var(--text-dark);
-    position: absolute;
-    top: 0;
-    left: 15px;
-    font-size: 28px;
+    font-size: 1rem;
+    line-height: 1.6;
+}
+
+/* Botón de Cerrar (X) */
+.modal__close, .modal__close-report {
+    color: #a0aec0;
+    font-size: 24px;
     font-weight: bold;
     cursor: pointer;
+    transition: color 0.2s;
+    line-height: 1;
+    background: none;
+    border: none;
+    padding: 5px;
 }
 
 .modal__close:hover,
-.modal__close:focus,
-.modal__close-report:hover,
-.modal__close-report:focus {
-    color: var(--primary-color);
-    text-decoration: none;
+.modal__close-report:hover {
+    color: var(--text-dark);
+}
+
+/* Estilos específicos para el contenido del Hecho */
+.fact-description {
+    margin-bottom: 20px;
+}
+
+.fact-meta {
+    font-size: 0.85rem;
+    color: var(--text-medium);
+    background-color: #f7fafc;
+    padding: 10px;
+    border-radius: 6px;
+    margin-top: 15px;
 }

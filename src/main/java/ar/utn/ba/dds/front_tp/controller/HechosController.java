@@ -264,7 +264,9 @@ public class HechosController {
             model.addAttribute("globalError", "Error al subir imagen: " + file.getOriginalFilename());
 
             model.addAttribute("hecho", hecho);
+
             this.cargarCategoriasEnModelo(model);
+
             return "subir-hecho";
           }
         }
@@ -330,22 +332,18 @@ public class HechosController {
   public String editarHecho(@PathVariable Long id,
                             Model model,
                             RedirectAttributes redirectAttributes) {
-    try {
-      // Usamos HechoInputDTO (con estructura anidada ubicacionInputDTO)
-      HechoInputDTO inputOriginal = this.hechosApiService.obtenerHecho(id);
+    // Usamos HechoInputDTO (con estructura anidada ubicacionInputDTO)
+    HechoInputDTO inputOriginal = this.hechosApiService.obtenerHecho(id);
 
-      // Mapeamos a EditarHechoDTO (plano)
-      EditarHechoDTO hecho = this.hechoMapper.toEditarHechoDTO(inputOriginal);
+    // Mapeamos a EditarHechoDTO (plano)
+    EditarHechoDTO hecho = this.hechoMapper.toEditarHechoDTO(inputOriginal);
 
-      model.addAttribute("hecho", hecho);
-      model.addAttribute("id", id);
+    model.addAttribute("hecho", hecho);
+    model.addAttribute("id", id);
 
-      return "editar-hecho";
+    this.cargarCategoriasEnModelo(model);
 
-    } catch (Exception e) {
-      redirectAttributes.addFlashAttribute("error", "No se pudo cargar el hecho.");
-      return "redirect:/hechos/mis-hechos";
-    }
+    return "editar-hecho";
   }
 
   @PostMapping("/{id}/editar")
@@ -361,9 +359,11 @@ public class HechosController {
     if (bindingResult.hasErrors()) {
       bindingResult.getFieldErrors().forEach(e -> erroresVista.put(e.getField(), e.getDefaultMessage()));
 
-      model.addAttribute("hecho", hecho); // 'hecho' ya tiene la lista multimedia gracias a los hidden inputs
+      model.addAttribute("hecho", hecho);
       model.addAttribute("id", id);
       model.addAttribute("errores", erroresVista);
+
+      this.cargarCategoriasEnModelo(model);
 
       return "editar-hecho";
     }
@@ -378,9 +378,14 @@ public class HechosController {
             String name = imagenesService.copy(file);
             hecho.getMultimedia().add(name);
           } catch (IOException e) {
-            model.addAttribute("errorGlobal", "Error al subir imagen: " + file.getOriginalFilename());
+            log.error("Error I/O guardando imagen en edición", e);
+            model.addAttribute("globalError", "Error al subir imagen: " + file.getOriginalFilename());
+
             model.addAttribute("hecho", hecho);
             model.addAttribute("id", id);
+
+            this.cargarCategoriasEnModelo(model);
+
             return "editar-hecho";
           }
         }
@@ -394,28 +399,44 @@ public class HechosController {
       redirectAttributes.addFlashAttribute("mensaje", "¡Solicitud de edición creada con éxito!");
       return "redirect:/hechos/" + id + "/detalle";
 
-    } catch (ValidationBusinessException ex) {
+    } catch (ApiException ex) {
       // D. ERROR DE NEGOCIO (ApiError)
       ApiError apiError = ex.getApiError();
-      if (apiError.fields() != null) erroresVista.putAll(apiError.fields());
-      if (apiError.message() != null) model.addAttribute("globalError", apiError.message());
-      if (apiError.details() != null) model.addAttribute("errorDetails", apiError.details());
+
+      if (apiError != null) {
+        // 1. Errores de campos (422)
+        if (apiError.fields() != null && !apiError.fields().isEmpty()) {
+          erroresVista.putAll(apiError.fields());
+        }
+
+        // 2. Mensaje global (409, 503, etc)
+        if (apiError.message() != null) {
+          model.addAttribute("globalError", apiError.message());
+        }
+
+        // 3. Detalles técnicos
+        if (apiError.details() != null && !apiError.details().isEmpty()) {
+          model.addAttribute("errorDetails", apiError.details());
+        }
+      }
 
       model.addAttribute("hecho", hecho);
       model.addAttribute("id", id);
       model.addAttribute("errores", erroresVista);
 
-      return "editar-hecho";
-    } catch (GlobalBusinessException ex) {
-      // E. Errores de Negocio/Sistema (409, 503, Connection Refused)
-      // El usuario hizo todo bien, pero el sistema lo rechaza
-      ApiError apiError = ex.getApiError();
+      this.cargarCategoriasEnModelo(model);
 
-      if (apiError.message() != null) model.addAttribute("globalError", apiError.message());
-      if (apiError.details() != null) model.addAttribute("errorDetails", apiError.details());
+      return "editar-hecho";
+    } catch (Exception ex) {
+      // E. Catch-all (bugs inesperados)
+      log.error("💀 Error inesperado editando hecho {}: ", id, ex);
+
+      model.addAttribute("globalError", "Ocurrió un error inesperado al procesar la edición. Intente nuevamente.");
 
       model.addAttribute("hecho", hecho);
       model.addAttribute("id", id);
+
+      this.cargarCategoriasEnModelo(model);
 
       return "editar-hecho";
     }
@@ -449,8 +470,8 @@ public class HechosController {
       log.error(e.getMessage(), e);
         model.addAttribute("errorGlobal", "Ocurrió un error inesperado: " + e.getMessage());
         return "home";
-      }
     }
+  }
 
   @GetMapping("/{id}/solicitud-eliminacion")
   public String mostrarFormularioSolicitudEliminacion(@PathVariable Long id,

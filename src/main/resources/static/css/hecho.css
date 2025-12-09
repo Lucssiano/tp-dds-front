@@ -1,9 +1,9 @@
 /* ==========================================
-   ESTILOS ESPECÍFICOS DE VISTAS DE HECHO/COLECCIÓN
-   (Extiende global.css y admin.css)
+   HECHO.CSS - Estilos específicos para Detalle/Edición
+   (Depende de global.css para inputs, botones y alertas)
    ========================================== */
 
-/* Ajustes de Layout para Detalle */
+/* 1. LAYOUT Y ESTRUCTURA ESPECÍFICA */
 .detail-container {
     max-width: 900px;
     margin: 0 auto;
@@ -52,51 +52,8 @@
     font-weight: 800;
 }
 
-/* ==========================================
-   INPUTS PERSONALIZADOS (Clean Style)
-   ========================================== */
-.clean-input {
-    width: 100%;
-    padding: 10px;
-    border: 1px solid #cbd5e0;
-    border-radius: 6px;
-    font-family: 'Inter', sans-serif;
-    font-size: 1rem;
-    color: #2d3748;
-    background: #fff;
-    transition: all 0.2s;
-}
-
-.clean-input:focus {
-    border-color: #3182ce;
-    outline: none;
-    box-shadow: 0 0 0 3px rgba(49, 130, 206, 0.1);
-}
-
-.clean-input:disabled {
-    background-color: #f7fafc;
-    color: #a0aec0;
-    cursor: wait;
-}
-
-/* ==========================================
-   BADGES DE ESTADO
-   ========================================== */
-.estado-badge {
-    display: inline-block;
-    padding: 4px 12px;
-    border-radius: 9999px;
-    font-size: 0.75rem;
-    font-weight: 700;
-    color: white;
-    text-transform: uppercase;
-    margin-bottom: 15px;
-}
-.estado-ACEPTADO { background-color: #28a745; }
-.estado-RECHAZADO { background-color: #dc3545; }
-.estado-PENDIENTE { background-color: #ffc107; color: #333; }
-
-/* Badge para fotos nuevas */
+/* 2. BADGES */
+/* Badge para fotos nuevas (superpuesto en galería) */
 .badge-new {
     position: absolute;
     bottom: 5px;
@@ -110,9 +67,7 @@
     z-index: 5;
 }
 
-/* ==========================================
-   TABLAS DE DETALLE
-   ========================================== */
+/* 3. TABLAS DE DETALLE */
 .detail-table {
     width: 100%;
     border-collapse: collapse;
@@ -132,15 +87,11 @@
     font-weight: 500;
 }
 
-/* ==========================================
-   GALERÍA Y CARRUSEL (VISTA DETALLE)
-   ========================================== */
-
-/* Wrapper principal del carrusel */
+/* 4. GALERÍA DE LECTURA (CARRUSEL - VISTA DETALLE) */
 .carousel-wrapper {
     position: relative;
     width: 100%;
-    max-width: 800px; /* Ancho máximo del carrusel */
+    max-width: 800px;
     margin: 0 auto;
     background-color: #fff;
     border-radius: 8px;
@@ -148,16 +99,14 @@
     overflow: hidden;
 }
 
-/* La pista donde se mueven las slides */
 .gallery-track {
     display: flex;
-    height: 450px; /* Altura fija del carrusel */
+    height: 450px;
     width: 100%;
 }
 
-/* Items individuales dentro del Carrusel */
 .gallery-track .gallery-item {
-    flex: 0 0 100%; /* Ocupa el 100% del ancho visible */
+    flex: 0 0 100%;
     width: 100%;
     height: 100%;
     display: flex;
@@ -169,11 +118,10 @@
 .gallery-track .gallery-item img {
     width: 100%;
     height: 100%;
-    object-fit: contain; /* IMPORTANTE: Contain para ver la foto entera sin recortes */
+    object-fit: contain;
     display: block;
 }
 
-/* Botones del Carrusel */
 .carousel-btn {
     position: absolute;
     top: 50%;
@@ -199,17 +147,14 @@
 .carousel-btn.next { right: 15px; }
 
 
-/* ==========================================
-   EDITOR DE IMÁGENES (VISTA CARGA/EDICIÓN)
-   ========================================== */
-
+/* 5. GALERÍA DE EDICIÓN (VISTA CARGA/EDICIÓN) */
 .editable-gallery {
     display: flex;
     flex-wrap: nowrap; /* Fila india */
     overflow-x: auto;  /* Scroll horizontal */
     gap: 20px;
     margin-bottom: 15px;
-    padding: 20px 10px 10px 10px; /* Padding arriba para la X */
+    padding: 20px 10px 10px 10px; /* Padding arriba para el botón de borrar */
     -webkit-overflow-scrolling: touch;
 }
 
@@ -234,20 +179,19 @@
     box-shadow: 0 2px 5px rgba(0,0,0,0.05);
 }
 
-/* Imagen dentro de la miniatura */
 .editable-gallery .gallery-item img {
     width: 100%;
     height: 100%;
-    object-fit: cover; /* Recortar para llenar el cuadrado */
+    object-fit: cover;
     display: block;
 }
 
-/* Borde azul para nuevas */
+/* Estilo específico para fotos nuevas */
 .editable-gallery .gallery-item-new {
     border: 3px dashed #3182ce !important;
 }
 
-/* Botón Eliminar (X ROJA) */
+/* Botón Eliminar imagen (X ROJA FLOTANTE) */
 .editable-gallery .btn-delete-img {
     position: absolute;
     top: -12px;
@@ -269,35 +213,22 @@
     z-index: 10;
 }
 
-/* Badge "NUEVA" */
+/* Badge "NUEVA" en el editor */
 .editable-gallery .badge-new {
-    position: absolute;
     bottom: -8px;
     left: 50%;
     transform: translateX(-50%);
-    background-color: #3182ce;
-    color: white;
-    font-weight: bold;
-    font-size: 0.75rem;
     padding: 4px 10px;
     border-radius: 12px;
-    z-index: 5;
     box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-    display: flex;
-    justify-content: center;
-    align-items: center;
     white-space: nowrap;
 }
 
-/* Input oculto */
+/* Utilidades de JS */
 #file-input { display: none !important; }
-
-/* Contenedor de previsualización */
 #preview-container { display: contents; }
 
-/* ==========================================
-   BOTONES EXTRA Y ERRORES
-   ========================================== */
+/* 6. BOTONES ESPECÍFICOS DE FLUJO */
 .btn-reject {
     background-color: #e53e3e;
     color: #ffffff;
@@ -309,145 +240,6 @@
     text-decoration: none;
     display: inline-block;
     font-size: 1rem;
+    transition: background-color 0.2s;
 }
 .btn-reject:hover { background-color: #c53030; }
-
-/* Aseguramos alineación flex en botones */
-.btn {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-}
-
-.api-error-alert {
-    background-color: #fef2f2;
-    border: 1px solid #fecaca;
-    border-left: 5px solid #dc2626;
-    color: #991b1b;
-    padding: 20px;
-    border-radius: 6px;
-    margin-bottom: 20px;
-}
-
-.input-error {
-    border-color: #dc2626 !important;
-    background-color: #fff5f5 !important;
-}
-
-.field-error-msg {
-    color: #dc2626;
-    font-size: 0.85rem;
-    margin-top: 5px;
-    display: block;
-}
-
-/* ==========================================
-   ALERTA DE ADVERTENCIA (Input Warning)
-   ========================================== */
-.input-warning-msg {
-    color: #b45309;
-    background-color: #fffbeb;
-    font-size: 0.85rem;
-    margin-top: 8px;
-    padding: 8px 12px;
-    border-radius: 4px;
-    border: 1px solid #fcd34d;
-    display: block;
-}
-
-/* ==========================================
-   AUTOCOMPLETE CUSTOM & INPUTS CON ICONOS
-   ========================================== */
-
-/* 1. CONTENEDOR PRINCIPAL
-   Reemplaza al antiguo .input-group. Es vital para que la lista
-   y el ícono se posicionen relativos a este input. */
-.autocomplete-wrapper {
-    position: relative;
-    width: 100%;
-}
-
-/* 2. ESTILOS DEL ÍCONO (Lupa/Etiqueta) */
-.input-icon-left {
-    position: absolute;
-    left: 12px;
-    top: 50%;
-    transform: translateY(-50%);
-    color: #a0aec0;       /* Gris suave */
-    pointer-events: none; /* El click atraviesa el ícono */
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    transition: color 0.2s;
-    z-index: 10;          /* Por encima del input */
-}
-
-/* 3. AJUSTES AL INPUT */
-/* Espacio a la izquierda para que el texto no pise el ícono */
-.clean-input.has-icon {
-    padding-left: 40px;
-}
-
-/* Fusión visual: cuando se abre la lista, quitamos el borde inferior redondeado */
-.clean-input.dropdown-open {
-    border-bottom-left-radius: 0;
-    border-bottom-right-radius: 0;
-    border-bottom-color: transparent;
-    z-index: 51; /* Para que quede por encima de la sombra */
-}
-
-/* Efecto: Cuando el input o el wrapper tienen foco, el ícono se pinta azul */
-.clean-input:focus + .input-icon-left,
-.autocomplete-wrapper:focus-within .input-icon-left {
-    color: #3182ce;
-}
-
-/* 4. LA LISTA DESPLEGABLE (CUSTOM) */
-.autocomplete-list {
-    position: absolute;
-    top: 100%;          /* Justo debajo del input */
-    left: 0;
-    right: 0;
-    background: #ffffff;
-    border: 1px solid #e2e8f0;
-    border-radius: 0 0 8px 8px; /* Redondeado solo abajo */
-    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
-    max-height: 200px;  /* Altura máxima antes de scroll */
-    overflow-y: auto;   /* Scroll vertical si hace falta */
-    z-index: 50;        /* Por encima de todo */
-    list-style: none;
-    padding: 0;
-    margin: 0;
-    display: none;      /* Oculto inicialmente */
-    margin-top: -1px;   /* Para solapar el borde del input */
-}
-
-/* Clase para mostrar la lista (activada por JS) */
-.autocomplete-list.active {
-    display: block;
-}
-
-/* Items de la lista */
-.autocomplete-item {
-    padding: 10px 15px; /* 40px de indentación para alinear con el texto del input */
-    cursor: pointer;
-    font-size: 0.95rem;
-    color: #4a5568;
-    transition: background-color 0.2s;
-    border-bottom: 1px solid #edf2f7;
-}
-
-.autocomplete-item:last-child {
-    border-bottom: none;
-}
-
-.autocomplete-item:hover {
-    background-color: #ebf8ff; /* Azul muy clarito */
-    color: #2b6cb0;            /* Azul texto */
-}
-
-/* Clase para el ítem seleccionado por teclado */
-.autocomplete-item.autocomplete-active {
-    background-color: #ebf8ff; /* El mismo azul clarito del hover */
-    color: #2b6cb0;
-}

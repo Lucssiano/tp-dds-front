@@ -1,4 +1,8 @@
-/* Variables de Diseño */
+/* ==========================================
+   GLOBAL.CSS - Estilos Base y Componentes UI
+   ========================================== */
+
+/* 1. VARIABLES */
 :root {
 	--primary-color: #2e86c1;
 	--secondary-color: #f1c40f;
@@ -10,9 +14,17 @@
 	--border-color: #cccccc;
 	--radius: 4px;
 	--shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+
+	/* Colores de Estado */
+	--error-bg: #fff5f5;
+	--error-border: #dc2626;
+	--error-text: #dc2626;
+	--warning-bg: #fffbeb;
+	--warning-border: #fcd34d;
+	--warning-text: #b45309;
 }
 
-/* Base */
+/* 2. RESET & BASE */
 * {
 	box-sizing: border-box;
 	margin: 0;
@@ -24,15 +36,25 @@ body {
 	line-height: 1.6;
 	color: var(--text-dark);
 	background-color: var(--bg-light);
+	display: flex;
+	flex-direction: column;
+	min-height: 100vh;
+	margin: 0;
 }
 
-.container {
-	max-width: 1200px;
+/* Contenedores Flexibles para Sticky Footer */
+main,
+.container,
+.detail-container,
+.main-content {
+	flex: 1;
+	width: 100%;
+	max-width: 1200px; /* Ancho máximo estándar */
 	margin: 0 auto;
-	padding: 0 20px;
+	padding: 0 15px; /* Padding lateral para que no toque los bordes en móvil */
 }
 
-/* Header (Barra de Navegación Común) */
+/* 3. HEADER & FOOTER */
 .header {
 	background-color: var(--bg-white);
 	padding: 15px 0;
@@ -43,6 +65,8 @@ body {
 	display: flex;
 	justify-content: space-between;
 	align-items: center;
+	/* Quitamos el flex:1 aquí para que no rompa el header, usamos width auto o heredado */
+	flex: initial;
 }
 
 .logo {
@@ -52,113 +76,227 @@ body {
 	text-decoration: none;
 }
 
+.nav {
+	display: flex;
+	align-items: center;
+	gap: 20px;
+}
+
 .nav a {
 	text-decoration: none;
 	color: var(--text-dark);
-	margin-left: 20px;
+	font-weight: 500;
 }
 
-.nav {
-  display: flex;
-  align-items: center;
-  gap: 20px;      /* separa los ítems del menú */
-}
-
-.nav__logout-form {
-  margin: 0;      /* para que el form no meta espacio raro */
-}
-
-
-/* Botones */
-.btn {
-	padding: 10px 20px;
-	border-radius: var(--radius);
-	text-decoration: none;
-	font-weight: bold;
-	transition: background-color 0.3s;
-	border: none;
-	cursor: pointer;
-	font-size: 16px;
-}
-
-.btn--primary {
-	background-color: var(--primary-color);
-	color: var(--bg-white);
-	border: 1px solid var(--primary-color);
-}
-
-.btn--primary:hover {
-	background-color: #2471a3;
-	border-color: #2471a3;
-}
-
-.btn--secondary {
-	background-color: var(--bg-white);
-	color: var(--primary-color);
-	border: 1px solid var(--primary-color);
-}
-
-.btn--secondary:hover {
-	background-color: var(--bg-light);
-}
-
-.btn--third {
-	background-color: var(--third-color);
-	color: var(--bg-white);
-	border: 1px solid var(--third-color);
-}
-
-.btn--third:hover {
-	border-color: #a93226;
-	background-color: #a93226;
-}
-
-.btn--large {
-	padding: 12px 30px;
-	font-size: 18px;
-}
-
-/* Formularios (Clases Comunes) */
-.form-group {
-	margin-bottom: 20px;
-	text-align: left;
-}
-
-.form-group label {
-	display: block;
-	font-weight: bold;
-	margin-bottom: 8px;
-	color: var(--text-dark);
-}
-
-.form-group label span{
-	color: #666;
-}
-
-.form-control {
-	width: 100%;
-	padding: 12px;
-	border: 1px solid var(--border-color);
-	border-radius: var(--radius);
-	font-size: 16px;
-	transition: border-color 0.3s, box-shadow 0.3s;
-}
-
-.form-control:focus {
-	border-color: var(--primary-color);
-	outline: none;
-	box-shadow: 0 0 0 2px rgba(46, 134, 193, 0.2);
-}
+.nav__logout-form { margin: 0; }
 
 .footer {
 	background-color: var(--text-dark);
 	color: var(--bg-white);
-	padding: 20px 0;
+	padding: 40px 0;
+	margin-top: auto;
+	width: 100%;
 	text-align: center;
 }
 
 .footer__links a {
-	color: var(--bg-white);
+	color: #cbd5e0;
 	text-decoration: none;
 	margin: 0 10px;
+	transition: color 0.2s;
 }
+.footer__links a:hover { color: white; }
+
+/* 4. BOTONES (UI KIT) */
+.btn {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	padding: 10px 20px;
+	border-radius: var(--radius);
+	text-decoration: none;
+	font-weight: bold;
+	transition: all 0.2s;
+	border: 1px solid transparent;
+	cursor: pointer;
+	font-size: 16px;
+	line-height: 1.2;
+}
+
+.btn:active { transform: translateY(1px); }
+
+.btn--primary {
+	background-color: var(--primary-color);
+	color: var(--bg-white);
+	border-color: var(--primary-color);
+}
+.btn--primary:hover { background-color: #2471a3; }
+
+.btn--secondary {
+	background-color: var(--bg-white);
+	color: var(--primary-color);
+	border-color: var(--primary-color);
+}
+.btn--secondary:hover { background-color: #e2e8f0; }
+
+.btn--third {
+	background-color: var(--third-color);
+	color: var(--bg-white);
+	border-color: var(--third-color);
+}
+.btn--third:hover { background-color: #a93226; }
+
+.btn--large { padding: 12px 30px; font-size: 18px; }
+
+/* 5. INPUTS & FORMULARIOS (CLEAN STYLE) */
+.form-group { margin-bottom: 20px; text-align: left; }
+.form-group label { display: block; font-weight: bold; margin-bottom: 8px; color: var(--text-dark); }
+.form-group label span { color: #666; font-weight: normal; font-size: 0.9em; }
+
+/* Input Estándar (Login, Registro, Edición) */
+.clean-input, .form-control {
+	width: 100%;
+	padding: 10px 12px;
+	border: 1px solid #cbd5e0;
+	border-radius: 6px;
+	font-family: 'Inter', sans-serif;
+	font-size: 1rem;
+	color: #2d3748;
+	background: #fff;
+	transition: all 0.2s;
+}
+
+.clean-input:focus, .form-control:focus {
+	border-color: var(--primary-color);
+	outline: none;
+	box-shadow: 0 0 0 3px rgba(46, 134, 193, 0.2);
+}
+
+.clean-input:disabled {
+	background-color: #f7fafc;
+	color: #a0aec0;
+	cursor: wait;
+}
+
+/* 6. COMPONENTE AUTOCOMPLETE (Input con lista) */
+.autocomplete-wrapper {
+	position: relative;
+	width: 100%;
+}
+
+.input-icon-left {
+	position: absolute;
+	left: 12px;
+	top: 50%;
+	transform: translateY(-50%);
+	color: #a0aec0;
+	pointer-events: none;
+	display: flex;
+	z-index: 10;
+}
+
+.clean-input.has-icon { padding-left: 40px; }
+.clean-input.dropdown-open {
+	border-bottom-left-radius: 0;
+	border-bottom-right-radius: 0;
+	border-bottom-color: transparent;
+	z-index: 51;
+}
+
+.clean-input:focus + .input-icon-left,
+.autocomplete-wrapper:focus-within .input-icon-left {
+	color: var(--primary-color);
+}
+
+.autocomplete-list {
+	position: absolute;
+	top: 100%;
+	left: 0;
+	right: 0;
+	background: #ffffff;
+	border: 1px solid #e2e8f0;
+	border-radius: 0 0 8px 8px;
+	box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+	max-height: 200px;
+	overflow-y: auto;
+	z-index: 50;
+	list-style: none;
+	padding: 0;
+	margin: 0;
+	display: none;
+	margin-top: -1px;
+}
+
+.autocomplete-list.active { display: block; }
+
+.autocomplete-item {
+	padding: 10px 15px;
+	cursor: pointer;
+	font-size: 0.95rem;
+	color: #4a5568;
+	border-bottom: 1px solid #edf2f7;
+	transition: background 0.2s;
+}
+.autocomplete-item:last-child { border-bottom: none; }
+.autocomplete-item:hover, .autocomplete-item.autocomplete-active {
+	background-color: #ebf8ff;
+	color: #2b6cb0;
+}
+
+/* 7. ALERTAS Y ERRORES */
+/* Error en campo individual */
+.input-error {
+	border-color: var(--error-border) !important;
+	background-color: var(--error-bg) !important;
+}
+
+.field-error-msg {
+	color: var(--error-text);
+	font-size: 0.85rem;
+	margin-top: 5px;
+	display: block;
+}
+
+/* Warning (Amarillo) */
+.input-warning-msg {
+	color: var(--warning-text);
+	background-color: var(--warning-bg);
+	font-size: 0.85rem;
+	margin-top: 8px;
+	padding: 8px 12px;
+	border-radius: 4px;
+	border: 1px solid var(--warning-border);
+	display: block;
+}
+
+/* Alerta General (Roja) */
+.api-error-alert {
+	background-color: var(--error-bg);
+	border: 1px solid #fecaca;
+	border-left: 5px solid var(--error-border);
+	color: #991b1b;
+	padding: 15px;
+	border-radius: 6px;
+	margin-bottom: 20px;
+}
+
+/* 8. BADGES DE ESTADO */
+.estado-badge {
+	display: inline-block;
+	padding: 4px 12px;
+	border-radius: 9999px;
+	font-size: 0.75rem;
+	font-weight: 700;
+	color: white;
+	text-transform: uppercase;
+	margin-bottom: 15px;
+}
+.estado-ACEPTADO { background-color: #28a745; }
+.estado-RECHAZADO { background-color: #dc3545; }
+.estado-PENDIENTE { background-color: #ffc107; color: #333; }
+
+/* 9. UTILIDADES */
+.mt-1 { margin-top: 10px; }
+.mt-2 { margin-top: 20px; }
+.mb-2 { margin-bottom: 20px; }
+.text-center { text-align: center; }

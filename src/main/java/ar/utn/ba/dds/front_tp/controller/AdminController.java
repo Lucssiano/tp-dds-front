@@ -13,6 +13,7 @@ import ar.utn.ba.dds.front_tp.dto.output.ColeccionOutputDTO;
 import ar.utn.ba.dds.front_tp.dto.output.CriterioDePertenenciaOutputDTO;
 import ar.utn.ba.dds.front_tp.dto.usuarios.AuthResponseDTO;
 import ar.utn.ba.dds.front_tp.dto.admin.DashboardSummaryDTO;
+import ar.utn.ba.dds.front_tp.exceptions.api.ApiException;
 import ar.utn.ba.dds.front_tp.exceptions.api.ValidationBusinessException;
 import ar.utn.ba.dds.front_tp.mappers.HechoMapper;
 import ar.utn.ba.dds.front_tp.services.*;
@@ -52,6 +53,29 @@ public class AdminController {
   private  final UploadFileService imagenesService;
   private final HechoMapper hechoMapper;
   private static final Logger log = LoggerFactory.getLogger(AdminController.class);
+
+  private void cargarCategoriasEnModelo(Model model) {
+    try {
+      List<ar.utn.ba.dds.front_tp.dto.hechos.CategoriaDTO> categorias = this.hechosApiService.obtenerCategorias();
+      model.addAttribute("categorias", categorias);
+    } catch (Exception ex) {
+      // Usamos 'Exception' para que sea una red de seguridad TOTAL.
+
+      if (ex instanceof ApiException) {
+        // Usamos WARN y solo mostramos el mensaje corto.
+        log.warn("⚠️ No se cargaron las categorías. Causa: {}", ex.getMessage());
+      } else {
+        // Usamos ERROR y pasamos 'ex' como segundo argumento para ver el Stack Trace completo.
+        log.error("🔥 BUG: Falló la carga de categorías por un error de código.", ex);
+      }
+
+      // Ponemos la lista vacía (CRÍTICO para que no rompa el HTML)
+      model.addAttribute("categorias", new ArrayList<ar.utn.ba.dds.front_tp.dto.hechos.CategoriaDTO>());
+
+      // Aviso visual amarillo
+      model.addAttribute("warningCategorias", "No se pudieron cargar las sugerencias, pero podés escribir manualmente.");
+    }
+  }
 
   @GetMapping("/colecciones")
   public String gestionarColecciones(Model model) {
@@ -318,23 +342,17 @@ public class AdminController {
 
   @GetMapping("/revisiones/hechos/{id}/editar")
   public String editarHecho(@PathVariable Long id,
-                            Model model,
-                            RedirectAttributes redirectAttributes) {
-    try {
-      HechoInputDTO inputOriginal = this.hechosApiService.obtenerHecho(id);
+                            Model model) {
+    HechoInputDTO inputOriginal = this.hechosApiService.obtenerHecho(id);
 
-      // Mapeamos a EditarHechoDTO (plano)
-      EditarHechoDTO hecho = this.hechoMapper.toEditarHechoDTO(inputOriginal);
+    EditarHechoDTO hecho = this.hechoMapper.toEditarHechoDTO(inputOriginal);
 
-      model.addAttribute("hecho", hecho);
-      model.addAttribute("id", id);
+    model.addAttribute("hecho", hecho);
+    model.addAttribute("id", id);
 
-      return "admin-hecho-editar";
+    this.cargarCategoriasEnModelo(model);
 
-    } catch (Exception e) {
-      redirectAttributes.addFlashAttribute("error", "No se pudo cargar para editar.");
-      return "redirect:/admin/revisiones";
-    }
+    return "admin-hecho-editar";
   }
 
   @PostMapping("/revisiones/hechos/{id}/editar")
@@ -351,9 +369,11 @@ public class AdminController {
     if (bindingResult.hasErrors()) {
       bindingResult.getFieldErrors().forEach(e -> erroresVista.put(e.getField(), e.getDefaultMessage()));
 
-      model.addAttribute("hecho", hecho); // 'hecho' ya tiene la lista multimedia gracias a los hidden inputs
+      model.addAttribute("hecho", hecho);
       model.addAttribute("id", id);
       model.addAttribute("errores", erroresVista);
+
+      this.cargarCategoriasEnModelo(model);
 
       return "admin-hecho-editar";
     }
@@ -368,9 +388,13 @@ public class AdminController {
             String name = imagenesService.copy(file);
             hecho.getMultimedia().add(name);
           } catch (IOException e) {
-            model.addAttribute("errorGlobal", "Error al subir imagen: " + file.getOriginalFilename());
+            log.error("Error I/O guardando imagen en edición admin", e);
+            model.addAttribute("globalError", "Error al subir imagen: " + file.getOriginalFilename());
+
             model.addAttribute("hecho", hecho);
             model.addAttribute("id", id);
+
+            this.cargarCategoriasEnModelo(model);
             return "admin-hecho-editar";
           }
         }
@@ -381,19 +405,36 @@ public class AdminController {
     try {
       this.hechosApiService.editarHecho(id, hecho);
 
-      redirectAttributes.addFlashAttribute("mensaje", "Hecho editado con éxito.");
+      redirectAttributes.addFlashAttribute("mensaje", "¡Hecho editado con éxito!");
+
       return "redirect:/admin/revisiones/hechos/" + id + "/detalle";
 
-    } catch (ValidationBusinessException ex) {
+    } catch (ApiException ex) {
       // D. ERROR DE NEGOCIO (ApiError)
       ApiError apiError = ex.getApiError();
-      if (apiError.fields() != null) erroresVista.putAll(apiError.fields());
-      if (apiError.message() != null) model.addAttribute("globalError", apiError.message());
-      if (apiError.details() != null) model.addAttribute("errorDetails", apiError.details());
+
+      if (apiError != null) {
+        // 1. Errores de campos (422)
+        if (apiError.fields() != null && !apiError.fields().isEmpty()) {
+          erroresVista.putAll(apiError.fields());
+        }
+
+        // 2. Mensaje global (409, 503, 400)
+        if (apiError.message() != null) {
+          model.addAttribute("globalError", apiError.message());
+        }
+
+        // 3. Detalles técnicos
+        if (apiError.details() != null && !apiError.details().isEmpty()) {
+          model.addAttribute("errorDetails", apiError.details());
+        }
+      }
 
       model.addAttribute("hecho", hecho);
       model.addAttribute("id", id);
       model.addAttribute("errores", erroresVista);
+
+      this.cargarCategoriasEnModelo(model);
 
       return "admin-hecho-editar";
     }

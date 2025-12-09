@@ -1,105 +1,178 @@
+/* mapa.css */
+
+/* Layout Principal: Volvemos al calc() que te funcionaba */
 .map-layout {
     display: flex;
+    /* Asegurate que 70px sea la altura real de tu header, sino ajustalo */
     height: calc(100vh - 70px);
+    position: relative;
+    overflow: hidden;
 }
 
 /* --- Barra Lateral (Sidebar) --- */
 .sidebar {
-    width: 300px;
+    width: 320px;
     flex-shrink: 0;
     background-color: var(--bg-white);
     border-right: 1px solid var(--border-color);
     overflow-y: auto;
     display: flex;
     flex-direction: column;
-    /* QUITAMOS el padding de aquí para que no interfiera */
+    z-index: 1000;
+    box-shadow: 2px 0 10px rgba(0,0,0,0.05);
 }
 
+/* Paneles internos */
 .filter-panel {
-    padding: 20px; /* MANTENEMOS el padding aquí para el espacio interno */
-    border-bottom: 1px solid var(--border-color);
+    padding: 25px;
+    border-bottom: 1px solid #f0f0f0;
 }
 
 .filter-panel:last-child {
     border-bottom: none;
-}
-/* --- Estilos para el panel de Colecciones (AQUÍ ESTÁ EL ARREGLO) --- */
-.filter-panel__title {
-    margin-top: 0;
-    margin-bottom: 20px;
-    color: var(--primary-color);
-    font-size: 1.1rem;
+    padding-bottom: 40px;
 }
 
+.filter-panel__title {
+    margin-top: 0;
+    margin-bottom: 15px;
+    color: var(--text-dark);
+    font-size: 0.95rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+/* --- Lista de Colecciones --- */
 .collection-list {
     list-style: none;
     padding: 0;
-    margin: 0 0 15px 0;
+    margin: 0 0 20px 0;
 }
+
+.collection-list li { margin-bottom: 4px; }
 
 .collection-list li a {
     text-decoration: none;
-    color: var(--text-dark);
+    color: var(--text-medium);
     display: block;
-    padding: 8px 5px;
-    border-radius: var(--radius-small);
-    transition: color 0.2s, background-color 0.2s;
+    padding: 10px 12px;
+    border-radius: 6px;
+    transition: all 0.2s ease;
+    font-size: 0.95rem;
+    font-weight: 500;
+    border-left: 3px solid transparent;
 }
 
 .collection-list li a:hover {
+    background-color: #f8fafc;
     color: var(--primary-color);
-    background-color: #f4f4f4;
-}
-/* --- Fin del Arreglo --- */
-
-
-/* --- Contenedor del Mapa --- */
-#mapid {
-    flex-grow: 1;
-    height: 100%;
+    border-left-color: #cbd5e0;
 }
 
-/* --- Toggle Switch --- */
-.toggle-switch {
+.collection-list li a.active {
+    background-color: #ebf8ff;
+    color: var(--primary-color);
+    font-weight: 700;
+    border-left-color: var(--primary-color);
+}
+
+/* ==========================================
+   TOGGLE SWITCH (Corregido y Estable)
+   ========================================== */
+
+.mode-toggle-container {
     display: flex;
     align-items: center;
     justify-content: center;
+    gap: 12px;
+    background-color: #f8fafc;
+    padding: 15px;
+    border-radius: 8px;
     margin-top: 20px;
-    text-align: center;
+    border: 1px solid #edf2f7;
 }
 
-.toggle-switch span {
-    font-size: 14px;
+.mode-label {
+    font-size: 0.85rem;
+    font-weight: 600;
     color: var(--text-medium);
-    padding: 0 10px;
+    user-select: none;
+    text-align: center;
+    line-height: 1.2;
 }
-.switch { position: relative; display: inline-block; width: 60px; height: 34px; }
+
+.switch {
+    position: relative;
+    display: inline-block;
+    width: 50px;
+    height: 26px;
+    flex-shrink: 0;
+    margin: 0;
+}
+
 .switch input { opacity: 0; width: 0; height: 0; }
-.slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #ccc; transition: .4s; border-radius: 34px; }
-.slider:before { position: absolute; content: ""; height: 26px; width: 26px; left: 4px; bottom: 4px; background-color: white; transition: .4s; border-radius: 50%; }
-input:checked + .slider { background-color: var(--primary-color); }
-input:checked + .slider:before { transform: translateX(26px); }
 
-.collection-list li a {
-    text-decoration: none;
-    color: var(--text-dark);
-    display: block;
-    padding: 8px 12px; /* Un poco más de padding */
-    border-radius: 6px;
-    transition: all 0.2s;
+/* La pista (Fondo) */
+.slider {
+    position: absolute;
+    cursor: pointer;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background-color: #cbd5e0; /* Color Apagado */
+    border-radius: 34px;
+
+    /* Usamos ease-in-out que es más seguro que cubic-bezier para evitar saltos */
+    transition: background-color 0.4s ease-in-out;
+
+    box-shadow: inset 0 2px 4px rgba(0,0,0,0.1);
 }
 
-.collection-list li a:hover {
-    color: var(--primary-color);
-    background-color: #f4f4f4;
+/* La pelotita (Knob) */
+.slider:before {
+    position: absolute;
+    content: "";
+    height: 20px;
+    width: 20px;
+    left: 3px;
+    bottom: 3px;
+    background-color: white;
+    border-radius: 50%;
+
+    /* ESTO ES LO QUE FALTABA: Definir dónde empieza */
+    transform: translateX(0);
+
+    /* Animación suave igual que el fondo */
+    transition: transform 0.4s ease-in-out;
+
+    box-shadow: 0 2px 4px rgba(0,0,0,0.2);
 }
 
-/* Nuevo: Estilo para la colección activa */
-.collection-list li a.active {
+/* --- ESTADO ACTIVO --- */
+input:checked + .slider {
     background-color: var(--primary-color);
-    color: white;
-    font-weight: bold;
 }
 
+input:checked + .slider:before {
+    transform: translateX(24px);
+}
 
+/* Accesibilidad */
+input:focus + .slider {
+    box-shadow: 0 0 1px var(--primary-color);
+}
 
+/* --- Mapa --- */
+#mapid {
+    flex-grow: 1;
+    height: 100%;
+    z-index: 1;
+}
+
+/* Ajustes responsive */
+@media (max-width: 768px) {
+    .map-layout { flex-direction: column-reverse; }
+    .sidebar { width: 100%; height: 40%; border-right: none; border-top: 1px solid var(--border-color); }
+}

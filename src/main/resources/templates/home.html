@@ -15,7 +15,6 @@
 
 <body>
 
-
 <div th:replace="fragments/header :: header"></div>
 
 <main>
@@ -51,6 +50,7 @@
             <div class="fact-card" th:if="${hechoDestacado != null}">
                 <img th:src="${hechoDestacado.imagenUrl}" alt="Imagen del hecho" class="fact-card__img">
                 <div class="fact-card__content">
+                    <span class="fact-card__label">Hecho Destacado</span>
                     <h3 class="fact-card__title" th:text="${hechoDestacado.titulo}">Título del hecho</h3>
                     <p class="fact-card__description" th:text="${hechoDestacado.descripcion}">
                         Descripción del hecho
