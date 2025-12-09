@@ -2,37 +2,46 @@
 <html xmlns:th="http://www.thymeleaf.org">
 <body>
 
-<div id="fact-modal" class="modal" th:fragment="fact-modal">
+<div th:fragment="fact-modal" id="fact-modal" class="modal">
     <div class="modal__content">
-        <span class="modal__close">&times;</span>
-        <h2 id="modal-title">Título del Hecho</h2>
-        <div class="fact-details">
-            <p><span class="label">Fecha:</span> <span id="modal-date"></span></p>
-            <p><span class="label">Ubicación:</span> <span id="modal-location"></span></p>
-            <p><span class="label">Fuente:</span> <span id="modal-source"></span></p>
-        </div>
-        <p id="modal-description" class="fact-description"></p>
-        <div class="actions">
-            <a id="ver-hecho-btn" href="#" class="btn btn--secondary">Ver Hecho</a>
-            <button id="report-button" class="btn btn--danger">Solicitar Eliminación</button>
-        </div>
-    </div>
-</div>
 
-<div id="report-modal" class="modal" th:fragment="report-modal">
-    <div class="modal__content">
-        <span class="modal__close-report">&times;</span>
-        <h2 class="modal__title">Solicitar Eliminación</h2>
-        <p class="modal__subtitle">
-            Por favor, justifica tu solicitud con un mínimo de 500 caracteres.
-        </p>
-        <form id="report-form">
-            <div class="form-group">
-                <label for="report-reason">Justificación</label>
-                <textarea id="report-reason" class="form-control" rows="5" minlength="10" required></textarea>
+        <div class="modal__header">
+            <h3 id="modal-title" class="modal__title">Título del Hecho</h3>
+            <span class="modal__close">&times;</span>
+        </div>
+
+        <div class="modal__body">
+            <div class="fact-description">
+                <p id="modal-description">Descripción del hecho...</p>
             </div>
-            <button type="submit" class="btn btn--danger">Enviar Solicitud</button>
-        </form>
+
+            <div class="fact-metadata">
+                <div class="meta-row">
+                    <span class="meta-label">Fecha:</span>
+                    <span id="modal-date" class="meta-value">-</span>
+                </div>
+                <div class="meta-row">
+                    <span class="meta-label">Ubicación:</span>
+                    <span id="modal-location" class="meta-value">-</span>
+                </div>
+                <div class="meta-row">
+                    <span class="meta-label">Fuente:</span>
+                    <span id="modal-source" class="meta-value">-</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="modal__footer">
+
+            <button id="report-button" class="btn btn-danger-outline">
+                Solicitar Eliminación
+            </button>
+
+            <a id="ver-hecho-btn" href="#" class="btn btn--primary">
+                Ver Detalle
+            </a>
+        </div>
+
     </div>
 </div>
 

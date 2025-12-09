@@ -123,7 +123,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const ubicacion = fact.ubicacionDTO;
             if (ubicacion && ubicacion.latitud != null) {
                 const marker = L.marker([parseFloat(ubicacion.latitud), parseFloat(ubicacion.longitud)]).addTo(map);
-                marker.bindPopup(`<b>${fact.titulo}</b>`);
+                // marker.bindPopup(`<b>${fact.titulo}</b>`);
 
                 marker.on('click', () => {
 
@@ -146,31 +146,32 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // ... Lógica de cierre de modales (igual que tenías) ...
-     const factModal = document.getElementById('fact-modal');
-    const reportModal = document.getElementById('report-modal');
-    const reportButton = document.getElementById('report-button');
+    // LÓGICA DE MODALES SIMPLIFICADA
+    const factModal = document.getElementById('fact-modal');
+    const reportButton = document.getElementById('report-button'); // El botón rojo del modal de detalle
 
-    // Validamos que los botones existan antes de asignar onclick para evitar errores
+    // 1. Configurar botón de reporte (REDIRECCIÓN DIRECTA)
     if (reportButton) {
         reportButton.addEventListener('click', () => {
             const hechoId = reportButton.dataset.hechoId;
             if (hechoId) {
+                // ¡Nos vamos directo al formulario! Sin preguntas extra.
                 window.location.href = `/hechos/${hechoId}/solicitud-eliminacion`;
             }
         });
     }
 
-    const closeBtns = document.querySelectorAll('.modal__close, .modal__close-report');
+    // 2. Cerrar Modal con la X o clic afuera
+    const closeBtns = document.querySelectorAll('.modal__close'); // Ya no buscamos .modal__close-report
     closeBtns.forEach(btn => {
         btn.onclick = () => {
             if(factModal) factModal.style.display = "none";
-            if(reportModal) reportModal.style.display = "none";
         };
     });
 
     window.onclick = (event) => {
-        if (factModal && event.target == factModal) factModal.style.display = "none";
-        if (reportModal && event.target == reportModal) reportModal.style.display = "none";
+        if (factModal && event.target === factModal) {
+            factModal.style.display = "none";
+        }
     };
 });

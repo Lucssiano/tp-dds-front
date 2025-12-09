@@ -94,8 +94,8 @@
                     </div>
 
                     <div class="content-block">
-                        <label class="content-title">Descripción</label>
-                        <textarea class="clean-input" th:field="*{descripcion}" rows="6"
+                        <label class="content-title" for="descripcion">Descripción</label>
+                        <textarea id="descripcion" class="clean-input" th:field="*{descripcion}" rows="6"
                                   th:classappend="${errores != null and errores.containsKey('descripcion')} ? 'input-error' : ''"
                                   placeholder="Descripción...">
                         </textarea>

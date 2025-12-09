@@ -1,46 +1,50 @@
-/* modals.css */
+/* ==========================================
+   MODALS.CSS - Estilos para Ventanas Emergentes
+   ========================================== */
 
 /* Animación de entrada */
-@keyframes fadeIn {
-    from { opacity: 0; transform: translateY(-20px); }
+@keyframes fadeInModal {
+    from { opacity: 0; transform: translateY(10px); }
     to { opacity: 1; transform: translateY(0); }
 }
 
 .modal {
     display: none;
     position: fixed;
-    z-index: 2000; /* Muy encima de todo, incluido Leaflet */
+    z-index: 2000; /* Encima del mapa */
     left: 0;
     top: 0;
     width: 100%;
     height: 100%;
     overflow: auto;
-    background-color: rgba(0, 0, 0, 0.6); /* Un poco más oscuro */
-    backdrop-filter: blur(2px); /* Efecto difuminado moderno */
+    background-color: rgba(0, 0, 0, 0.6);
+    backdrop-filter: blur(2px);
 }
 
 .modal__content {
-    background-color: var(--bg-white);
-    margin: 10vh auto; /* 10% desde arriba */
-    padding: 0; /* Quitamos padding general para manejarlo por secciones */
+    background-color: #ffffff;
+    margin: 10vh auto;
+    padding: 0; /* Sin padding global, lo manejamos por secciones */
     border-radius: 12px;
     width: 90%;
     max-width: 550px;
     position: relative;
-    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
-    text-align: left;
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden; /* Para respetar bordes redondeados */
 
-    /* Aplicar animación */
-    animation: fadeIn 0.3s ease-out;
+    animation: fadeInModal 0.3s ease-out;
 }
 
-/* Header del Modal */
+/* --- 1. HEADER --- */
 .modal__header {
     padding: 20px 25px;
-    border-bottom: 1px solid #edf2f7;
+    background-color: #f8fafc; /* Gris muy suave */
+    border-bottom: 1px solid #e2e8f0;
     display: flex;
     justify-content: space-between;
-    align-items: center;
+    align-items: flex-start;
 }
 
 .modal__title {
@@ -48,44 +52,104 @@
     font-weight: 700;
     color: var(--primary-color);
     margin: 0;
+    line-height: 1.3;
 }
 
-/* Cuerpo del Modal */
+.modal__close, .modal__close-report {
+    color: #94a3b8;
+    font-size: 28px;
+    font-weight: bold;
+    cursor: pointer;
+    line-height: 1;
+    background: none;
+    border: none;
+    padding: 0;
+    transition: color 0.2s;
+}
+
+.modal__close:hover, .modal__close-report:hover {
+    color: var(--text-dark);
+}
+
+/* --- 2. BODY --- */
 .modal__body {
     padding: 25px;
     color: var(--text-dark);
     font-size: 1rem;
     line-height: 1.6;
+    overflow-y: auto;
+    max-height: 60vh;
 }
 
-/* Botón de Cerrar (X) */
-.modal__close, .modal__close-report {
-    color: #a0aec0;
-    font-size: 24px;
-    font-weight: bold;
-    cursor: pointer;
-    transition: color 0.2s;
-    line-height: 1;
-    background: none;
-    border: none;
-    padding: 5px;
-}
-
-.modal__close:hover,
-.modal__close-report:hover {
-    color: var(--text-dark);
-}
-
-/* Estilos específicos para el contenido del Hecho */
 .fact-description {
     margin-bottom: 20px;
+    color: #334155;
 }
 
-.fact-meta {
-    font-size: 0.85rem;
-    color: var(--text-medium);
-    background-color: #f7fafc;
-    padding: 10px;
-    border-radius: 6px;
-    margin-top: 15px;
+/* Caja gris de datos técnicos (Mejorada) */
+.fact-metadata {
+    background-color: #f1f5f9;
+    padding: 15px;
+    border-radius: 8px;
+    font-size: 0.9rem;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.meta-row {
+    display: flex;
+    gap: 10px;
+}
+
+.meta-label {
+    font-weight: 600;
+    color: #64748b;
+    min-width: 80px; /* Alinea los valores */
+}
+
+.meta-value {
+    color: #1e293b;
+    font-weight: 500;
+}
+
+/* --- 3. FOOTER  --- */
+.modal__footer {
+    padding: 15px 25px;
+    background-color: #ffffff;
+    border-top: 1px solid #e2e8f0;
+    display: flex;
+    justify-content: flex-end; /* Botones a la derecha */
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+/* Esto hace que cada botón ocupe el espacio disponible (50/50) */
+.modal__footer .btn {
+    flex: 1;
+    justify-content: center; /* Centra el texto dentro del botón */
+    margin: 0;
+}
+
+/* Opcional: Si querés que el botón de eliminar se vea como el secundario (blanco)
+   pero mantenga el texto rojo de advertencia, asegurate de tener esto */
+.btn-danger-outline {
+    background-color: white;
+    color: #c0392b;
+    border: 1px solid #c0392b;
+    font-weight: 600;
+}
+.btn-danger-outline:hover {
+    background-color: #fff5f5;
+    color: #a93226;
+}
+
+/* Responsive para botones */
+@media (max-width: 480px) {
+    .modal__footer {
+        flex-direction: column-reverse; /* El botón principal queda arriba en móvil si se apilan */
+    }
+    .modal__footer .btn {
+        width: 100%;
+    }
 }
