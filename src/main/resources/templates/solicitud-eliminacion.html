@@ -22,8 +22,11 @@
 
         <h1 class="section-title">Solicitar Eliminación</h1>
 
-        <div th:if="${errorGlobal}" class="api-error-alert" style="margin-bottom: 25px;">
-            <p th:text="${errorGlobal}"></p>
+        <div th:if="${globalError}" class="api-error-alert">
+            <strong th:text="${globalError}"></strong>
+            <ul th:if="${errorDetails}">
+                <li th:each="det : ${errorDetails}" th:text="${det}"></li>
+            </ul>
         </div>
 
         <div class="fact-summary">
@@ -33,15 +36,17 @@
                 <p th:text="${hecho.descripcion}">Descripción...</p>
 
                 <div class="summary-meta">
-                    Fecha del hecho: <span th:text="${#temporals.format(hecho.fechaHecho, 'dd/MM/yyyyHH:mm')}">01/01/2024 12:00</span>
+                    Fecha del hecho: <span th:text="${#temporals.format(hecho.fechaHecho, 'dd/MM/yyyy HH:mm')}">01/01/2024 12:00</span>
                 </div>
             </div>
         </div>
 
-        <form th:action="@{|/hechos/${hecho.id}/solicitud-eliminacion|}"
+        <form th:action="@{|/hechos/${id}/solicitud-eliminacion|}"
               th:object="${solicitud}"
               method="post"
               id="form-reporte">
+
+            <input type="hidden" th:field="*{idHecho}">
 
             <div class="content-block" style="border-bottom: none; padding-bottom: 0">
                 <label class="content-title" for="justificacion">Justificación de la solicitud</label>
@@ -51,18 +56,18 @@
                           class="clean-input"
                           rows="6"
                           placeholder="Por favor, explicá detalladamente por qué considerás que este hecho debe ser eliminado..."
-                          th:classappend="${#fields.hasErrors('justificacion')} ? 'input-error' : ''"></textarea>
+                          th:classappend="${errores != null and errores.containsKey('justificacion')} ? 'input-error' : ''"></textarea>
+
+                <span class="field-error-msg"
+                      th:if="${errores != null and errores.containsKey('justificacion')}"
+                      th:text="${errores['justificacion']}">
+                    Error del backend aquí
+                </span>
 
                 <div class="mt-2">
                     <div class="input-warning-msg">
                         Para asegurar la validez del reporte, la justificación debe tener al menos 500 caracteres.
                     </div>
-
-                    <span class="field-error-msg"
-                          th:if="${#fields.hasErrors('justificacion')}"
-                          th:errors="*{justificacion}">
-                        Error del backend aquí
-                    </span>
                 </div>
             </div>
 
@@ -71,7 +76,7 @@
                     Enviar Solicitud
                 </button>
 
-                <a th:href="@{|/hechos/${hecho.id}/detalle|}" class="btn btn--secondary">
+                <a th:href="@{|/hechos/${id}/detalle|}" class="btn btn--secondary">
                     Cancelar
                 </a>
             </div>

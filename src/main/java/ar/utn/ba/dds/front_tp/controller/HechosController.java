@@ -6,13 +6,10 @@ import ar.utn.ba.dds.front_tp.dto.hechos.CategoriaDTO;
 import ar.utn.ba.dds.front_tp.dto.input.ApiError;
 import ar.utn.ba.dds.front_tp.dto.input.ColeccionInputDTO;
 import ar.utn.ba.dds.front_tp.dto.input.HechoInputDTO;
-import ar.utn.ba.dds.front_tp.dto.hechos.input.SolicitudEliminacionInputDTO;
+import ar.utn.ba.dds.front_tp.dto.input.SolicitudEliminacionInputDTO;
 import ar.utn.ba.dds.front_tp.dto.output.ColeccionOutputDTO;
-import ar.utn.ba.dds.front_tp.dto.output.SoliOutputDTO;
 import ar.utn.ba.dds.front_tp.dto.usuarios.AuthResponseDTO;
 import ar.utn.ba.dds.front_tp.exceptions.api.ApiException;
-import ar.utn.ba.dds.front_tp.exceptions.api.GlobalBusinessException;
-import ar.utn.ba.dds.front_tp.exceptions.api.ValidationBusinessException;
 import ar.utn.ba.dds.front_tp.mappers.HechoMapper;
 import ar.utn.ba.dds.front_tp.services.*;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -442,6 +439,109 @@ public class HechosController {
     }
   }
 
+  @GetMapping("/{id}/solicitud-eliminacion")
+  public String mostrarFormularioSolicitudEliminacion(@PathVariable Long id,
+                                                      Model model,
+                                                      Authentication authentication) {
+    // 1. Obtenemos el hecho para mostrar título y descripción
+    HechoInputDTO hecho = this.hechosApiService.obtenerHecho(id);
+
+    // 2. Preparamos el DTO vacío
+    SolicitudEliminacionInputDTO solicitud = new SolicitudEliminacionInputDTO();
+    solicitud.setIdHecho(hecho.getId());
+
+    // 3. Prellenamos datos de usuario si corresponde (opcional, el post lo pisa igual por seguridad)
+    if (authentication != null && authentication.isAuthenticated()) {
+      AuthResponseDTO token = (AuthResponseDTO) authentication.getDetails();
+      var email = JwtUtils.validarToken(token.getAccessToken());
+      solicitud.setUsuario(email);
+    } else {
+      solicitud.setUsuario("VISUALIZADOR");
+    }
+
+    model.addAttribute("hecho", hecho);
+    model.addAttribute("solicitud", solicitud);
+
+    return "solicitud-eliminacion";
+  }
+
+  @PostMapping("/{id}/solicitud-eliminacion")
+  public String enviarSolicitudEliminacion(@PathVariable Long id,
+                                           @ModelAttribute("solicitud") @Valid SolicitudEliminacionInputDTO solicitud,
+                                           BindingResult bindingResult,
+                                           Model model,
+                                           RedirectAttributes redirectAttributes
+  ) {
+    Map<String, String> erroresVista = new HashMap<>();
+
+    // A. VALIDACIÓN LOCAL (BindingResult)
+    if (bindingResult.hasErrors()) {
+      bindingResult.getFieldErrors().forEach(e -> erroresVista.put(e.getField(), e.getDefaultMessage()));
+
+      HechoInputDTO hecho = this.hechosApiService.obtenerHecho(id);
+
+      model.addAttribute("hecho", hecho);
+      model.addAttribute("solicitud", solicitud);
+      model.addAttribute("errores", erroresVista);
+
+      return "solicitud-eliminacion";
+    }
+
+    // B. LLAMADA AL SERVICIO
+    try {
+      this.solicitudesApiService.crearSolicitudEliminacion(solicitud);
+
+      redirectAttributes.addFlashAttribute("mensaje", "¡Solicitud de eliminación creada con éxito!");
+
+      return "redirect:/hechos/" + id + "/detalle";
+
+    } catch (ApiException ex) {
+      // D. ERROR DE NEGOCIO (ApiError)
+      ApiError apiError = ex.getApiError();
+
+      if (apiError != null) {
+        // 1. Errores de campos (422)
+        if (apiError.fields() != null && !apiError.fields().isEmpty()) {
+          erroresVista.putAll(apiError.fields());
+        }
+
+        // 2. Mensaje global (409, 503, etc)
+        if (apiError.message() != null) {
+          model.addAttribute("globalError", apiError.message());
+        }
+
+        // 3. Detalles técnicos
+        if (apiError.details() != null && !apiError.details().isEmpty()) {
+          model.addAttribute("errorDetails", apiError.details());
+        }
+      }
+
+      // Recargamos vista con errores
+      HechoInputDTO hecho = this.hechosApiService.obtenerHecho(id);
+
+      model.addAttribute("hecho", hecho);
+      model.addAttribute("solicitud", solicitud);
+      model.addAttribute("errores", erroresVista);
+
+      return "solicitud-eliminacion";
+
+    } catch (Exception ex) {
+      // E. Catch-all (bugs inesperados)
+      log.error("💀 Error inesperado editando hecho {}: ", id, ex);
+
+      model.addAttribute("globalError", "Ocurrió un error inesperado al procesar la edición. Intente nuevamente.");
+
+
+      HechoInputDTO hecho = this.hechosApiService.obtenerHecho(id);
+
+      model.addAttribute("hecho", hecho);
+      model.addAttribute("solicitud", solicitud);
+      model.addAttribute("errorGlobal", "Ocurrió un error inesperado al procesar la solicitud. Intente nuevamente.");
+
+      return "solicitud-eliminacion";
+    }
+  }
+
   @GetMapping("/mapa/coleccion/{id}")
   public String verHechosColeccion(@ModelAttribute("coleccion") ColeccionInputDTO coleccion,
                                    @RequestParam(required = false, defaultValue = "CURADA") String modoNavegacion,
@@ -468,98 +568,8 @@ public class HechosController {
       return "mapa";
     } catch (Exception e) {
       log.error(e.getMessage(), e);
-        model.addAttribute("errorGlobal", "Ocurrió un error inesperado: " + e.getMessage());
-        return "home";
-    }
-  }
-
-  @GetMapping("/{id}/solicitud-eliminacion")
-  public String mostrarFormularioSolicitudEliminacion(@PathVariable Long id,
-                                                      Model model,
-                                                      Authentication authentication) {
-    try {
-      var hecho = hechosApiService.obtenerHecho(id);
-
-      SolicitudEliminacionInputDTO solicitud = new SolicitudEliminacionInputDTO();
-      solicitud.setIdHecho(hecho.getId());
-      if (authentication != null) {
-        AuthResponseDTO token = (AuthResponseDTO) authentication.getDetails();
-        var email = JwtUtils.validarToken(token.getAccessToken());
-        solicitud.setUsuario(email);
-      } else {
-        solicitud.setUsuario("VISUALIZADOR");
-      }
-
-      log.info("USUARIO" + solicitud.getUsuario());
-
-      boolean esAnonimo = (authentication == null || !authentication.isAuthenticated());
-
-      model.addAttribute("hecho", hecho);
-      model.addAttribute("solicitud", solicitud);
-      model.addAttribute("esAnonimo", esAnonimo);
-
-      return "solicitud-eliminacion";
-    } catch (Exception e) {
-      log.error("Error al cargar formulario de solicitud de eliminación para hecho {}: {}", id, e.getMessage(), e);
-      model.addAttribute("errorGlobal", "Ocurrió un error al cargar la solicitud de eliminación.");
+      model.addAttribute("errorGlobal", "Ocurrió un error inesperado: " + e.getMessage());
       return "home";
-    }
-  }
-
-  @PostMapping("/{id}/solicitud-eliminacion")
-  public String enviarSolicitudEliminacion(@PathVariable Long id,
-                                           @ModelAttribute("solicitud") SolicitudEliminacionInputDTO solicitud,
-                                           BindingResult bindingResult,
-                                           Model model,
-                                           RedirectAttributes redirectAttributes,
-                                           Authentication authentication) {
-
-    boolean esAnonimo = (authentication == null || !authentication.isAuthenticated());
-
-    // Regla: si NO está logueado, justificación mínimo 500 caracteres
-    String just = solicitud.getJustificacion() != null ? solicitud.getJustificacion().trim() : "";
-    if (esAnonimo && just.length() < 500) {
-      bindingResult.rejectValue(
-          "justificacion",
-          "justificacion.corta",
-          "Si no estás logueado, la justificación debe tener al menos 500 caracteres."
-      );
-    }
-
-    if (bindingResult.hasErrors()) {
-      // Volvemos a cargar el hecho para la vista
-      var hecho = hechosApiService.obtenerHecho(id);
-      model.addAttribute("hecho", hecho);
-      model.addAttribute("esAnonimo", esAnonimo);
-      return "solicitud-eliminacion";
-    }
-
-    try {
-      if (authentication != null) {
-        AuthResponseDTO token = (AuthResponseDTO) authentication.getDetails();
-        var email = JwtUtils.validarToken(token.getAccessToken());
-        solicitud.setUsuario(email);
-      } else {
-        solicitud.setUsuario("VISUALIZADOR");
-      }
-      solicitud.setIdHecho(id);
-
-      log.info("USUARIO justito antes de mandar" + solicitud.getUsuario());
-
-      SoliOutputDTO respuesta = solicitudesApiService.crearSolicitudEliminacion(solicitud);
-
-      redirectAttributes.addFlashAttribute("mensaje",
-          "Solicitud enviada correctamente. Código: " + respuesta.getId());
-      redirectAttributes.addFlashAttribute("tipoMensaje", "success");
-
-      return "redirect:/hechos/" + id + "/detalle";
-    } catch (Exception e) {
-      log.error("Error al enviar solicitud de eliminación para hecho {}: {}", id, e.getMessage(), e);
-      var hecho = hechosApiService.obtenerHecho(id);
-      model.addAttribute("hecho", hecho);
-      model.addAttribute("esAnonimo", esAnonimo);
-      model.addAttribute("errorGlobal", "Ocurrió un error al enviar la solicitud. Intenta nuevamente.");
-      return "solicitud-eliminacion";
     }
   }
 
