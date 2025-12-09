@@ -105,23 +105,20 @@
               </table>
           </div>
 
-          <div class="content-block" style="border-bottom: none;">
+          <div class="content-block" style="border-bottom: none; padding-bottom: 0">
               <h3 class="content-title">Ubicación en mapa</h3>
               <div id="map-readonly" style="height: 400px; border-radius: 8px;"></div>
           </div>
 
-          <div style="margin-top: 40px; display: flex; gap: 15px; justify-content: center; flex-wrap: wrap;">
-              <a th:href="@{/hechos/mapa}"
-                 class="btn btn--secondary"
-                 style="min-width: 150px; text-align: center;">
-                Ir al mapa
+          <div class="form-actions">
+              <a th:href="@{/hechos/mapa}" class="btn btn--secondary">
+                  Ir al mapa
               </a>
 
               <a th:if="${esPropietario && hecho.estado == 'ACEPTADO'}"
                  th:href="@{|/hechos/${hecho.id}/editar|}"
-                 class="btn btn--primary"
-                 style="min-width: 150px; text-align: center;">
-                Editar Hecho
+                 class="btn btn--primary">
+                  Editar Hecho
               </a>
           </div>
 

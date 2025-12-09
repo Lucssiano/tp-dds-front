@@ -5,129 +5,83 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Solicitud de Eliminación</title>
+    <title>Solicitar Eliminación - MetaMapa</title>
 
     <link rel="stylesheet" th:href="@{/css/global.css}">
-    <link rel="stylesheet" th:href="@{/css/landing.css}">
+    <link rel="stylesheet" th:href="@{/css/hecho.css}">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700&display=swap" rel="stylesheet">
 </head>
 
 <body>
-<header class="header">
-    <div class="container">
-        <a th:href="@{/}" class="logo">MetaMapa</a>
-        <nav class="nav">
-            <a th:href="@{/hechos/mapa}" class="nav__link">Visualizar</a>
 
-            <a th:href="@{/admin/dashboard}" class="nav__link" sec:authorize="hasRole('ADMIN')">
-                Admin Dashboard
-            </a>
+<div th:replace="~{fragments/header :: header}"></div>
 
-            <!-- Anónimo -->
-            <a th:href="@{/auth}" class="btn btn--secondary" sec:authorize="isAnonymous()">Iniciar Sesión</a>
-            <a th:href="@{/auth?modoRegistro=true}" class="btn btn--primary" sec:authorize="isAnonymous()">Registrarse</a>
+<div class="detail-container">
 
-            <!-- Logueado -->
-            <form th:action="@{/auth/logout}" method="post"
-                  sec:authorize="isAuthenticated()"
-                  class="nav__logout-form">
-                <button type="submit" class="btn btn--secondary">Cerrar Sesión</button>
-            </form>
-        </nav>
-    </div>
-</header>
+    <div class="stat-card">
 
-<main>
-    <section class="featured-fact">
-        <div class="container">
-            <h1 class="featured__title">Solicitud de Eliminación de Hecho</h1>
+        <h1 class="section-title">Solicitar Eliminación</h1>
 
-            <!-- Mensaje global de error si existe -->
-            <div th:if="${errorGlobal}" class="alert alert--error">
-                <p th:text="${errorGlobal}"></p>
+        <div th:if="${errorGlobal}" class="api-error-alert" style="margin-bottom: 25px;">
+            <p th:text="${errorGlobal}"></p>
+        </div>
+
+        <div class="fact-summary">
+            <div class="content-block">
+                <span class="content-title" style="margin-bottom: 5px;">Hecho seleccionado</span>
+                <h3 th:text="${hecho.titulo}">Título</h3>
+                <p th:text="${hecho.descripcion}">Descripción...</p>
+
+                <div class="summary-meta">
+                    Fecha del hecho: <span th:text="${#temporals.format(hecho.fechaHecho, 'dd/MM/yyyyHH:mm')}">01/01/2024 12:00</span>
+                </div>
             </div>
+        </div>
 
-            <!-- Resumen del hecho -->
-            <div class="fact-card">
-                <div class="fact-card__content">
-                    <h2 class="fact-card__title" th:text="${hecho.titulo}">Título del hecho</h2>
+        <form th:action="@{|/hechos/${hecho.id}/solicitud-eliminacion|}"
+              th:object="${solicitud}"
+              method="post"
+              id="form-reporte">
 
-                    <div class="content-block">
-                        <h3 class="content-title">Descripción</h3>
-                        <p th:text="${hecho.descripcion}">Descripción</p>
+            <div class="content-block" style="border-bottom: none; padding-bottom: 0">
+                <label class="content-title" for="justificacion">Justificación de la solicitud</label>
+
+                <textarea id="justificacion"
+                          th:field="*{justificacion}"
+                          class="clean-input"
+                          rows="6"
+                          placeholder="Por favor, explicá detalladamente por qué considerás que este hecho debe ser eliminado..."
+                          th:classappend="${#fields.hasErrors('justificacion')} ? 'input-error' : ''"></textarea>
+
+                <div class="mt-2">
+                    <div class="input-warning-msg">
+                        Para asegurar la validez del reporte, la justificación debe tener al menos 500 caracteres.
                     </div>
 
-                    <div class="content-block">
-                        <h3 class="content-title">Fecha del Hecho</h3>
-                        <p th:text="${#temporals.format(hecho.fechaHecho, 'dd/MM/yyyy HH:mm')}">01/01/2024 12:00</p>
-                    </div>
+                    <span class="field-error-msg"
+                          th:if="${#fields.hasErrors('justificacion')}"
+                          th:errors="*{justificacion}">
+                        Error del backend aquí
+                    </span>
                 </div>
             </div>
 
-            <!-- Formulario de solicitud -->
-            <div class="content-block" style="margin-top: 30px;">
-                <h3 class="content-title">Justificación de la solicitud</h3>
+            <div class="form-actions">
+                <button type="submit" class="btn btn--third">
+                    Enviar Solicitud
+                </button>
 
-                <form th:action="@{|/hechos/${hecho.id}/solicitud-eliminacion|}"
-                      th:object="${solicitud}"
-                      method="post"
-                      class="form">
-
-                    <input type="hidden" class="form-control" th:value="${hecho.titulo}" readonly>
-
-                    <div class="form-group">
-                        <label for="justificacion">
-                            Explicá por qué considerás que este hecho debe ser eliminado
-                        </label>
-
-                        <textarea id="justificacion"
-                                  th:field="*{justificacion}"
-                                  class="form-control"
-                                  rows="6"
-                                  th:attr="minlength=${esAnonimo} ? 500 : null"
-                                  required></textarea>
-
-
-                        <small class="help-text" th:if="${esAnonimo}">
-                            La justificación debe tener al menos 500 caracteres.
-                        <!-- decia:  como no estas logueado, la justificación debe tener al menos 500 caracteres.  -->
-                        </small>
-                        <small class="help-text" th:unless="${esAnonimo}">
-                            Puedes escribir una justificación de cualquier extensión.
-                        </small>
-
-                        <div class="field-error"
-                             th:if="${#fields.hasErrors('justificacion')}"
-                             th:errors="*{justificacion}"></div>
-                    </div>
-
-                    <div style="margin-top: 20px; display: flex; gap: 12px; flex-wrap: wrap;">
-                        <button type="submit" class="btn btn--danger">Enviar Solicitud</button>
-                        <a th:href="@{|/hechos/${hecho.id}/detalle|}" class="btn btn--secondary">Cancelar</a>
-                    </div>
-
-                </form>
+                <a th:href="@{|/hechos/${hecho.id}/detalle|}" class="btn btn--secondary">
+                    Cancelar
+                </a>
             </div>
-        </div>
-    </section>
-</main>
 
-<footer class="footer">
-    <div class="container">
-        <div class="footer__about">
-            <p>
-                MetaMapa es un sistema de código abierto de una ONG, diseñado para la recopilación y mapeo colaborativo
-                de información, protegiendo la identidad de sus usuarios.
-            </p>
-        </div>
-        <br>
-        <div class="footer__links">
-            <a href="#">Política de Privacidad</a>
-            <a href="#">Términos de Uso</a>
-            <a href="#">Contacto</a>
-        </div>
+        </form>
+
     </div>
-</footer>
+</div>
+
+<div th:replace="~{fragments/footer :: footer}"></div>
 
 </body>
 </html>

@@ -144,7 +144,7 @@
                 <span class="field-error-msg" th:if="${errores != null and errores.containsKey('fecha')}" th:text="${errores['fecha']}"></span>
             </div>
 
-            <div class="content-block" style="border-bottom: none;">
+            <div class="content-block" style="border-bottom: none; ; padding-bottom: 0">
                 <label class="content-title" for="address-input">Ubicación (Click en el mapa para corregir automáticamente)</label>
 
                 <div style="display: flex; gap: 10px; margin-bottom: 15px;">
@@ -163,7 +163,7 @@
                 </div>
             </div>
 
-            <div style="margin-top: 40px; display: flex; gap: 15px; justify-content: center;">
+            <div class="form-actions">
                 <button class="btn btn--primary" type="submit">Crear Hecho</button>
                 <a th:href="@{/home}" class="btn btn--secondary">Cancelar</a>
             </div>

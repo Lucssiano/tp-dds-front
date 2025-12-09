@@ -33,10 +33,6 @@
     border-bottom: 1px solid #e2e8f0;
 }
 
-.content-block:last-child {
-    border-bottom: none;
-}
-
 .content-title {
     font-size: 0.875rem;
     text-transform: uppercase;
@@ -243,3 +239,38 @@
     transition: background-color 0.2s;
 }
 .btn-reject:hover { background-color: #c53030; }
+
+/* 7. CAJA DE RESUMEN */
+.fact-summary {
+    background-color: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    padding: 20px;
+    margin-bottom: 25px;
+}
+
+/* Ajustes para limpiar el content-block si está dentro del resumen */
+.fact-summary .content-block {
+    border-bottom: none;
+    padding-bottom: 0;
+    margin-bottom: 0;
+}
+
+/* Tipografía dentro del resumen */
+.fact-summary h3 {
+    margin: 0 0 10px 0;
+    font-size: 1.1rem;
+    color: #1e293b;
+}
+
+.fact-summary p {
+    color: #475569;
+    font-size: 0.95rem;
+    line-height: 1.5;
+}
+
+.summary-meta {
+    margin-top: 10px;
+    font-size: 0.85rem;
+    color: #64748b;
+}
