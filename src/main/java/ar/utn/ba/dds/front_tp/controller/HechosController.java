@@ -4,10 +4,10 @@ import ar.utn.ba.dds.front_tp.Utils.JwtUtils;
 import ar.utn.ba.dds.front_tp.dto.editar.EditarHechoDTO;
 import ar.utn.ba.dds.front_tp.dto.hechos.CategoriaDTO;
 import ar.utn.ba.dds.front_tp.dto.input.ApiError;
-import ar.utn.ba.dds.front_tp.dto.input.ColeccionInputDTO;
 import ar.utn.ba.dds.front_tp.dto.input.HechoInputDTO;
 import ar.utn.ba.dds.front_tp.dto.input.SolicitudEliminacionInputDTO;
 import ar.utn.ba.dds.front_tp.dto.output.ColeccionOutputDTO;
+import ar.utn.ba.dds.front_tp.dto.output.SolicitudEliminacionOutputDTO;
 import ar.utn.ba.dds.front_tp.dto.usuarios.AuthResponseDTO;
 import ar.utn.ba.dds.front_tp.exceptions.api.ApiException;
 import ar.utn.ba.dds.front_tp.mappers.HechoMapper;
@@ -54,7 +54,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 public class HechosController {
   private static final Logger log = LoggerFactory.getLogger(HechosController.class);
   private final HechosApiService hechosApiService;
-  private final SolicitudesApiService solicitudesApiService;
+  private final SolicitudesEliminacionApiService solicitudesEliminacionApiService;
   private final SolicitudesModificacionApiService solicitudesModificacionApiService;
   @Autowired
   private  final UploadFileService imagenesService;
@@ -199,11 +199,11 @@ public class HechosController {
       model.addAttribute("hechos", hechosUsuario);
       model.addAttribute("usuarioEmail", email);
 
-      return "mis-hechos";  // => templates/mis-hechos.html
+      return "mis-hechos";
     } catch (Exception e) {
       log.error("Error al obtener hechos del usuario", e);
       model.addAttribute("errorGlobal", "Ocurrió un error al obtener tus hechos. Intenta más tarde.");
-      return "mis-hechos"; // Mostramos la vista igual pero vacía
+      return "mis-hechos";
     }
   }
 
@@ -486,7 +486,7 @@ public class HechosController {
     HechoInputDTO hecho = this.hechosApiService.obtenerHecho(id);
 
     // 2. Preparamos el DTO vacío
-    SolicitudEliminacionInputDTO solicitud = new SolicitudEliminacionInputDTO();
+    SolicitudEliminacionOutputDTO solicitud = SolicitudEliminacionOutputDTO.builder().build();
     solicitud.setIdHecho(hecho.getId());
 
     // 3. Prellenamos datos de usuario si corresponde (opcional, el post lo pisa igual por seguridad)
@@ -506,7 +506,7 @@ public class HechosController {
 
   @PostMapping("/{id}/solicitud-eliminacion")
   public String enviarSolicitudEliminacion(@PathVariable Long id,
-                                           @ModelAttribute("solicitud") @Valid SolicitudEliminacionInputDTO solicitud,
+                                           @ModelAttribute("solicitud") @Valid SolicitudEliminacionOutputDTO solicitud,
                                            BindingResult bindingResult,
                                            Model model,
                                            RedirectAttributes redirectAttributes
@@ -528,7 +528,7 @@ public class HechosController {
 
     // B. LLAMADA AL SERVICIO
     try {
-      this.solicitudesApiService.crearSolicitudEliminacion(solicitud);
+      this.solicitudesEliminacionApiService.crearSolicitud(solicitud);
 
       redirectAttributes.addFlashAttribute("mensaje", "¡Solicitud de eliminación creada con éxito! Se ha enviado a moderación.");
 

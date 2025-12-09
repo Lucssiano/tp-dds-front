@@ -18,7 +18,7 @@
 
 <div class="detail-container">
 
-    <div th:if="${mensaje}" style="background-color: #d1fae5; border: 1px solid #34d399; color: #065f46; padding: 15px; border-radius: 6px; margin-bottom: 20px; margin-top: 20px;">
+    <div th:if="${mensaje}" class="api-success-alert mt-2 mb-2">
         <span th:text="${mensaje}"></span>
     </div>
 
@@ -165,7 +165,7 @@
 
             <div class="form-actions">
                 <button class="btn btn--primary" type="submit">Crear Hecho</button>
-                <a th:href="@{/home}" class="btn btn--secondary">Cancelar</a>
+                <a th:href="@{/home}" class="btn btn--third">Cancelar</a>
             </div>
         </form>
     </div>

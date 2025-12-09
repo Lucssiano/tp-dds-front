@@ -28,8 +28,8 @@
         <h1 class="page-title">Panel de Control</h1>
 
         <!-- Mensajes de feedback (éxito/error) -->
-        <div th:if="${mensaje}" class="alert alert--success" th:text="${mensaje}"></div>
-        <div th:if="${error}" class="alert alert--danger" th:text="${error}"></div>
+        <div th:if="${mensaje}" class="api-success-alert mt-2 mb-2" th:text="${mensaje}"></div>
+        <div th:if="${error}" class="api-error-alert mt-2 mb-2" th:text="${error}"></div>
 
         <!-- Tarjetas de estadísticas dinámicas -->
         <div class="dashboard-grid">

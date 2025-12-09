@@ -52,7 +52,7 @@
 
 .page-title {
     font-size: 32px;
-    margin-bottom: 30px;
+    margin-bottom: 20px;
     color: var(--primary-color);
 }
 
@@ -95,11 +95,44 @@
 }
 
 .data-table {
-    width: 100%;
-    border-collapse: collapse;
-    background-color: white; /* O var(--bg-white) */
-    font-size: 0.95rem;
-    white-space: nowrap; /* Evita que el texto se rompa feo en listas */
+    table-layout: fixed; /* Ya lo agregamos para anchos fijos */
+    border-collapse: collapse; /* Asegura que los bordes se junten */
+    border-spacing: 0;       /* Elimina cualquier espacio adicional entre celdas */
+    white-space: normal;
+}
+
+/* 2. Definimos los anchos porcentuales basados en el contenido de la cabecera (<th>) */
+/* NOTA: Estos anchos aplican a todas las tablas .data-table */
+
+/* Columna 1: ID (10%) */
+.data-table thead tr th:nth-child(1),
+.data-table tbody tr td:nth-child(1) {
+    width: 10%;
+    /* Aseguramos que el contenido sea truncado si es demasiado largo para el ID */
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+/* Columna 2: Título / Hecho Original (50%) */
+.data-table thead tr th:nth-child(2),
+.data-table tbody tr td:nth-child(2) {
+    width: 50%;
+    white-space: normal;
+    word-wrap: break-word;
+}
+
+/* Columna 3: Usuario / Texto Corto (30%) */
+.data-table thead tr th:nth-child(3),
+.data-table tbody tr td:nth-child(3) {
+    width: 30%;
+}
+
+/* Columna 4: Acción (10%) - Ya estaba casi fijo */
+.data-table thead tr th:nth-child(4),
+.data-table tbody tr td:nth-child(4) {
+    width: 10%;
+    white-space: nowrap;
 }
 
 /* Encabezados más limpios y sutiles */
@@ -120,12 +153,9 @@
 
 /* Celdas con aire y solo líneas horizontales */
 .data-table td {
-    padding: 16px;
-    border-bottom: 1px solid #e2e8f0; /* O var(--border-color) */
-    color: #334155;
-    border-top: none;
-    border-left: none;
-    border-right: none;
+    padding: 15px 20px;
+    border-bottom: 1px solid #e2e8f0;
+    vertical-align: middle;
 }
 
 /* Efecto Hover en las filas */

@@ -1,15 +1,18 @@
 <!DOCTYPE html>
-<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<html xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8">
-    <title>Admin - Detalle del Hecho</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Revisión de Solicitud de Eliminación</title>
+
     <link rel="stylesheet" th:href="@{/css/global.css}">
     <link rel="stylesheet" th:href="@{/css/admin.css}">
     <link rel="stylesheet" th:href="@{/css/hecho.css}">
 
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" />
 </head>
+
 <body>
 <div class="admin-layout">
     <aside class="sidebar">
@@ -25,7 +28,7 @@
     <div class="main-content">
         <div class="detail-container">
 
-            <h1 class="page-title">Revisión de Hechos</h1>
+            <h1 class="page-title">Revisión de Solicitud de Eliminación</h1>
 
             <div th:if="${mensaje}" class="api-success-alert mb-2">
                 <span th:text="${mensaje}"></span>
@@ -34,54 +37,69 @@
             <div class="stat-card">
 
                 <div style="margin-bottom: 20px;">
-                    <h1 class="section-title" th:text="${hecho.titulo}">Título</h1>
+                    <h1 class="section-title" th:text="${hechoOriginal.titulo}">Título del Hecho (A Eliminar)</h1>
                 </div>
 
-                <div class="content-block" th:if="${not #lists.isEmpty(hecho.multimedia)}">
-                    <h3 class="content-title">Imágenes</h3>
+                <div class="content-block" style="padding-bottom: 0;">
+                    <h2 class="content-title" style="font-size: 1.2rem; color: var(--third-color);">Datos del Reporte</h2>
+                </div>
 
+                <div class="content-block">
+                    <h3 class="content-title">Justificación del Solicitante</h3>
+                    <p th:text="${solicitudEliminacion.justificacion}" style="white-space: pre-wrap; font-weight: 500;"></p>
+                </div>
+
+                <div class="content-block" style="border-bottom: none; padding-bottom: 20px;">
+                    <h3 class="content-title">Usuario Solicitante</h3>
+                    <p th:text="${solicitudEliminacion.usuario}"></p>
+                </div>
+
+                <hr style="border: 0; border-top: 1px dashed #e2e8f0; margin: 30px 0;" />
+
+
+                <div class="content-block">
+                    <h2 class="content-title" style="font-size: 1.2rem; color: var(--primary-color);">Detalle Completo del Hecho</h2>
+                </div>
+
+                <div class="content-block" th:if="${not #lists.isEmpty(hechoOriginal.multimedia)}">
+                    <h3 class="content-title">Imágenes</h3>
                     <div class="carousel-wrapper" id="carousel-container">
                         <button type="button" class="carousel-btn prev" id="btn-prev">&#10094;</button>
 
                         <div class="gallery-track" id="carousel-track">
-                            <div th:each="imagen : ${hecho.multimedia}" class="gallery-item">
+                            <div th:each="imagen : ${hechoOriginal.multimedia}" class="gallery-item">
                                 <img th:src="@{'/hechos/uploads/' + ${imagen}}" th:alt="'Evidencia'">
                             </div>
                         </div>
-
                         <button type="button" class="carousel-btn next" id="btn-next">&#10095;</button>
                     </div>
                 </div>
 
                 <div class="content-block">
                     <h3 class="content-title">Descripción</h3>
-                    <p th:text="${hecho.descripcion}">
-                        Descripción del hecho.
-                    </p>
+                    <p th:text="${hechoOriginal.descripcion}"></p>
                 </div>
 
                 <div class="content-block">
                     <h3 class="content-title">Categoría</h3>
-                    <p th:text="${hecho.categoria}">Categoría</p>
+                    <p th:text="${hechoOriginal.categoria}"></p>
                 </div>
 
                 <div class="content-block">
-                    <h3 class="content-title">Fecha del hecho</h3>
-                    <p th:text="${#temporals.format(hecho.fechaHecho, 'dd/MM/yyyy HH:mm')}">
-                        01/01/2024 12:00
-                    </p>
+                    <h3 class="content-title">Fecha del Hecho</h3>
+                    <p th:text="${#temporals.format(hechoOriginal.fechaHecho, 'dd/MM/yyyy HH:mm')}"></p>
                 </div>
 
                 <div class="content-block">
                     <h3 class="content-title">Fuentes</h3>
-                    <div th:if="${not #lists.isEmpty(hecho.fuentes)}" style="display: flex; flex-wrap: wrap; gap: 8px;">
-                      <span th:each="fuente : ${hecho.fuentes}"
+                    <div th:if="${not #lists.isEmpty(hechoOriginal.fuentes)}" style="display: flex; flex-wrap: wrap; gap: 8px;">
+                      <span th:each="fuente : ${hechoOriginal.fuentes}"
                             th:text="${fuente.nombre}"
                             style="background-color: #f1f5f9; border: 1px solid #cbd5e1; padding: 4px 12px; border-radius: 16px; font-size: 0.85em; color: #475569; font-weight: 500;">
                           Fuente
                       </span>
                     </div>
-                    <p th:if="${#lists.isEmpty(hecho.fuentes)}" style="color: #94a3b8; font-style: italic;">
+                    <p th:if="${#lists.isEmpty(hechoOriginal.fuentes)}" style="color: #94a3b8; font-style: italic;">
                         No se han especificado fuentes.
                     </p>
                 </div>
@@ -92,64 +110,70 @@
                         <tbody>
                         <tr>
                             <th>Provincia</th>
-                            <td th:text="${hecho.getUbicacionDTO != null ? hecho.getUbicacionDTO.provincia : '-'}">Provincia</td>
+                            <td th:text="${hechoOriginal.ubicacionDTO != null ? hechoOriginal.ubicacionDTO.provincia : '-'}">Provincia</td>
                         </tr>
                         <tr>
                             <th>Municipio</th>
-                            <td th:text="${hecho.getUbicacionDTO != null ? hecho.getUbicacionDTO.municipio : '-'}">Municipio</td>
+                            <td th:text="${hechoOriginal.ubicacionDTO != null ? hechoOriginal.ubicacionDTO.municipio : '-'}">Municipio</td>
                         </tr>
                         <tr>
                             <th>Departamento</th>
-                            <td th:text="${hecho.getUbicacionDTO != null ? hecho.getUbicacionDTO.departamento : '-'}">Departamento</td>
+                            <td th:text="${hechoOriginal.ubicacionDTO != null ? hechoOriginal.ubicacionDTO.departamento : '-'}">Departamento</td>
                         </tr>
                         </tbody>
                     </table>
                 </div>
 
-                <div class="content-block" style="border-bottom: none;">
+                <div class="content-block" style="border-bottom: none; padding-bottom: 0; margin-bottom: 0;">
                     <h3 class="content-title">Ubicación en mapa</h3>
-                    <div id="map-readonly" style="height: 400px; border-radius: 8px;"></div>
+                    <div id="map-preview" style="height: 400px; border-radius: 8px;"></div>
                 </div>
 
-                <div style="margin-top: 40px; display: flex; gap: 15px; justify-content: center; flex-wrap: wrap;">
-                    <form th:action="@{/admin/revisiones/hechos/{id}/aprobar(id=${hecho.id})}" method="post">
-                        <button class="btn btn--primary">Aprobar</button>
+                <div class="form-actions">
+                    <form th:action="@{/admin/revisiones/solicitudes/{id}/aceptar(id=${solicitudEliminacion.id})}" method="post">
+                        <button class="btn btn--third" onclick="return confirm('ATENCIÓN: Esto eliminará el hecho de forma PERMANENTE. ¿Confirmar?')">Eliminar Hecho</button>
                     </form>
-                    <form th:action="@{/admin/revisiones/hechos/{id}/editar(id=${hecho.id})}" method="get">
-                        <button class="btn btn--secondary">Editar</button>
-                    </form>
-                    <form th:action="@{/admin/revisiones/hechos/{id}/rechazar(id=${hecho.id})}" method="post">
-                        <button class="btn-reject" onclick="return confirm('¿Está seguro que quiere RECHAZAR este hecho?')">Rechazar</button>
+
+                    <form th:action="@{/admin/revisiones/solicitudes/{id}/rechazar(id=${solicitudEliminacion.id})}" method="post">
+                        <button class="btn btn--secondary">Descartar Solicitud</button>
                     </form>
                 </div>
+
             </div>
         </div>
     </div>
 </div>
 
 <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
-<script th:inline="javascript">
-    document.addEventListener('DOMContentLoaded', function() {
-        const latInicial = /*[[${hecho.ubicacionDTO?.latitud ?: -34.6037}]]*/ -34.6037;
-        const lngInicial = /*[[${hecho.ubicacionDTO?.longitud ?: -58.3816}]]*/ -58.3816;
-
-        const map = L.map('map-readonly').setView([latInicial, lngInicial], 14);
-        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution: '&copy; OpenStreetMap' }).addTo(map);
-        L.marker([latInicial, lngInicial]).addTo(map).bindPopup("Ubicación del hecho").openPopup();
-    });
-</script>
 
 <script th:inline="javascript">
     document.addEventListener('DOMContentLoaded', function() {
+        const hechoData = /*[[${hechoOriginal}]]*/ null;
 
-        // --- INICIO LÓGICA CARRUSEL INFINITO ---
+        // --- MAPA ---
+        const mapElement = document.getElementById('map-preview');
+
+        if (mapElement && hechoData && hechoData.ubicacionDTO && hechoData.ubicacionDTO.latitud != null) {
+            const latInicial = hechoData.ubicacionDTO.latitud;
+            const lngInicial = hechoData.ubicacionDTO.longitud;
+            const tituloHecho = hechoData.titulo;
+
+            const map = L.map(mapElement.id).setView([latInicial, lngInicial], 14);
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution: '&copy; OpenStreetMap' }).addTo(map);
+
+            L.marker([latInicial, lngInicial]).addTo(map).bindPopup(tituloHecho).openPopup();
+
+            // Fix para el renderizado si está en una pestaña oculta (Admin)
+            setTimeout(() => { map.invalidateSize(); }, 300);
+        }
+
+        // --- CARRUSEL ---
         const track = document.getElementById('carousel-track');
         const btnPrev = document.getElementById('btn-prev');
         const btnNext = document.getElementById('btn-next');
 
         if (!track || track.children.length === 0) return;
 
-        // Si solo hay 1 imagen, ocultamos flechas y no hacemos lógica
         const slidesOriginales = Array.from(track.children);
         if (slidesOriginales.length < 2) {
             if(btnPrev) btnPrev.style.display = 'none';
@@ -157,33 +181,27 @@
             return;
         }
 
-        // 1. Clonar primera y última diapositiva para el efecto infinito
+        // --- LÓGICA DEL BUCLE INFINITO (Copia y Adaptación) ---
         const firstClone = slidesOriginales[0].cloneNode(true);
         const lastClone = slidesOriginales[slidesOriginales.length - 1].cloneNode(true);
 
-        // Identificadores para depuración (opcional)
         firstClone.id = 'first-clone';
         lastClone.id = 'last-clone';
 
-        // 2. Insertar clones en el DOM
         track.append(firstClone);
         track.prepend(lastClone);
 
-        const slides = track.children; // Ahora incluye clones
-        let counter = 1; // Empezamos en 1 porque el 0 es el lastClone
-        let size = slidesOriginales[0].clientWidth; // Ancho inicial
+        const slides = track.children;
+        let counter = 1;
+        let size = slidesOriginales[0].clientWidth;
 
-        // Posicionar en la primera imagen real (saltando el clon inicial)
         track.style.transform = 'translateX(' + (-size * counter) + 'px)';
 
-        // Actualizar tamaño si se redimensiona la ventana
         window.addEventListener('resize', () => {
-            size = track.clientWidth; // El wrapper controla el ancho visible
-            track.style.transition = "none"; // Sin animación al redimensionar
+            size = track.clientWidth;
+            track.style.transition = "none";
             track.style.transform = 'translateX(' + (-size * counter) + 'px)';
         });
-
-        // --- MOVIMIENTO ---
 
         const moveToNext = () => {
             if (counter >= slides.length - 1) return;
@@ -199,23 +217,18 @@
             track.style.transform = 'translateX(' + (-size * counter) + 'px)';
         };
 
-        // Listeners Botones
         if(btnNext) btnNext.addEventListener('click', moveToNext);
         if(btnPrev) btnPrev.addEventListener('click', moveToPrev);
 
-        // --- EL SALTO MÁGICO (LOOP) ---
-        // Se ejecuta cuando termina la transición
         track.addEventListener('transitionend', () => {
-            // Si estamos en el clon de la primera (al final)
             if (slides[counter].id === 'first-clone') {
-                track.style.transition = "none"; // Quitamos animación
-                counter = 1; // Saltamos a la imagen 1 real
+                track.style.transition = "none";
+                counter = 1;
                 track.style.transform = 'translateX(' + (-size * counter) + 'px)';
             }
-            // Si estamos en el clon de la última (al principio)
             if (slides[counter].id === 'last-clone') {
-                track.style.transition = "none"; // Quitamos animación
-                counter = slides.length - 2; // Saltamos a la última imagen real
+                track.style.transition = "none";
+                counter = slides.length - 2;
                 track.style.transform = 'translateX(' + (-size * counter) + 'px)';
             }
         });

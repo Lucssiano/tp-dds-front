@@ -6,11 +6,10 @@ import lombok.Data;
 
 @Data
 public class SolicitudEliminacionInputDTO {
+  private Long id;
   private Long idHecho;
-
-  @NotBlank(message = "La justificación es obligatoria.")
-  @Size(min = 500, message = "La justificación es muy corta. Por favor, escribe al menos 500 caracteres para que podamos analizar el caso.")
+  private String hechoTitulo;
   private String justificacion;
-
+  private String estado;
   private String usuario;
 }

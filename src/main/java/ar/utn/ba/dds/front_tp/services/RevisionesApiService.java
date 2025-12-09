@@ -61,32 +61,12 @@ public class RevisionesApiService {
     }
   }
 
-  public List<SolicitudEliminacionDTO> obtenerSolicitudesPendientes(String token) {
-    try {
-      String url = baseUrl + "/solicitudes/pendientes"; // Ajusta la URL
-      log.info("Obteniendo solicitudes pendientes desde: {}", url);
-      return webApiCallerService.getListWithAuth(url, token, SolicitudEliminacionDTO.class);
-    } catch (Exception e) {
-      log.error("Error al obtener solicitudes: {}", e.getMessage());
-      return Collections.emptyList();
-    }
-  }
-
   public void aprobarHecho(Long id, String token) {
     enviarAccionHecho(id, "aprobar", token);
   }
 
   public void rechazarHecho(Long id, String token) {
     enviarAccionHecho(id, "rechazar", token);
-  }
-
-  // Agrego estos para las solicitudes de eliminación según tu HTML
-  public void aceptarSolicitud(Long id, String token) {
-    enviarAccionSolicitud(id, "aceptar", token);
-  }
-
-  public void rechazarSolicitud(Long id, String token) {
-    enviarAccionSolicitud(id, "rechazar", token);
   }
 
   private void enviarAccionHecho(Long id, String accion, String token) {
@@ -102,12 +82,5 @@ public class RevisionesApiService {
     }
   }
 
-  private void enviarAccionSolicitud(Long id, String accion, String token) {
-    try {
-      String url = baseUrl + "/solicitudes/" + id + "/" + accion;
-      webApiCallerService.postWithAuth(url, null, Void.class, token);
-    } catch (Exception e) {
-      throw new RuntimeException("Error al " + accion + " la solicitud: " + e.getMessage());
-    }
-  }
+
 }

@@ -306,6 +306,17 @@ main,
 	margin-bottom: 20px;
 }
 
+/* Alerta de Éxito (Verde) - Para mensajes de RedirectAttributes */
+.api-success-alert {
+	background-color: #d1fae5; /* Verde muy claro */
+	border: 1px solid #34d399;
+	border-left: 5px solid #34d399; /* Barra lateral verde para más impacto */
+	color: #065f46; /* Texto verde oscuro */
+	padding: 15px;
+	border-radius: 6px;
+	/* Usamos clases de utilidad para los márgenes */
+}
+
 /* 8. BADGES DE ESTADO */
 .estado-badge {
 	display: inline-block;

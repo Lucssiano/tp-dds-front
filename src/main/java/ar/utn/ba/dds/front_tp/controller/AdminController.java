@@ -9,6 +9,7 @@ import ar.utn.ba.dds.front_tp.dto.input.ColeccionInputDTO;
 import ar.utn.ba.dds.front_tp.dto.input.FuenteInputDTO;
 import ar.utn.ba.dds.front_tp.dto.input.HechoInputDTO;
 import ar.utn.ba.dds.front_tp.dto.hechos.input.SolicitudModificacionInputDTO;
+import ar.utn.ba.dds.front_tp.dto.input.SolicitudEliminacionInputDTO;
 import ar.utn.ba.dds.front_tp.dto.output.ColeccionOutputDTO;
 import ar.utn.ba.dds.front_tp.dto.output.CriterioDePertenenciaOutputDTO;
 import ar.utn.ba.dds.front_tp.dto.usuarios.AuthResponseDTO;
@@ -49,6 +50,7 @@ public class AdminController {
   private final RevisionesApiService revisionesApiService;
   private final HechosApiService hechosApiService;
   private final SolicitudesModificacionApiService solicitudesModificacionApiService;
+  private final SolicitudesEliminacionApiService solicitudesEliminacionApiService;
   private final EstadisticasApiService estadisticasApiService;
   private  final UploadFileService imagenesService;
   private final HechoMapper hechoMapper;
@@ -311,11 +313,11 @@ public class AdminController {
 
     // Cargar listas
     var hechos = revisionesApiService.obtenerHechosPendientes(token);
-    var solicitudes = revisionesApiService.obtenerSolicitudesPendientes(token);
+    var solicitudesEliminacion = solicitudesEliminacionApiService.obtenerSolicitudesPendientes(token);
     var solicitudesModificacion = solicitudesModificacionApiService.obtenerSolicitudesModificacionPendientes();
 
     model.addAttribute("hechosPendientes", hechos);
-    model.addAttribute("solicitudesPendientes", solicitudes);
+    model.addAttribute("solicitudesPendientes", solicitudesEliminacion);
     model.addAttribute("modificacionesPendientes", solicitudesModificacion);
 
     return "admin-revisiones";
@@ -437,6 +439,15 @@ public class AdminController {
       this.cargarCategoriasEnModelo(model);
 
       return "admin-hecho-editar";
+    } catch (Exception ex) {
+      log.error("💀 Error inesperado no controlado al crear hecho: ", ex);
+
+      model.addAttribute("globalError", "Ocurrió un error inesperado en la aplicación. Por favor, intente nuevamente.");
+      model.addAttribute("id", id);
+      model.addAttribute("hecho", hecho);
+
+      this.cargarCategoriasEnModelo(model);
+      return "admin-hecho-editar";
     }
   }
 
@@ -451,10 +462,10 @@ public class AdminController {
     try {
       if ("aprobar".equals(accion)) {
         revisionesApiService.aprobarHecho(id, authData.getAccessToken());
-        redirectAttributes.addFlashAttribute("mensaje", "Hecho aprobado correctamente.");
+        redirectAttributes.addFlashAttribute("mensaje", "¡Hecho aprobado con éxito!");
       } else if ("rechazar".equals(accion)) {
         revisionesApiService.rechazarHecho(id, authData.getAccessToken());
-        redirectAttributes.addFlashAttribute("mensaje", "Hecho rechazado correctamente.");
+        redirectAttributes.addFlashAttribute("mensaje", "¡Hecho rechazado con éxito!");
       }
     } catch (Exception e) {
       redirectAttributes.addFlashAttribute("error", "Error al procesar el hecho: " + e.getMessage());
@@ -464,16 +475,18 @@ public class AdminController {
 
   @GetMapping("/revisiones/modificaciones/{id}/detalle")
   public String verDetalleModificacion(@PathVariable Long id,
-                                       @ModelAttribute("soliModificacion") SolicitudModificacionInputDTO solicitudModificacion,
-                                       Model model,
+                                       Model model, // Quitamos @ModelAttribute del DTO
                                        RedirectAttributes redirectAttributes) {
     try {
+      SolicitudModificacionInputDTO solicitudModificacion = this.solicitudesModificacionApiService.obtenerSolicitud(id);
+
       model.addAttribute("solicitudModificacion", solicitudModificacion);
 
       return "admin-detalle-modificacion";
 
     } catch (Exception e) {
-      redirectAttributes.addFlashAttribute("error", "No se pudo cargar el hecho modificado.");
+      log.error("Error al cargar detalle de solicitud {}: {}", id, e.getMessage(), e);
+      redirectAttributes.addFlashAttribute("error", "Error al cargar el detalle de la solicitud.");
       return "redirect:/admin/revisiones";
     }
   }
@@ -485,15 +498,35 @@ public class AdminController {
     try {
       if ("aprobar".equals(accion)) {
         solicitudesModificacionApiService.aceptarSolicitudModificacion(id);
-        redirectAttributes.addFlashAttribute("mensaje", "Hecho aprobado correctamente.");
+        redirectAttributes.addFlashAttribute("mensaje", "¡Solicitud de modificación aprobada con éxito!");
       } else if ("rechazar".equals(accion)) {
         solicitudesModificacionApiService.rechazarSolicitudModificacion(id);
-        redirectAttributes.addFlashAttribute("mensaje", "Hecho rechazado correctamente.");
+        redirectAttributes.addFlashAttribute("mensaje", "¡Solicitud de modificación rechazada con éxito!");
       }
     } catch (Exception e) {
       redirectAttributes.addFlashAttribute("error", "Error al procesar el hecho: " + e.getMessage());
     }
     return "redirect:/admin/revisiones";
+  }
+
+  @GetMapping("/revisiones/solicitudes/{id}/detalle")
+  public String verDetalleEliminacion(@PathVariable Long id,
+                                       Model model,
+                                       RedirectAttributes redirectAttributes) {
+    try {
+      SolicitudEliminacionInputDTO solicitudEliminacion = this.solicitudesEliminacionApiService.obtenerSolicitud(id);
+      HechoInputDTO hechoOriginal = this.hechosApiService.obtenerHecho(solicitudEliminacion.getIdHecho());
+
+      model.addAttribute("solicitudEliminacion", solicitudEliminacion);
+      model.addAttribute("hechoOriginal", hechoOriginal);
+
+      return "admin-detalle-eliminacion";
+
+    } catch (Exception e) {
+      log.error("Error al cargar detalle de solicitud {}: {}", id, e.getMessage(), e);
+      redirectAttributes.addFlashAttribute("error", "Error al cargar el detalle de la solicitud.");
+      return "redirect:/admin/revisiones";
+    }
   }
 
   // Acciones sobre Solicitudes (Aceptar eliminación / Rechazar solicitud)
@@ -506,11 +539,11 @@ public class AdminController {
 
     try {
       if ("aceptar".equals(accion)) { // Eliminar el hecho reportado
-        revisionesApiService.aceptarSolicitud(id, authData.getAccessToken());
-        redirectAttributes.addFlashAttribute("mensaje", "Solicitud aceptada y hecho eliminado.");
+        solicitudesEliminacionApiService.aceptarSolicitud(id, authData.getAccessToken());
+        redirectAttributes.addFlashAttribute("mensaje", "¡Solicitud de eliminación aceptada con éxito! El hecho ha sido eliminado.");
       } else if ("rechazar".equals(accion)) { // Descartar la solicitud
-        revisionesApiService.rechazarSolicitud(id, authData.getAccessToken());
-        redirectAttributes.addFlashAttribute("mensaje", "Solicitud descartada.");
+        solicitudesEliminacionApiService.rechazarSolicitud(id, authData.getAccessToken());
+        redirectAttributes.addFlashAttribute("mensaje", "¡Solicitud de eliminación rechazada con éxito!");
       }
     } catch (Exception e) {
       redirectAttributes.addFlashAttribute("error", "Error al procesar la solicitud: " + e.getMessage());
