@@ -29,7 +29,7 @@ public class HomeController {
   public String mostrarHome(Model model) {
 
     // 1. Obtenemos las 2 últimas colecciones reales del Backend
-    List<ColeccionInputDTO> recientes = coleccionesApiService.obtenerUltimasColecciones(2);
+    List<ColeccionInputDTO> recientes = coleccionesApiService.obtenerUltimasColecciones(1);
 
     // 2. Mapeamos a la estructura que espera el HTML (agregando imagen fake)
     var coleccionesParaVista = recientes.stream().map(dto -> Map.of(

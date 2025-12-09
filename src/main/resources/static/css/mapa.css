@@ -81,10 +81,11 @@
     font-size: 0.95rem;
     font-weight: 500;
     border-left: 3px solid transparent;
+    background-color: #f8fafc;
 }
 
 .collection-list li a:hover {
-    background-color: #f8fafc;
+    background-color: #ebf8ff;
     color: var(--primary-color);
     border-left-color: #cbd5e0;
 }
@@ -95,7 +96,6 @@
     font-weight: 700;
     border-left-color: var(--primary-color);
 }
-
 /* ==========================================
    TOGGLE SWITCH (Corregido y Estable)
    ========================================== */

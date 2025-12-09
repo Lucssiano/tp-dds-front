@@ -2,7 +2,6 @@
 <html lang="es" xmlns:th="http://www.thymeleaf.org"
       xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
 
-
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -30,14 +29,22 @@
 
     <section class="featured">
         <div class="container">
-            <h2 class="featured__title">Colecciones Destacadas</h2>
-            <div class="card-grid">
-                <div class="card" th:each="coleccion : ${coleccionesDestacadas}">
-                    <img th:src="${coleccion.imagenUrl}" alt="Imagen de Colección" class="card__img">
-                    <div class="card__content">
-                        <h3 class="card__title" th:text="${coleccion.titulo}">Título</h3>
-                        <p class="card__description" th:text="${coleccion.descripcion}">Descripción</p>
-                        <a th:href="@{/hechos/mapa/coleccion/{id}(id=${coleccion.id})}"class="card__link">Ver Colección</a>
+            <h2 class="featured__title">Colección Destacada</h2>
+
+            <div class="card-stack">
+                <div class="wide-card" th:each="coleccion : ${coleccionesDestacadas}">
+                    <img th:src="${coleccion.imagenUrl}" alt="Imagen de Colección" class="wide-card__img">
+
+                    <div class="wide-card__content">
+                        <span class="wide-card__label">COLECCIÓN DESTACADA</span>
+
+                        <h3 class="wide-card__title" th:text="${coleccion.titulo}">Título</h3>
+                        <p class="wide-card__description" th:text="${coleccion.descripcion}">Descripción</p>
+
+                        <a th:href="@{/hechos/mapa/coleccion/{id}(id=${coleccion.id})}"
+                           class="btn btn--secondary w-100">
+                            Ver Colección
+                        </a>
                     </div>
                 </div>
             </div>
@@ -46,19 +53,23 @@
 
     <section class="featured-fact">
         <div class="container">
-            <h2 class="featured__title">Hecho del Día</h2>
-            <div class="fact-card" th:if="${hechoDestacado != null}">
-                <img th:src="${hechoDestacado.imagenUrl}" alt="Imagen del hecho" class="fact-card__img">
-                <div class="fact-card__content">
-                    <span class="fact-card__label">Hecho Destacado</span>
-                    <h3 class="fact-card__title" th:text="${hechoDestacado.titulo}">Título del hecho</h3>
-                    <p class="fact-card__description" th:text="${hechoDestacado.descripcion}">
+            <h2 class="featured__title">Hecho Destacado</h2>
+
+            <div class="wide-card" th:if="${hechoDestacado != null}">
+                <img th:src="${hechoDestacado.imagenUrl}" alt="Imagen del hecho" class="wide-card__img">
+
+                <div class="wide-card__content">
+                    <span class="wide-card__label">HECHO DESTACADO</span>
+
+                    <h3 class="wide-card__title" th:text="${hechoDestacado.titulo}">Título del hecho</h3>
+                    <p class="wide-card__description" th:text="${hechoDestacado.descripcion}">
                         Descripción del hecho
                     </p>
 
-                    <!-- LÍNEA CORREGIDA -->
-                    <a th:href="@{'/hechos/' + ${hechoDestacado.id} + '/detalle'}" class="btn btn--secondary">Ver Detalle</a>
-
+                    <a th:href="@{'/hechos/' + ${hechoDestacado.id} + '/detalle'}"
+                       class="btn btn--secondary w-100">
+                        Ver Detalle
+                    </a>
                 </div>
             </div>
         </div>
