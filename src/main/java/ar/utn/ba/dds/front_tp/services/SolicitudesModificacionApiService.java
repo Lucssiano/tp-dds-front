@@ -1,9 +1,7 @@
 package ar.utn.ba.dds.front_tp.services;
 
 import ar.utn.ba.dds.front_tp.dto.editar.EditarHechoDTO;
-import ar.utn.ba.dds.front_tp.dto.hechos.input.SolicitudModificacionInputDTO;
-import ar.utn.ba.dds.front_tp.dto.input.HechoInputDTO;
-import ar.utn.ba.dds.front_tp.dto.input.PageInputDTO;
+import ar.utn.ba.dds.front_tp.dto.input.SolicitudModificacionInputDTO;
 import ar.utn.ba.dds.front_tp.dto.output.HechoOutputDTO;
 import ar.utn.ba.dds.front_tp.dto.output.SolicitudModificacionOutputDTO;
 import ar.utn.ba.dds.front_tp.exceptions.api.GlobalBusinessException;
@@ -11,13 +9,11 @@ import ar.utn.ba.dds.front_tp.mappers.HechoMapper;
 import ar.utn.ba.dds.front_tp.services.internal.HandlerExceptions;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.HttpStatusCode;
 import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;
 import org.springframework.web.reactive.function.client.WebClientRequestException;
 
-import java.util.Collections;
 import java.util.List;
 
 @Service

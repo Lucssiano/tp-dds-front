@@ -214,4 +214,23 @@
     line-height: 1.4;               /* Un poco de aire entre líneas para leer mejor */
 }
 
+/* ==========================================
+   COMPARACIÓN DE MODIFICACIONES
+   ========================================== */
 
+/* Contenedor de la comparación */
+.comparison-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr; /* Dos columnas iguales */
+    gap: 30px; /* Espacio entre las columnas de comparación */
+}
+
+/* Encabezado de columna de comparación */
+.comparison-column-title {
+    font-size: 1rem;
+    font-weight: 700;
+    color: #4a5568;
+    margin-bottom: 15px;
+    padding-bottom: 5px;
+    border-bottom: 2px solid #cbd5e0;
+}

@@ -8,7 +8,7 @@ import ar.utn.ba.dds.front_tp.dto.input.ApiError;
 import ar.utn.ba.dds.front_tp.dto.input.ColeccionInputDTO;
 import ar.utn.ba.dds.front_tp.dto.input.FuenteInputDTO;
 import ar.utn.ba.dds.front_tp.dto.input.HechoInputDTO;
-import ar.utn.ba.dds.front_tp.dto.hechos.input.SolicitudModificacionInputDTO;
+import ar.utn.ba.dds.front_tp.dto.input.SolicitudModificacionInputDTO;
 import ar.utn.ba.dds.front_tp.dto.input.SolicitudEliminacionInputDTO;
 import ar.utn.ba.dds.front_tp.dto.output.ColeccionOutputDTO;
 import ar.utn.ba.dds.front_tp.dto.output.CriterioDePertenenciaOutputDTO;
@@ -475,12 +475,15 @@ public class AdminController {
 
   @GetMapping("/revisiones/modificaciones/{id}/detalle")
   public String verDetalleModificacion(@PathVariable Long id,
-                                       Model model, // Quitamos @ModelAttribute del DTO
+                                       Model model,
                                        RedirectAttributes redirectAttributes) {
     try {
       SolicitudModificacionInputDTO solicitudModificacion = this.solicitudesModificacionApiService.obtenerSolicitud(id);
 
+      HechoInputDTO hechoOriginal = this.hechosApiService.obtenerHecho(solicitudModificacion.getHechoId());
+
       model.addAttribute("solicitudModificacion", solicitudModificacion);
+      model.addAttribute("hechoOriginal", hechoOriginal);
 
       return "admin-detalle-modificacion";
 

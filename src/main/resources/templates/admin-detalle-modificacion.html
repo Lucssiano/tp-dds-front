@@ -11,6 +11,13 @@
 
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" />
+
+    <style>
+        .carousel-wrapper { height: 220px; }
+        .gallery-track { height: 220px; }
+        /* Ajuste para imágenes cover en comparación */
+        .gallery-item img { object-fit: contain; background: #f8fafc; }
+    </style>
 </head>
 
 <body>
@@ -36,44 +43,136 @@
 
             <div class="stat-card">
 
-                <div style="margin-bottom: 20px;">
+                <div style="margin-bottom: 30px;">
                     <h1 class="section-title" th:text="${solicitudModificacion.hechoTitulo}">Título del Hecho</h1>
+                    <p style="color: #64748b;">Solicitante: <span th:text="${solicitudModificacion.usuario}" style="font-weight: 600;">usuario@ejemplo.com</span></p>
+                </div>
+
+                <div class="comparison-grid" style="margin-bottom: 15px; padding-bottom: 5px; border-bottom: 2px solid #e2e8f0;">
+                    <h3 class="comparison-column-title" style="margin: 0; border: none;">Estado Actual (Original)</h3>
+                    <h3 class="comparison-column-title" style="margin: 0; border: none; color: var(--primary-color);">Propuesta de Modificación</h3>
                 </div>
 
                 <div class="content-block">
-                    <h3 class="content-title">Descripción</h3>
-                    <p th:text="${solicitudModificacion.hechoDescripcion}"></p>
+                    <div class="comparison-grid">
+
+                        <div>
+                            <h4 class="content-title">Imágenes</h4>
+
+                            <div th:if="${not #lists.isEmpty(hechoOriginal.multimedia)}">
+                                <div class="carousel-wrapper" id="carousel-original">
+                                    <button type="button" class="carousel-btn prev">&#10094;</button>
+                                    <div class="gallery-track">
+                                        <div th:each="imagen : ${hechoOriginal.multimedia}" class="gallery-item">
+                                            <img th:src="@{'/hechos/uploads/' + ${imagen}}" th:alt="'Original'">
+                                        </div>
+                                    </div>
+                                    <button type="button" class="carousel-btn next">&#10095;</button>
+                                </div>
+                            </div>
+                            <p th:if="${#lists.isEmpty(hechoOriginal.multimedia)}" style="color: #94a3b8; font-style: italic;">Sin imágenes.</p>
+                        </div>
+
+                        <div>
+                            <h4 class="content-title" style="color: var(--primary-color)">Imágenes</h4>
+
+                            <div th:if="${not #lists.isEmpty(solicitudModificacion.hechoMultimedia)}">
+                                <div class="carousel-wrapper" id="carousel-propuesta">
+                                    <button type="button" class="carousel-btn prev">&#10094;</button>
+                                    <div class="gallery-track">
+                                        <div th:each="imagen : ${solicitudModificacion.hechoMultimedia}" class="gallery-item">
+                                            <img th:src="@{'/hechos/uploads/' + ${imagen}}" th:alt="'Propuesta'">
+                                        </div>
+                                    </div>
+                                    <button type="button" class="carousel-btn next">&#10095;</button>
+                                </div>
+                            </div>
+                            <p th:if="${#lists.isEmpty(solicitudModificacion.hechoMultimedia)}" style="color: #94a3b8; font-style: italic;">Sin cambios en imágenes.</p>
+                        </div>
+                    </div>
                 </div>
 
                 <div class="content-block">
-                    <h3 class="content-title">Categoría</h3>
-                    <p th:text="${solicitudModificacion.hechoCategoria}"></p>
+                    <div class="comparison-grid">
+                        <div>
+                            <h4 class="content-title">Descripción</h4>
+                            <p th:text="${hechoOriginal.descripcion}">Desc original...</p>
+                        </div>
+                        <div>
+                            <h4 class="content-title" style="color: var(--primary-color)">Descripción</h4>
+                            <p th:text="${solicitudModificacion.hechoDescripcion}" style="font-weight: 600; color: #1e293b;">Desc nueva...</p>
+                        </div>
+                    </div>
                 </div>
 
                 <div class="content-block">
-                    <h3 class="content-title">Fecha del Hecho</h3>
-                    <p th:text="${#temporals.format(solicitudModificacion.fechaHecho, 'dd/MM/yyyy HH:mm')}"></p>
+                    <div class="comparison-grid">
+                        <div>
+                            <h4 class="content-title">Categoría</h4>
+                            <p th:text="${hechoOriginal.categoria}">Cat original</p>
+                        </div>
+                        <div>
+                            <h4 class="content-title" style="color: var(--primary-color)">Categoría</h4>
+                            <p th:text="${solicitudModificacion.hechoCategoria}" style="font-weight: 600; color: #1e293b;">Cat nueva</p>
+                        </div>
+                    </div>
                 </div>
 
                 <div class="content-block">
-                    <h3 class="content-title">Ubicación (Coordenadas)</h3>
-                    <table class="detail-table" style="max-width: 400px;">
-                        <tbody>
-                        <tr>
-                            <th>Latitud</th>
-                            <td th:text="${solicitudModificacion.hechoLatitud}"></td>
-                        </tr>
-                        <tr>
-                            <th>Longitud</th>
-                            <td th:text="${solicitudModificacion.hechoLongitud}"></td>
-                        </tr>
-                        </tbody>
-                    </table>
+                    <div class="comparison-grid">
+                        <div>
+                            <h4 class="content-title">Fecha del Hecho</h4>
+                            <p th:text="${#temporals.format(hechoOriginal.fechaHecho, 'dd/MM/yyyy HH:mm')}">01/01/2020</p>
+                        </div>
+                        <div>
+                            <h4 class="content-title" style="color: var(--primary-color)">Fecha del Hecho</h4>
+                            <p th:text="${#temporals.format(solicitudModificacion.fechaHecho, 'dd/MM/yyyy HH:mm')}" style="font-weight: 600; color: #1e293b;">02/01/2020</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="content-block">
+                    <div class="comparison-grid">
+                        <div>
+                            <h4 class="content-title">Ubicación (Coordenadas)</h4>
+                            <div style="display: flex; gap: 20px;">
+                                <div>
+                                    <span style="font-size: 0.8rem; color: #64748b; font-weight: bold;">LATITUD</span><br>
+                                    <span th:text="${hechoOriginal.ubicacionDTO?.latitud}">-34.123</span>
+                                </div>
+                                <div>
+                                    <span style="font-size: 0.8rem; color: #64748b; font-weight: bold;">LONGITUD</span><br>
+                                    <span th:text="${hechoOriginal.ubicacionDTO?.longitud}">-58.123</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div>
+                            <h4 class="content-title" style="color: var(--primary-color)">Ubicación (Coordenadas)</h4>
+                            <div style="display: flex; gap: 20px;">
+                                <div>
+                                    <span style="font-size: 0.8rem; color: #64748b; font-weight: bold;">LATITUD</span><br>
+                                    <span th:text="${solicitudModificacion.hechoLatitud}" style="font-weight: 600; color: #1e293b;">-34.999</span>
+                                </div>
+                                <div>
+                                    <span style="font-size: 0.8rem; color: #64748b; font-weight: bold;">LONGITUD</span><br>
+                                    <span th:text="${solicitudModificacion.hechoLongitud}" style="font-weight: 600; color: #1e293b;">-58.999</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
 
                 <div class="content-block" style="border-bottom: none; padding-bottom: 0; margin-bottom: 0;">
-                    <h3 class="content-title">Ubicación en mapa</h3>
-                    <div id="map-preview" style="height: 400px; border-radius: 8px;"></div>
+                    <h3 class="content-title" style="font-size: 1rem;">Ubicación en mapa (Comparación)</h3>
+                    <div id="map-comparison" style="height: 400px; border-radius: 8px; margin-top: 10px; border: 1px solid #e2e8f0;"></div>
+                    <div style="margin-top: 5px; font-size: 0.85rem; color: #64748b; display: flex; gap: 15px;">
+                        <span style="display: flex; align-items: center; gap: 5px;">
+                            <img src="https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-grey.png" width="15" alt="Gris"> Original
+                        </span>
+                        <span style="display: flex; align-items: center; gap: 5px;">
+                            <img src="https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-blue.png" width="15" alt="Azul"> Propuesta
+                        </span>
+                    </div>
                 </div>
 
                 <div class="form-actions">
@@ -95,16 +194,135 @@
 
 <script th:inline="javascript">
     document.addEventListener('DOMContentLoaded', function() {
-        // Aseguramos que la latitud y longitud no sean nulas antes de inicializar
-        const latInicial = /*[[${solicitudModificacion.hechoLatitud}]]*/ -34.6037;
-        const lngInicial = /*[[${solicitudModificacion.hechoLongitud}]]*/ -58.3816;
 
-        if (document.getElementById('map-preview') && latInicial != null && lngInicial != null) {
-            const map = L.map('map-preview').setView([latInicial, lngInicial], 13);
-            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
+        // ============================================
+        // 1. MAPA
+        // ============================================
+        const originalLat = /*[[${hechoOriginal.ubicacionDTO?.latitud}]]*/ null;
+        const originalLng = /*[[${hechoOriginal.ubicacionDTO?.longitud}]]*/ null;
+        const propuestaLat = /*[[${solicitudModificacion.hechoLatitud}]]*/ null;
+        const propuestaLng = /*[[${solicitudModificacion.hechoLongitud}]]*/ null;
 
-            L.marker([latInicial, lngInicial]).addTo(map).bindPopup("Ubicación Modificada").openPopup();
+        const mapElement = document.getElementById('map-comparison');
+
+        if (mapElement && originalLat != null && propuestaLat != null) {
+
+            const map = L.map('map-comparison');
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                attribution: '&copy; OpenStreetMap'
+            }).addTo(map);
+
+            const markers = [];
+
+            // Iconos personalizados
+            const greyIcon = new L.Icon({
+                iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-grey.png',
+                shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/images/marker-shadow.png',
+                iconSize: [25, 41], iconAnchor: [12, 41], popupAnchor: [1, -34], shadowSize: [41, 41]
+            });
+
+            const blueIcon = new L.Icon({
+                iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-blue.png',
+                shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/images/marker-shadow.png',
+                iconSize: [25, 41], iconAnchor: [12, 41], popupAnchor: [1, -34], shadowSize: [41, 41]
+            });
+
+            // Pin Original
+            const markerOriginal = L.marker([originalLat, originalLng], {icon: greyIcon}).addTo(map).bindPopup("<b>Ubicación Original</b>");
+            markers.push(markerOriginal);
+
+            // Pin Propuesta
+            const markerPropuesta = L.marker([propuestaLat, propuestaLng], {icon: blueIcon}).addTo(map).bindPopup("<b>Propuesta Nueva</b>");
+            markers.push(markerPropuesta);
+
+            // Auto-Zoom (FitBounds)
+            const group = new L.featureGroup(markers);
+            map.fitBounds(group.getBounds(), { padding: [50, 50], maxZoom: 15 });
+
+            setTimeout(() => { map.invalidateSize(); }, 300);
         }
+
+        // ============================================
+        // 2. CARRUSEL MODULAR (Para manejar 2 independientes)
+        // ============================================
+        function initCarousel(containerId) {
+            const container = document.getElementById(containerId);
+            if (!container) return;
+
+            const track = container.querySelector('.gallery-track');
+            const btnPrev = container.querySelector('.prev');
+            const btnNext = container.querySelector('.next');
+
+            if (!track || track.children.length === 0) return;
+
+            const slidesOriginales = Array.from(track.children);
+
+            // Si hay pocas fotos, ocultar botones
+            if (slidesOriginales.length < 2) {
+                if(btnPrev) btnPrev.style.display = 'none';
+                if(btnNext) btnNext.style.display = 'none';
+                return;
+            }
+
+            // Clonar para efecto infinito
+            const firstClone = slidesOriginales[0].cloneNode(true);
+            const lastClone = slidesOriginales[slidesOriginales.length - 1].cloneNode(true);
+            firstClone.id = 'first-clone';
+            lastClone.id = 'last-clone';
+            track.append(firstClone);
+            track.prepend(lastClone);
+
+            const slides = track.children;
+            let counter = 1;
+            // Usamos gallery-item para medir el ancho correcto
+            let itemWidth = container.querySelector('.gallery-item').clientWidth;
+
+            // Posición inicial
+            track.style.transform = 'translateX(' + (-itemWidth * counter) + 'px)';
+
+            // Ajuste resize
+            window.addEventListener('resize', () => {
+                itemWidth = container.querySelector('.gallery-item').clientWidth;
+                track.style.transition = "none";
+                track.style.transform = 'translateX(' + (-itemWidth * counter) + 'px)';
+            });
+
+            // Movimiento
+            const moveToNext = () => {
+                if (counter >= slides.length - 1) return;
+                track.style.transition = "transform 0.4s ease-in-out";
+                counter++;
+                track.style.transform = 'translateX(' + (-itemWidth * counter) + 'px)';
+            };
+
+            const moveToPrev = () => {
+                if (counter <= 0) return;
+                track.style.transition = "transform 0.4s ease-in-out";
+                counter--;
+                track.style.transform = 'translateX(' + (-itemWidth * counter) + 'px)';
+            };
+
+            if(btnNext) btnNext.addEventListener('click', moveToNext);
+            if(btnPrev) btnPrev.addEventListener('click', moveToPrev);
+
+            // Loop
+            track.addEventListener('transitionend', () => {
+                if (slides[counter].id === 'first-clone') {
+                    track.style.transition = "none";
+                    counter = 1;
+                    track.style.transform = 'translateX(' + (-itemWidth * counter) + 'px)';
+                }
+                if (slides[counter].id === 'last-clone') {
+                    track.style.transition = "none";
+                    counter = slides.length - 2;
+                    track.style.transform = 'translateX(' + (-itemWidth * counter) + 'px)';
+                }
+            });
+        }
+
+        // Inicializamos ambos carruseles
+        initCarousel('carousel-original');
+        initCarousel('carousel-propuesta');
     });
 </script>
 

@@ -1,4 +1,4 @@
-package ar.utn.ba.dds.front_tp.dto.hechos.input;
+package ar.utn.ba.dds.front_tp.dto.input;
 
 import ar.utn.ba.dds.front_tp.dto.output.EstadoSolicitud;
 import lombok.Builder;
