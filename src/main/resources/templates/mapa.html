@@ -24,16 +24,27 @@
 
         <div class="filter-panel">
             <h3 class="filter-panel__title">Colecciones</h3>
+
             <ul class="collection-list">
                 <li th:each="col : ${listaColecciones}">
                     <a th:href="@{'/hechos/mapa/coleccion/' + ${col.id}}"
                        th:text="${col.titulo}"
-                       th:classappend="${coleccion != null and col.id == coleccion.id} ? 'active' : ''">
+                       th:classappend="${idColeccionActual != null and idColeccionActual == col.id} ? 'active' : ''">
                         Nombre Colección
                     </a>
                 </li>
             </ul>
-            <a th:href="@{/colecciones}" class="btn btn--secondary w-100" style="justify-content: center;">Ver Todas</a>
+
+            <div th:if="${idColeccionActual != null}" class="sidebar-action-wrapper">
+                <a th:href="@{/hechos/mapa}"
+                   class="btn btn--secondary w-100">
+                    Ver todos los hechos
+                </a>
+            </div>
+
+            <div th:if="${idColeccionActual == null}" class="sidebar-action-wrapper compact">
+                <small style="color: #94a3b8; font-style: italic;">Explorando todos los hechos</small>
+            </div>
         </div>
 
         <div class="filter-panel">
@@ -43,11 +54,7 @@
                 <label for="category">Categoría</label>
                 <select id="category" class="clean-input">
                     <option value="">Todas las categorías</option>
-                    <option th:each="cat : ${listaCategorias}"
-                            th:value="${cat.id}"
-                            th:text="${cat.nombre}"
-                            th:selected="${categoriasSeleccionadas != null and categoriasSeleccionadas.contains(cat.id)}">
-                    </option>
+                    <option th:each="cat : ${listaCategorias}" th:value="${cat.id}" th:text="${cat.nombre}" th:selected="${categoriasSeleccionadas != null and categoriasSeleccionadas.contains(cat.id)}"></option>
                 </select>
             </div>
 
@@ -60,21 +67,23 @@
                 <label for="source">Fuente</label>
                 <select id="source" class="clean-input">
                     <option value="">Todas las fuentes</option>
-                    <option th:each="fuente : ${listaFuentes}"
-                            th:value="${fuente.id}"
-                            th:text="${fuente.nombre}"
-                            th:selected="${fuentesSeleccionadas != null and fuentesSeleccionadas.contains(fuente.id)}">
-                    </option>
+                    <option th:each="fuente : ${listaFuentes}" th:value="${fuente.id}" th:text="${fuente.nombre}" th:selected="${fuentesSeleccionadas != null and fuentesSeleccionadas.contains(fuente.id)}"></option>
                 </select>
             </div>
 
-            <div class="mode-toggle-container">
+            <div class="mode-toggle-container" th:if="${idColeccionActual != null}">
                 <span class="mode-label">Modo Curado</span>
                 <label class="switch">
                     <input type="checkbox" id="modo-navegacion-switch" th:checked="${modoActual == 'IRRESTRICTA'}">
                     <span class="slider round"></span>
                 </label>
-                <span class="mode-label">Modo Irrestricto</span>
+                <span class="mode-label">Irrestricto</span>
+            </div>
+
+            <div class="sidebar-action-wrapper">
+                <button id="btn-limpiar-filtros" class="btn btn--outline w-100">
+                    Limpiar Filtros
+                </button>
             </div>
         </div>
     </aside>

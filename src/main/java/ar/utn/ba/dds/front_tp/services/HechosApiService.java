@@ -58,93 +58,52 @@ public class HechosApiService {
    * @param fechaHasta La fecha de fin del rango.
    * @return Una lista de HechoInputDTO.
    */
-  public List<HechoInputDTO> obtenerHechos(String modo, LocalDate fechaDesde, LocalDate fechaHasta, List<Long> categorias, List<Long> fuentes) {
+  public List<HechoInputDTO> obtenerHechos(LocalDate fechaDesde, LocalDate fechaHasta, List<Long> categorias, List<Long> fuentes) {
     UriComponentsBuilder builder = UriComponentsBuilder.fromUriString(hechosServiceUrl + "/hechos/paginado")
         .queryParam("page", 0)
         .queryParam("size", 100);
 
-    if (modo != null && !modo.isEmpty()) {
-      builder.queryParam("modoNavegacion", modo);
-    }
-
-    // --- AQUÍ ESTÁ EL CAMBIO ---
     if (fechaDesde != null) {
-      // Usamos el nombre que el backend final espera
-      builder.queryParam("fechaAcontecimientoDesde", fechaDesde.format(DateTimeFormatter.ISO_LOCAL_DATE));
+      builder.queryParam("fechaAcontecimientoDesde", fechaDesde);
     }
     if (fechaHasta != null) {
-      // Usamos el nombre que el backend final espera
-      builder.queryParam("fechaAcontecimientoHasta", fechaHasta.format(DateTimeFormatter.ISO_LOCAL_DATE));
+      builder.queryParam("fechaAcontecimientoHasta", fechaHasta);
+    }
+    if (categorias != null && !categorias.isEmpty()) {
+      builder.queryParam("categorias", categorias);
+    }
+    if (fuentes != null && !fuentes.isEmpty()) {
+      builder.queryParam("fuentes", fuentes);
     }
 
-    // NUEVO: Agregamos las listas si no son nulas
-    if (categorias != null && !categorias.isEmpty()) builder.queryParam("categorias", categorias);
-    if (fuentes != null && !fuentes.isEmpty()) builder.queryParam("fuentes", fuentes);
-
-    String urlFinal = builder.toUriString();
-    log.info("Llamando a la URL de hechos: {}", urlFinal);
+    String uriFinal = builder.toUriString();
 
     try {
-      // Para evitar el warning deberia hacer algo similar a lo q hago abajo con webclient pero hay q modificar la implementacion del webApiCallerService
-        log.info("Antes del llamado api");
-      PageInputDTO<HechoInputDTO> pagedResponse = webApiCallerService.get(urlFinal, PageInputDTO.class);
+      var tipoRespuesta = new ParameterizedTypeReference<PageInputDTO<HechoInputDTO>>() {};
 
-      return pagedResponse.content();
-
-    } catch (RuntimeException e) {
-      // Lógica de error y llamada pública
-      if (e.getMessage() != null && e.getMessage().contains("No hay token de acceso disponible")) {
-        log.warn("No hay token: usando llamada pública sin autenticación");
-
-        // Definición explícita del tipo genérico para WebClient (sino me lanza un warning porq no conoce el tipo de dato que va dentro de PageInputDTO)
-        ParameterizedTypeReference<PageInputDTO<HechoInputDTO>> typeRef = new ParameterizedTypeReference<PageInputDTO<HechoInputDTO>>() {};
-        PageInputDTO<HechoInputDTO> pagedResponse = webClient.get()
-            .uri(urlFinal)
-            .retrieve()
-            .bodyToMono(typeRef) // bodyToMono, no bodyToFlux
-            .block();
-
-        return pagedResponse != null ? pagedResponse.content() : Collections.emptyList();
-      }
-      throw e;
-    }
-  }
-
-  public List<HechoInputDTO> obtenerHechosColeccion(Long id, String modo, LocalDate fechaDesde, LocalDate fechaHasta, List<Long> categorias, List<Long> fuentes) {
-    try {
-      // 1. Construimos la URI de forma explícita usando fromHttpUrl
-      // Esto parsea correctamente "http://tuservidor.com"
-      UriComponentsBuilder builder = UriComponentsBuilder.fromHttpUrl(hechosServiceUrl)
-          .path("/colecciones/{id}/hechos"); // Agregamos el resto de la ruta
-
-      // 2. Agregamos los parámetros condicionales
-      if (modo != null) {
-        builder.queryParam("modoNavegacion", modo);
-      }
-      if (fechaDesde != null) {
-        builder.queryParam("fechaAcontecimientoDesde", fechaDesde);
-      }
-      if (fechaHasta != null) {
-        builder.queryParam("fechaAcontecimientoHasta", fechaHasta);
-      }
-      // NUEVO
-      if (categorias != null && !categorias.isEmpty()) builder.queryParam("categorias", categorias);
-      if (fuentes != null && !fuentes.isEmpty()) builder.queryParam("fuentes", fuentes);
-
-      // 3. Generamos el objeto URI final (aquí se reemplaza el {id})
-      URI uriFinal = builder.buildAndExpand(id).toUri();
-
-      // 4. Se lo pasamos al WebClient
-      return webClient.get()
+      PageInputDTO<HechoInputDTO> pagedResponse = webClient
+          .get()
           .uri(uriFinal)
           .retrieve()
-          .bodyToFlux(HechoInputDTO.class)
-          .collectList()
+          .onStatus(HttpStatusCode::isError, response -> {
+            log.warn("Error recibido. Status: {}", response.statusCode().value());
+            return this.handlerExceptions.manejarError(response);
+          })
+          .bodyToMono(tipoRespuesta)
           .block();
 
-    } catch (Exception e) {
-      log.warn("No se pudieron obtener los hechos de la coleccion: " + id + " por error " + e.getMessage());
-      return List.of();
+      return pagedResponse != null ? pagedResponse.content() : Collections.emptyList();
+
+    } catch (
+    WebClientRequestException e) {
+      log.error("🔥 Error de conexión con módulo externo: {}", e.getMessage());
+
+      throw new GlobalBusinessException(
+          503,
+          "SERVICE_UNAVAILABLE",
+          "El sistema externo no responde. No se pudieron obtener los hechos.",
+          List.of(e.getMessage())
+      );
     }
   }
 

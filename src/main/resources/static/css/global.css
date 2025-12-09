@@ -148,6 +148,32 @@ main,
 
 .btn--large { padding: 12px 30px; font-size: 18px; }
 
+/* Estilo para botón de "Limpiar" o acciones secundarias */
+.btn--outline {
+	background-color: transparent;
+	border: 1px solid #cbd5e0; /* Gris suave */
+	color: var(--text-medium);
+	font-weight: 600;
+}
+
+.btn--outline:hover {
+	background-color: #fff;
+	border-color: var(--text-dark);
+	color: var(--text-dark);
+	box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+}
+
+/* Variante roja para acciones destructivas si quisieras usarla en el futuro */
+.btn--outline-danger {
+	background-color: transparent;
+	border: 1px solid #e57373;
+	color: #c0392b;
+}
+.btn--outline-danger:hover {
+	background-color: #fff5f5;
+	color: #a93226;
+}
+
 /* 5. INPUTS & FORMULARIOS (CLEAN STYLE) */
 .form-group { margin-bottom: 20px; text-align: left; }
 .form-group label { display: block; font-weight: bold; margin-bottom: 8px; color: var(--text-dark); }
@@ -308,4 +334,11 @@ main,
 	gap: 15px;
 	justify-content: center;
 	flex-wrap: wrap;
+}
+
+/* Forzar ancho completo (para centrar botones en sidebar) */
+.w-100 {
+	width: 100%;
+	display: flex; /* Asegura que justify-content funcione */
+	justify-content: center;
 }

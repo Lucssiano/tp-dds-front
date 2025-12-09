@@ -104,35 +104,74 @@ public class HechosController {
 
   @GetMapping("/mapa")
   public String mostrarMapa(
+      @RequestParam(required = false, name = "fechaAcontecimientoDesde") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate fechaDesde,
+      @RequestParam(required = false, name = "fechaAcontecimientoHasta") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate fechaHasta,
+      @RequestParam(required = false) List<Long> categorias,
+      @RequestParam(required = false) List<Long> fuentes,
+      Model model) {
+    try {
+      cargarFiltrosEnModelo(model);
+
+      // Llamada al servicio
+      List<HechoInputDTO> hechos = this.hechosApiService.obtenerHechos(fechaDesde, fechaHasta, categorias, fuentes);
+      log.info("Cantidad de hechos recibidos: {}", hechos.size());
+
+      // Serialización
+      String hechosJson = objectMapper.writeValueAsString(hechos);
+
+      // Modelo
+      model.addAttribute("hechosJson", hechosJson);
+      model.addAttribute("fechaDesde", fechaDesde != null ? fechaDesde.toString() : "");
+      model.addAttribute("fechaHasta", fechaHasta != null ? fechaHasta.toString() : "");
+      model.addAttribute("categoriasSeleccionadas", categorias != null ? categorias : new ArrayList<>());
+      model.addAttribute("fuentesSeleccionadas", fuentes != null ? fuentes : new ArrayList<>());
+      model.addAttribute("idColeccionActual", null);
+
+    } catch (Exception e) {
+      log.error("Error al obtener hechos o al convertirlos a JSON", e);
+      // Manejo elegante del error en la vista
+      model.addAttribute("hechosJson", "[]");
+      model.addAttribute("categoriasSeleccionadas", new ArrayList<>());
+      model.addAttribute("fuentesSeleccionadas", new ArrayList<>());
+    }
+    return "mapa";
+  }
+
+  @GetMapping("/mapa/coleccion/{id}")
+  public String verHechosColeccion(
+      @PathVariable("id") Long idColeccion,
       @RequestParam(required = false, defaultValue = "CURADA") String modo,
       @RequestParam(required = false, name = "fechaAcontecimientoDesde") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate fechaDesde,
       @RequestParam(required = false, name = "fechaAcontecimientoHasta") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate fechaHasta,
-      @RequestParam(required = false) List<Long> categorias, // <--- NUEVO
-      @RequestParam(required = false) List<Long> fuentes,    // <--- NUEVO
+      @RequestParam(required = false) List<Long> categorias,
+      @RequestParam(required = false) List<Long> fuentes,
       Model model) {
     try {
-      // Cargamos los datos para los dropdowns y sidebar
       cargarFiltrosEnModelo(model);
 
-      List<HechoInputDTO> hechos = hechosApiService.obtenerHechos(modo, fechaDesde, fechaHasta, categorias, fuentes);
-      log.info("Cantidad de hechos recibidos: {}", hechos.size());
+      // Llamada al servicio
+      List<HechoInputDTO> hechos = this.coleccionesApiService.obtenerHechosColeccion(
+          idColeccion, modo, fechaDesde, fechaHasta, categorias, fuentes
+      );
 
-      // Convertimos la lista a un String JSON
+      // Serialización
       String hechosJson = objectMapper.writeValueAsString(hechos);
 
-      // Pasamos el STRING JSON al modelo
+      // Modelo
       model.addAttribute("hechosJson", hechosJson);
       model.addAttribute("modoActual", modo);
       model.addAttribute("fechaDesde", fechaDesde != null ? fechaDesde.toString() : "");
       model.addAttribute("fechaHasta", fechaHasta != null ? fechaHasta.toString() : "");
-      model.addAttribute("categoriasSeleccionadas", categorias);
-      model.addAttribute("fuentesSeleccionadas", fuentes);
+      model.addAttribute("categoriasSeleccionadas", categorias != null ? categorias : new ArrayList<>());
+      model.addAttribute("fuentesSeleccionadas", fuentes != null ? fuentes : new ArrayList<>());
+      model.addAttribute("idColeccionActual", idColeccion);
+
+      return "mapa";
     } catch (Exception e) {
-      log.error("Error al obtener hechos o al convertirlos a JSON", e);
-      model.addAttribute("hechosJson", "[]"); // Pasamos un array vacío en caso de error
-      model.addAttribute("modoActual", modo); // Pasamos un array vacío en caso de error
+      log.error("Error cargando mapa de colección: {}", e.getMessage(), e);
+      model.addAttribute("errorGlobal", "Ocurrió un error inesperado al cargar la colección.");
+      return "home";
     }
-    return "mapa";
   }
 
   @GetMapping("/mis-hechos")
@@ -393,7 +432,7 @@ public class HechosController {
     try {
       this.solicitudesModificacionApiService.crearSolicitudModificacion(id, hecho);
 
-      redirectAttributes.addFlashAttribute("mensaje", "¡Solicitud de edición creada con éxito!");
+      redirectAttributes.addFlashAttribute("mensaje", "¡Solicitud de edición creada con éxito! Se ha enviado a moderación.");
       return "redirect:/hechos/" + id + "/detalle";
 
     } catch (ApiException ex) {
@@ -491,7 +530,7 @@ public class HechosController {
     try {
       this.solicitudesApiService.crearSolicitudEliminacion(solicitud);
 
-      redirectAttributes.addFlashAttribute("mensaje", "¡Solicitud de eliminación creada con éxito!");
+      redirectAttributes.addFlashAttribute("mensaje", "¡Solicitud de eliminación creada con éxito! Se ha enviado a moderación.");
 
       return "redirect:/hechos/" + id + "/detalle";
 
@@ -539,37 +578,6 @@ public class HechosController {
       model.addAttribute("errorGlobal", "Ocurrió un error inesperado al procesar la solicitud. Intente nuevamente.");
 
       return "solicitud-eliminacion";
-    }
-  }
-
-  @GetMapping("/mapa/coleccion/{id}")
-  public String verHechosColeccion(@ModelAttribute("coleccion") ColeccionInputDTO coleccion,
-                                   @RequestParam(required = false, defaultValue = "CURADA") String modoNavegacion,
-                                   @RequestParam(required = false, name = "fechaAcontecimientoDesde") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate fechaDesde,
-                                   @RequestParam(required = false, name = "fechaAcontecimientoHasta") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate fechaHasta,
-                                   @RequestParam(required = false) List<Long> categorias, // <--- NUEVO
-                                   @RequestParam(required = false) List<Long> fuentes,    // <--- NUEVO
-                                   Model model) {
-    try {
-      cargarFiltrosEnModelo(model);
-
-      // Usamos el ID de la colección (asumo que 'coleccion' tiene el ID populado, sino usa @PathVariable)
-      List<HechoInputDTO> hechos = hechosApiService.obtenerHechosColeccion(coleccion.getId(), modoNavegacion, fechaDesde, fechaHasta, categorias, fuentes);
-
-      String hechosJson = objectMapper.writeValueAsString(hechos);
-
-      model.addAttribute("hechosJson", hechosJson);
-      model.addAttribute("modoActual", modoNavegacion);
-      model.addAttribute("fechaDesde", fechaDesde != null ? fechaDesde.toString() : "");
-      model.addAttribute("fechaHasta", fechaHasta != null ? fechaHasta.toString() : "");
-      model.addAttribute("categoriasSeleccionadas", categorias);
-      model.addAttribute("fuentesSeleccionadas", fuentes);
-
-      return "mapa";
-    } catch (Exception e) {
-      log.error(e.getMessage(), e);
-      model.addAttribute("errorGlobal", "Ocurrió un error inesperado: " + e.getMessage());
-      return "home";
     }
   }
 

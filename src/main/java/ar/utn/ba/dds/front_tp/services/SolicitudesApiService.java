@@ -26,7 +26,6 @@ public class SolicitudesApiService {
   }
 
   public SoliOutputDTO crearSolicitudEliminacion(SolicitudEliminacionInputDTO soli) {
-    log.info("usuario en service solicitud: " + soli.getUsuario());
     try {
       return webClient.post()
           .uri(baseUrl)
@@ -45,7 +44,7 @@ public class SolicitudesApiService {
       throw new GlobalBusinessException(
           503,
           "SERVICE_UNAVAILABLE", // Código para identificarlo
-          "El sistema externo no responde. No se pudo guardar el hecho.",
+          "El sistema externo no responde. No se pudo crear la solicitud de eliminación.",
           List.of(e.getMessage())
       );
     }

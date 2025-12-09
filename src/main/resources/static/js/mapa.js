@@ -45,9 +45,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
         // A. MODO (Curado / Irrestricto)
         if (toggleSwitch) {
-            // Nota: El controller espera "IRRESTRICTA" (con A)
             const modo = toggleSwitch.checked ? 'IRRESTRICTA' : 'CURADA';
-            url.searchParams.set('modo', modo); // Usamos 'modo' pq asi lo definimos en el Controller (@RequestParam defaultValue)
+            url.searchParams.set('modo', modo);
+        } else {
+            // Si no hay switch (Mapa Global), limpiamos el parametro 'modo' si existiera
+            url.searchParams.delete('modo');
         }
 
         // B. FECHAS
@@ -107,7 +109,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if (sourceSelect) sourceSelect.addEventListener('change', aplicarFiltros);
 
 
-    // 5. DIBUJAR PINES (Igual que antes)
+    // 5. DIBUJAR PINES
     const hechosJson = mapElement.dataset.hechos;
     let hechos = [];
 
@@ -131,8 +133,12 @@ document.addEventListener('DOMContentLoaded', () => {
                     document.getElementById('modal-title').textContent = fact.titulo;
                     document.getElementById('modal-date').textContent = formatearFechaParaArgentina(fact.fechaHecho);
                     document.getElementById('modal-location').textContent = `${ubicacion.provincia || ''}, ${ubicacion.municipio || ''}`;
-                    document.getElementById('modal-source').textContent = (fact.fuentes && fact.fuentes.length > 0) ? fact.fuentes[0].nombre : 'Desconocida';
+                    document.getElementById('modal-source').textContent =
+                        (fact.fuentes && fact.fuentes.length > 0)
+                            ? fact.fuentes.map(f => f.nombre).join(', ')
+                            : 'Desconocidas';
                     document.getElementById('modal-description').textContent = fact.descripcion || '';
+                    document.getElementById('modal-category').textContent = fact.categoria || '';
 
                     const verHechoBtn = document.getElementById('ver-hecho-btn');
                     if(verHechoBtn) verHechoBtn.href = `/hechos/${fact.id}/detalle`;
@@ -143,6 +149,42 @@ document.addEventListener('DOMContentLoaded', () => {
                     document.getElementById('fact-modal').style.display = "block";
                 });
             }
+        });
+    }
+
+    // 6. LÓGICA BOTÓN LIMPIAR FILTROS
+    const btnLimpiar = document.getElementById('btn-limpiar-filtros');
+
+    if (btnLimpiar) {
+        btnLimpiar.addEventListener('click', () => {
+            console.log("🧹 Limpiando filtros...");
+
+            // 1. Resetear inputs visualmente
+            if (categorySelect) categorySelect.value = "";
+            if (sourceSelect) sourceSelect.value = "";
+            if (fp) fp.clear(); // Limpia Flatpickr
+
+            // 2. Construir URL limpia
+            const url = new URL(window.location.origin + window.location.pathname);
+
+            // 3. ¿Qué hacemos con el MODO?
+            // Si estamos en una colección, generalmente queremos mantener el modo actual
+            // (no resetearlo a Curado violentamente), pero quitar el resto de filtros.
+            // Si prefieres resetear TODO (incluido volver a Curado), borra este bloque 'if'.
+            if (toggleSwitch) {
+                // Mantenemos el modo que el usuario ya tenía seleccionado
+                const currentMode = url.searchParams.get('modo');
+                if (currentMode) {
+                    url.searchParams.set('modo', currentMode);
+                }
+            }
+
+            // Nota: Al crear 'new URL' basado en location.pathname,
+            // automáticamente se eliminan todos los searchParams anteriores
+            // (fecha, categorias, fuentes), excepto los que volvamos a setear explícitamente.
+
+            // 4. Recargar
+            window.location.href = url.toString();
         });
     }
 
