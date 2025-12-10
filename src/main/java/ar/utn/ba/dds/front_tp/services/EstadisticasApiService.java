@@ -1,5 +1,6 @@
 package ar.utn.ba.dds.front_tp.services;
 
+import ar.utn.ba.dds.front_tp.dto.admin.CategoriaEstadisticaDTO;
 import ar.utn.ba.dds.front_tp.dto.admin.ColeccionEstadisticaDTO;
 import ar.utn.ba.dds.front_tp.dto.input.CategoriaInputDTO;
 import ar.utn.ba.dds.front_tp.services.internal.WebApiCallerService;
@@ -24,7 +25,7 @@ public class EstadisticasApiService {
         this.webApiCallerService = webApiCallerService;
     }
 
-    public List<CategoriaInputDTO> obtenerCategorias(List<String> categorias, Boolean top) {
+    public List<CategoriaEstadisticaDTO> obtenerCategorias(List<String> categorias, Boolean top) {
 
         String url = estadisticasServiceUrl + "/categoria";
 
@@ -41,7 +42,7 @@ public class EstadisticasApiService {
         return webClient.get()
                 .uri(finalUrl)
                 .retrieve()
-                .bodyToFlux(CategoriaInputDTO.class)
+                .bodyToFlux(CategoriaEstadisticaDTO.class)
                 .collectList()
                 .block();
     }

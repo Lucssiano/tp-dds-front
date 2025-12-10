@@ -1,6 +1,7 @@
 package ar.utn.ba.dds.front_tp.controller;
 
 import ar.utn.ba.dds.front_tp.dto.admin.ActividadDTO;
+import ar.utn.ba.dds.front_tp.dto.admin.CategoriaEstadisticaDTO;
 import ar.utn.ba.dds.front_tp.dto.admin.ColeccionEstadisticaDTO;
 import ar.utn.ba.dds.front_tp.dto.editar.EditarHechoDTO;
 import ar.utn.ba.dds.front_tp.dto.input.ApiError;
@@ -641,15 +642,15 @@ public class AdminController {
                                     @RequestParam(value = "categorias", required = false) List<String> categorias,
                                     Model model) {
     try {
-      List<CategoriaInputDTO> resultado = estadisticasApiService.obtenerCategorias(categorias, top);
-      CategoriaInputDTO categoriaMax = estadisticasApiService.obtenerCategorias(categorias, true).get(0);
+      List<CategoriaEstadisticaDTO> resultado = estadisticasApiService.obtenerCategorias(categorias, top);
+        CategoriaEstadisticaDTO categoriaMax = estadisticasApiService.obtenerCategorias(categorias, true).get(0); //aca rompe
       List<ColeccionEstadisticaDTO> resultadoColecciones = estadisticasApiService.obtenerColecciones(List.of());
 
       model.addAttribute("categorias", resultado);
       model.addAttribute("categoriaMaxima", categoriaMax);
       model.addAttribute("colecciones", resultadoColecciones);
 
-      List<String> nombres = resultado.stream().map(CategoriaInputDTO::getNombre).toList();
+      List<String> nombres = resultado.stream().map(CategoriaEstadisticaDTO::getCategoria).toList();
       model.addAttribute("nombresCategorias", nombres);
 
       // Filtros para la vista
