@@ -4,12 +4,18 @@ import ar.utn.ba.dds.front_tp.dto.editar.EditarHechoDTO;
 import ar.utn.ba.dds.front_tp.dto.input.SolicitudModificacionInputDTO;
 import ar.utn.ba.dds.front_tp.dto.output.HechoOutputDTO;
 import ar.utn.ba.dds.front_tp.dto.output.SolicitudModificacionOutputDTO;
+import ar.utn.ba.dds.front_tp.dto.usuarios.AuthResponseDTO;
 import ar.utn.ba.dds.front_tp.exceptions.api.GlobalBusinessException;
 import ar.utn.ba.dds.front_tp.mappers.HechoMapper;
 import ar.utn.ba.dds.front_tp.services.internal.HandlerExceptions;
+import ar.utn.ba.dds.front_tp.services.internal.WebApiCallerService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatusCode;
+import org.springframework.security.authentication.AnonymousAuthenticationToken;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;
 import org.springframework.web.reactive.function.client.WebClientRequestException;
@@ -21,13 +27,16 @@ import java.util.List;
 public class SolicitudesModificacionApiService {
   private final WebClient webClient;
 
+  private final WebApiCallerService webApiCallerService;
+
   @Autowired
   private HechoMapper hechoMapper;
 
   @Autowired
   private HandlerExceptions handlerExceptions;
 
-  public SolicitudesModificacionApiService(){
+  public SolicitudesModificacionApiService(WebApiCallerService webApiCallerService){
+    this.webApiCallerService = webApiCallerService;
     this.webClient = WebClient.builder().baseUrl("http://localhost:8081/metamapa/solicitudes-modif").build();
   }
 
@@ -39,8 +48,24 @@ public class SolicitudesModificacionApiService {
         .hecho(hechoOutputDTO)
         .build();
 
+    String accessToken = null;
+
+    Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+    if (authentication != null && !(authentication instanceof AnonymousAuthenticationToken)) {
+      try {
+        AuthResponseDTO authData = (AuthResponseDTO) authentication.getDetails();
+        accessToken = authData.getAccessToken();
+
+        log.info("Token: "+ accessToken);
+      } catch (Exception e) {
+        // Logueamos pero no rompemos el flujo, seguimos intentando
+        System.err.println("Advertencia: No se pudo extraer token");
+      }
+    }
+
     try {
       webClient.post()
+          .header(HttpHeaders.AUTHORIZATION, "Bearer " + accessToken)
           .bodyValue(solicitudModificacionOutputDTO)
           .retrieve()
           .onStatus(HttpStatusCode::isError, response -> {
@@ -117,10 +142,25 @@ public class SolicitudesModificacionApiService {
   }
 
   private void enviarAccion(Long id, String accion) {
+    String accessToken = null;
+
+    Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+    if (authentication != null && !(authentication instanceof AnonymousAuthenticationToken)) {
+      try {
+        AuthResponseDTO authData = (AuthResponseDTO) authentication.getDetails();
+        accessToken = authData.getAccessToken();
+
+        log.info("Token: "+ accessToken);
+      } catch (Exception e) {
+        // Logueamos pero no rompemos el flujo, seguimos intentando
+        System.err.println("Advertencia: No se pudo extraer token");
+      }
+    }
     try {
       log.info("ID: " + id + " - Accion: " + accion);
       webClient.post()
           .uri("/" + id + "/" + accion)
+          .header(HttpHeaders.AUTHORIZATION, "Bearer " + accessToken)
           .retrieve()
           .onStatus(HttpStatusCode::isError, response -> {
             log.warn("Error recibido. Status: {}", response.statusCode().value());

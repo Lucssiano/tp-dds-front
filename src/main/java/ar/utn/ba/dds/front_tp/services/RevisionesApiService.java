@@ -74,6 +74,7 @@ public class RevisionesApiService {
       log.info("ID: " + id + " - Accion: " + accion);
       webClient.post()
           .uri("/hechos/" + id + "/" + accion)
+          .header(HttpHeaders.AUTHORIZATION, "Bearer " + token)
           .retrieve()
           .bodyToMono(Void.class)
           .block();
