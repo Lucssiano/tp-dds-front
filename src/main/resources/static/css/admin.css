@@ -393,3 +393,36 @@
 @media (max-width: 768px) {
     .form-grid-2 { grid-template-columns: 1fr; }
 }
+
+/* ==========================================
+   CRITERIOS DINÁMICOS (Para admin-crear-coleccion)
+   ========================================== */
+
+.criterio-card {
+    background-color: #f8fafc; /* Gris muy suave */
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    padding: 20px;
+    margin-bottom: 15px;
+    position: relative;
+    /* IMPORTANTE: overflow visible para que el dropdown de categoría no se corte */
+    overflow: visible;
+}
+
+.btn-delete-criterio {
+    position: absolute;
+    top: 15px;
+    right: 15px;
+    background: transparent;
+    border: none;
+    color: #ef4444; /* Rojo error */
+    cursor: pointer;
+    font-size: 1.5rem;
+    line-height: 1;
+    z-index: 5;
+    transition: color 0.2s;
+}
+
+.btn-delete-criterio:hover {
+    color: #dc2626;
+}

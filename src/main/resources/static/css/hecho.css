@@ -33,6 +33,13 @@
     border-bottom: 1px solid #e2e8f0;
 }
 
+.content-block p {
+    overflow-wrap: break-word;
+    word-wrap: break-word;
+    word-break: break-word;
+    white-space: pre-wrap;
+}
+
 .content-title {
     font-size: 0.875rem;
     text-transform: uppercase;
@@ -273,4 +280,11 @@
     margin-top: 10px;
     font-size: 0.85rem;
     color: #64748b;
+}
+
+/* Item especial para "Crear nueva categoría" */
+.autocomplete-create-item {
+    color: var(--primary-color);
+    font-weight: 600;
+    display: none;
 }

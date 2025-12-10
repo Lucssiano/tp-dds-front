@@ -182,11 +182,18 @@ public class AdminController {
           erroresVista.putAll(apiError.fields());
           model.addAttribute("errors", erroresVista);
         }
+
         // Mensaje global
         if (apiError.message() != null) {
           model.addAttribute("globalError", apiError.message());
         }
-      } else {
+
+        // Detalles técnicos
+        if (apiError.details() != null && !apiError.details().isEmpty()) {
+          model.addAttribute("errorDetails", apiError.details());
+        }
+      }
+      else {
         model.addAttribute("globalError", "Error al crear la colección: " + ex.getMessage());
       }
 

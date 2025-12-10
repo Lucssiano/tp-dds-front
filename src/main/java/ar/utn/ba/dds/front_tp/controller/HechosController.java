@@ -358,8 +358,7 @@ public class HechosController {
 
   @GetMapping("/{id}/editar")
   public String editarHecho(@PathVariable Long id,
-                            Model model,
-                            RedirectAttributes redirectAttributes) {
+                            Model model) {
     // Usamos HechoInputDTO (con estructura anidada ubicacionInputDTO)
     HechoInputDTO inputOriginal = this.hechosApiService.obtenerHecho(id);
 
