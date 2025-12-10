@@ -6,7 +6,8 @@
 
     <link rel="stylesheet" th:href="@{/css/global.css}">
     <link rel="stylesheet" th:href="@{/css/admin.css}">
-    <link rel="stylesheet" th:href="@{/css/hecho.css}"> <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" th:href="@{/css/hecho.css}">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 
     <style>
         .autocomplete-create-item {
@@ -14,7 +15,17 @@
             font-weight: 600;
             display: none;
         }
-        .autocomplete-wrapper { position: relative; } /* Asegura posicionamiento */
+        .autocomplete-wrapper { position: relative; }
+
+        /* Estilo para botón deshabilitado */
+        button:disabled {
+            background-color: #cbd5e1 !important;
+            color: #64748b !important;
+            cursor: not-allowed;
+            border-color: #cbd5e1 !important;
+            transform: none !important;
+            box-shadow: none !important;
+        }
     </style>
 </head>
 
@@ -37,7 +48,7 @@
 
             <div class="stat-card">
 
-                <form th:action="@{/admin/colecciones/{id}/editar(id=${idColeccion})}" th:object="${coleccion}" method="post">
+                <form id="main-form" th:action="@{/admin/colecciones/{id}/editar(id=${idColeccion})}" th:object="${coleccion}" method="post">
 
                     <div style="margin-bottom: 30px;">
                         <h1 class="section-title">Editar Colección</h1>
@@ -82,6 +93,7 @@
                                        th:field="*{fuentesIds}"
                                        th:value="${fuente.id}"
                                        th:id="${'fuente-' + fuente.id}"
+                                       class="chk-fuente"
                                        style="width: 16px; height: 16px; cursor: pointer; accent-color: var(--primary-color);">
                                 <label th:for="${'fuente-' + fuente.id}" th:text="${fuente.nombre}" style="cursor: pointer; color: #334155; font-weight: 500;"></label>
                             </div>
@@ -112,7 +124,7 @@
                     </div>
 
                     <div class="form-actions">
-                        <button type="submit" class="btn btn--primary">Guardar Cambios</button>
+                        <button id="btn-submit" type="submit" class="btn btn--primary" disabled>Sin cambios</button>
                         <a th:href="@{/admin/colecciones/{id}/editar(id=${idColeccion})}" class="btn btn--third">Cancelar</a>
                     </div>
                 </form>
@@ -133,17 +145,86 @@
 
     let criterioIndex = 0;
     let focusStates = {}; // Foco para teclados
+    let initialState = null; // Estado inicial para comparación
 
-    // PRE-CARGA DE CRITERIOS
+    // --- DETECCIÓN DE CAMBIOS (LÓGICA NUEVA) ---
+
+    // 1. Función auxiliar para leer el estado completo del formulario
+    function getFormState() {
+        const state = {
+            titulo: document.getElementById('titulo').value,
+            descripcion: document.getElementById('descripcion').value,
+            algoritmo: document.getElementById('algoritmoConsenso').value,
+            // Checkboxes de fuentes (ordenados para que siempre sea igual el array)
+            fuentes: Array.from(document.querySelectorAll('.chk-fuente:checked')).map(c => c.value).sort(),
+            // Criterios (leemos dinámicamente lo que hay en el DOM)
+            criterios: []
+        };
+
+        // Recorremos cada tarjeta de criterio visible
+        document.querySelectorAll('.criterio-card').forEach((card, idx) => {
+            // Buscamos inputs dentro de esta tarjeta
+            const nombreInput = card.querySelector('input[name*="nombreCriterio"]');
+            const tipoSelect = card.querySelector('select[name*="tipoCriterio"]');
+            const fechaInicio = card.querySelector('input[name*="fechaInicio"]');
+            const fechaFin = card.querySelector('input[name*="fechaFin"]');
+            const categoria = card.querySelector('input[name*="categoria"]');
+
+            state.criterios.push({
+                nombre: nombreInput ? nombreInput.value : '',
+                tipo: tipoSelect ? tipoSelect.value : '',
+                // Params opcionales
+                pInicio: fechaInicio ? fechaInicio.value : '',
+                pFin: fechaFin ? fechaFin.value : '',
+                pCat: categoria ? categoria.value : ''
+            });
+        });
+
+        return state;
+    }
+
+    // 2. Función de chequeo principal
+    function checkChanges() {
+        if (!initialState) return; // Aún no inicializado
+
+        const currentState = getFormState();
+        const submitBtn = document.getElementById('btn-submit');
+
+        // Comparamos stringificados (forma fácil de comparar objetos profundos)
+        const hasChanges = JSON.stringify(initialState) !== JSON.stringify(currentState);
+
+        if (hasChanges) {
+            submitBtn.disabled = false;
+            submitBtn.innerText = "Guardar Cambios";
+        } else {
+            submitBtn.disabled = true;
+            submitBtn.innerText = "Sin cambios";
+        }
+    }
+
+    // --- FIN LÓGICA CAMBIOS ---
+
+
+    // PRE-CARGA Y LISTENERS
     document.addEventListener('DOMContentLoaded', () => {
+        // 1. Cargar criterios existentes
         if (criteriosExistentes && criteriosExistentes.length > 0) {
             criteriosExistentes.forEach(c => agregarCriterioUI(c));
         }
+
+        // 2. CAPTURAR ESTADO INICIAL (Una vez que todo se renderizó)
+        initialState = getFormState();
+
+        // 3. Listener Global para inputs (Event Delegation)
+        // Esto captura cambios en inputs fijos y dinámicos (título, checks, criterios nuevos)
+        document.getElementById('main-form').addEventListener('input', checkChanges);
+        document.getElementById('main-form').addEventListener('change', checkChanges);
     });
 
     // --- AGREGAR CRITERIO (Wrapper) ---
     function agregarCriterio() {
         agregarCriterioUI(null);
+        checkChanges(); // Checkear cambio al agregar
     }
 
     // --- GENERACIÓN DE HTML (SIN INLINE STYLES) ---
@@ -198,6 +279,7 @@
         const row = document.getElementById(`criterio-row-${index}`);
         if(row) row.remove();
         delete focusStates[index];
+        checkChanges(); // Checkear cambio al eliminar
     }
 
     // --- ACTUALIZAR INPUTS ---
@@ -245,7 +327,7 @@
                            class="clean-input"
                            placeholder="Escribe o selecciona..."
                            autocomplete="off"
-                           oninput="filterDynamicCat(${index})"
+                           oninput="filterDynamicCat(${index}); checkChanges();"
                            onfocus="showDynamicCat(${index})"
                            onkeydown="handleKeydown(${index}, event)">
 
@@ -257,6 +339,7 @@
 
             focusStates[index] = -1; // Inicializar foco
         }
+        checkChanges(); // Checkear al cambiar tipo de param
     }
 
     // --- LOGICA AUTOCOMPLETE (Idéntica a Subir Hecho) ---
@@ -365,6 +448,7 @@
         const input = document.getElementById(`cat-input-${index}`);
         input.value = valor;
         closeDynamicList(index);
+        checkChanges(); // AGREGADO: Detectar cambio
     };
 
     function closeDynamicList(index) {

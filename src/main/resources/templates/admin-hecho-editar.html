@@ -9,6 +9,17 @@
 
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" />
+
+    <style>
+        button:disabled {
+            background-color: #cbd5e1 !important;
+            color: #64748b !important;
+            cursor: not-allowed;
+            border-color: #cbd5e1 !important;
+            transform: none !important;
+            box-shadow: none !important;
+        }
+    </style>
 </head>
 <body>
 <div class="admin-layout">
@@ -115,12 +126,12 @@
                                    th:field="*{categoria}"
                                    placeholder="Escribe o selecciona..."
                                    autocomplete="off"
-                                   oninput="filterCategories()"
+                                   oninput="filterCategories(); checkChanges();"
                                    onfocus="showCategories()"
                                    th:classappend="${errores != null and errores.containsKey('categoria')} ? 'input-error' : ''">
 
                             <ul id="categoria-list" class="autocomplete-list">
-                                <li th:each="cat : ${categorias}"
+                                <li th:each="cat : ${categoriasDisponibles}"
                                     class="autocomplete-item"
                                     th:text="${cat.nombre}"
                                     th:data-valor="${cat.nombre}"
@@ -171,7 +182,7 @@
                     </div>
 
                     <div style="margin-top: 40px; display: flex; gap: 15px; justify-content: center;">
-                        <button class="btn btn--primary" type="submit">Guardar Cambios</button>
+                        <button id="btn-submit" class="btn btn--primary" type="submit" disabled>Sin cambios</button>
                         <a th:href="@{/admin/revisiones/hechos/{id}/detalle(id=${id})}" class="btn btn--third">Cancelar</a>
                     </div>
                 </form>
@@ -185,6 +196,40 @@
     // IMAGENES --------------------------------
     // Variable global para acumular archivos
     let dt = new DataTransfer();
+
+    // AGREGADO: Variable global para estado inicial
+    let initialState = {};
+
+    // AGREGADO: Función central para detectar cambios
+    function checkChanges() {
+        const submitBtn = document.getElementById('btn-submit');
+        if (!submitBtn) return;
+
+        // 1. Estado actual
+        const currentState = {
+            titulo: document.getElementById('titulo').value,
+            descripcion: document.getElementById('descripcion').value,
+            categoria: document.getElementById('categoria').value,
+            fecha: document.getElementById('fecha').value,
+            lat: document.getElementById('lat-input').value,
+            lng: document.getElementById('lng-input').value,
+            existingImages: document.querySelectorAll('.existing-item').length
+        };
+
+        // 2. Comparaciones
+        const fieldsChanged = JSON.stringify(initialState) !== JSON.stringify(currentState);
+        const hasNewFiles = dt.files.length > 0;
+        const hasDeletedFiles = currentState.existingImages < initialState.existingImages;
+
+        // 3. Activar / Desactivar
+        if (fieldsChanged || hasNewFiles || hasDeletedFiles) {
+            submitBtn.disabled = false;
+            submitBtn.innerText = "Guardar Cambios";
+        } else {
+            submitBtn.disabled = true;
+            submitBtn.innerText = "Sin cambios";
+        }
+    }
 
     function handleFileSelect() {
         const fileInput = document.getElementById('file-input');
@@ -210,6 +255,7 @@
         // 3. Renderizamos
         renderNewPreviews();
         updateGalleryVisibility();
+        checkChanges(); // AGREGADO
     }
 
     function renderNewPreviews() {
@@ -266,6 +312,7 @@
 
         renderNewPreviews();
         updateGalleryVisibility();
+        checkChanges(); // AGREGADO
     }
 
     function removeExistingImage(index) {
@@ -278,6 +325,7 @@
             if(inputHidden) inputHidden.remove();
 
             updateGalleryVisibility();
+            checkChanges(); // AGREGADO
         }
     }
 
@@ -298,6 +346,24 @@
 
     // MAPA --------------------------------
     document.addEventListener('DOMContentLoaded', function() {
+        // AGREGADO: CAPTURA DE ESTADO INICIAL
+        initialState = {
+            titulo: document.getElementById('titulo').value,
+            descripcion: document.getElementById('descripcion').value,
+            categoria: document.getElementById('categoria').value,
+            fecha: document.getElementById('fecha').value,
+            lat: document.getElementById('lat-input').value,
+            lng: document.getElementById('lng-input').value,
+            existingImages: document.querySelectorAll('.existing-item').length
+        };
+
+        // AGREGADO: LISTENERS EN INPUTS
+        ['titulo', 'descripcion', 'fecha', 'address-input'].forEach(id => {
+            const el = document.getElementById(id);
+            if(el) el.addEventListener('input', checkChanges);
+        });
+
+
         /* Configuración Inicial */
         // Usamos los campos planos del EditarHechoDTO
         const latInicial = /*[[${hecho.latitud ?: -34.6037}]]*/ -34.6037;
@@ -320,6 +386,7 @@
                 marker = L.marker([lat, lng]).addTo(map);
                 latInput.value = lat;
                 lngInput.value = lng;
+                checkChanges(); // AGREGADO
             }
 
             // 1. Click en mapa -> Actualiza marker y busca dirección (Reverse Geo)
@@ -339,6 +406,7 @@
                         } else {
                             addressInput.value = "Ubicación seleccionada";
                         }
+                        checkChanges(); // AGREGADO
                     })
                     .catch(() => addressInput.value = "Error al obtener calle")
                     .finally(() => addressInput.disabled = false);
@@ -481,6 +549,7 @@
     function selectCategory(valor) {
         inputCat.value = valor;
         closeList();
+        checkChanges(); // AGREGADO (Único cambio en esta función)
     }
 
     function closeList() {

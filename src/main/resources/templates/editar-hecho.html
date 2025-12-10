@@ -11,6 +11,17 @@
     <link rel="stylesheet" th:href="@{/css/hecho.css}">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" />
+
+    <style>
+        /* Estilo para botón deshabilitado (Sin cambios) */
+        button:disabled {
+            background-color: #cbd5e1 !important; /* Gris claro */
+            color: #64748b !important;
+            cursor: not-allowed;
+            border-color: #cbd5e1 !important;
+            transform: none !important; /* Evita efecto click */
+        }
+    </style>
 </head>
 
 <body>
@@ -25,7 +36,6 @@
               method="post" enctype="multipart/form-data">
 
             <input type="hidden" th:field="*{estado}">
-
             <input type="hidden" th:field="*{usuario}">
 
             <div style="margin-bottom: 20px;">
@@ -34,7 +44,7 @@
 
             <div th:if="${globalError}" class="api-error-alert">
                 <strong th:text="${globalError}"></strong>
-                <ul th:if="${errorDetails}" class="error-list">
+                <ul th:if="${errorDetails}" class="lista-errores">
                     <li th:each="det : ${errorDetails}" th:text="${det}"></li>
                 </ul>
             </div>
@@ -43,8 +53,7 @@
                 <label class="content-title">Imágenes</label>
 
                 <div class="gallery-container editable-gallery" id="main-gallery"
-                     th:style="${#lists.isEmpty(hecho.multimedia)} ? 'display: none;' : ''"
-                >
+                     th:style="${#lists.isEmpty(hecho.multimedia)} ? 'display: none;' : ''">
 
                     <div th:if="${not #lists.isEmpty(hecho.multimedia)}"
                          th:each="img, stat : *{multimedia}"
@@ -99,14 +108,13 @@
                 <label class="content-title" for="categoria">Categoría</label>
 
                 <div class="autocomplete-wrapper" id="categoria-wrapper">
-
                     <input id="categoria"
                            class="clean-input"
                            type="text"
                            th:field="*{categoria}"
                            placeholder="Escribe o selecciona..."
                            autocomplete="off"
-                           oninput="filterCategories()"
+                           oninput="filterCategories(); checkChanges();"
                            onfocus="showCategories()"
                            th:classappend="${errores != null and errores.containsKey('categoria')} ? 'input-error' : ''">
 
@@ -117,7 +125,6 @@
                             th:data-valor="${cat.nombre}"
                             onclick="selectCategory(this.getAttribute('data-valor'))">
                         </li>
-
                         <li id="no-results"
                             class="autocomplete-item"
                             style="display:none; color: #2b6cb0; font-weight: 600;"
@@ -128,7 +135,6 @@
                 </div>
 
                 <span class="field-error-msg" th:if="${errores != null and errores.containsKey('categoria')}" th:text="${errores['categoria']}"></span>
-
                 <div th:if="${warningCategorias}" class="input-warning-msg">
                     <span th:text="${warningCategorias}"></span>
                 </div>
@@ -162,7 +168,7 @@
             </div>
 
             <div class="form-actions">
-                <button class="btn btn--primary" type="submit">Guardar Cambios</button>
+                <button id="btn-submit" class="btn btn--primary" type="submit" disabled>Sin cambios</button>
                 <a th:href="@{/hechos/{id}/detalle(id=${id})}" class="btn btn--third">Cancelar</a>
             </div>
         </form>
@@ -177,14 +183,46 @@
     // Variable global para acumular archivos
     let dt = new DataTransfer();
 
+    // Variable para guardar el estado inicial
+    let initialState = {};
+
+    // Función global de checkeo (la llamamos desde varios puntos)
+    function checkChanges() {
+        const submitBtn = document.getElementById('btn-submit');
+        if (!submitBtn) return;
+
+        // 1. Estado actual
+        const currentState = {
+            titulo: document.getElementById('titulo').value,
+            descripcion: document.getElementById('descripcion').value,
+            categoria: document.getElementById('categoria').value,
+            fecha: document.getElementById('fecha').value,
+            lat: document.getElementById('lat-input').value,
+            lng: document.getElementById('lng-input').value,
+            existingImages: document.querySelectorAll('.existing-item').length
+        };
+
+        // 2. Comparaciones
+        const fieldsChanged = JSON.stringify(initialState) !== JSON.stringify(currentState);
+        const hasNewFiles = dt.files.length > 0;
+        const hasDeletedFiles = currentState.existingImages < initialState.existingImages;
+
+        // 3. Activar / Desactivar
+        if (fieldsChanged || hasNewFiles || hasDeletedFiles) {
+            submitBtn.disabled = false;
+            submitBtn.innerText = "Guardar Cambios";
+        } else {
+            submitBtn.disabled = true;
+            submitBtn.innerText = "Sin cambios";
+        }
+    }
+
     function handleFileSelect() {
         const fileInput = document.getElementById('file-input');
         const newFiles = fileInput.files;
 
-        // 1. Agregamos archivos al acumulador
         for (let i = 0; i < newFiles.length; i++) {
             if (newFiles[i].type.startsWith('image/')) {
-                // Chequeo simple de duplicados por nombre y tamaño
                 let exists = false;
                 for(let j=0; j<dt.files.length; j++){
                     if(dt.files[j].name === newFiles[i].name && dt.files[j].size === newFiles[i].size){
@@ -195,46 +233,35 @@
             }
         }
 
-        // 2. Sincronizamos el input real
         fileInput.files = dt.files;
-
-        // 3. Renderizamos
         renderNewPreviews();
         updateGalleryVisibility();
+        checkChanges(); // <-- Check
     }
 
     function renderNewPreviews() {
         const previewContainer = document.getElementById('preview-container');
         const fileCount = document.getElementById('file-count');
-
-        // Limpiamos lo visual anterior
         previewContainer.innerHTML = '';
 
-        // Texto del contador
         if (dt.files.length > 0) {
             fileCount.textContent = `${dt.files.length} imagen(es) nueva(s)`;
         } else {
             fileCount.textContent = '';
         }
 
-        // Generamos el HTML para cada foto nueva
         Array.from(dt.files).forEach((file, index) => {
             const reader = new FileReader();
             reader.onload = function(e) {
                 const wrapper = document.createElement('div');
                 wrapper.className = 'gallery-item-wrapper';
-
-                // AQUI ESTÁ LA MAGIA:
-                // Usamos la clase 'gallery-item-new' que definimos en CSS para el borde punteado
                 wrapper.innerHTML = `
                 <div class="gallery-item gallery-item-new">
                     <img src="${e.target.result}" alt="Nueva">
                 </div>
                 <span class="badge-new">NUEVA</span>
-
                 <button type="button" class="btn-delete-img"
-                        onclick="removeNewFile(${index})"
-                        title="Quitar esta foto">×</button>
+                        onclick="removeNewFile(${index})" title="Quitar">×</button>
             `;
                 previewContainer.appendChild(wrapper);
             };
@@ -244,42 +271,33 @@
 
     function removeNewFile(index) {
         const fileInput = document.getElementById('file-input');
-
-        // Creamos un DataTransfer nuevo excluyendo el borrado
         const newDt = new DataTransfer();
         Array.from(dt.files).forEach((file, i) => {
             if (i !== index) newDt.items.add(file);
         });
-
-        // Actualizamos global e input
         dt = newDt;
         fileInput.files = dt.files;
-
         renderNewPreviews();
         updateGalleryVisibility();
+        checkChanges(); // <-- Check
     }
 
     function removeExistingImage(index) {
-        // Borramos el wrapper del DOM
         const wrapper = document.getElementById('img-wrapper-' + index);
         if(wrapper) {
             wrapper.remove();
-            // Borramos también el input hidden para que Spring sepa que se fue
             const inputHidden = document.getElementById('input-img-' + index);
             if(inputHidden) inputHidden.remove();
-
             updateGalleryVisibility();
+            checkChanges(); // <-- Check
         }
     }
 
     function updateGalleryVisibility() {
         const gallery = document.getElementById('main-gallery');
-        // Buscamos clases "existing-item" que sigan vivas en el DOM
         const existingItems = document.querySelectorAll('.existing-item');
         const newItemsCount = dt.files.length;
 
-        // Si no hay viejas Y no hay nuevas -> Ocultamos el contenedor gris (opcional)
-        // Si preferís que el contenedor gris quede siempre visible, borrá este IF.
         if (existingItems.length === 0 && newItemsCount === 0) {
             gallery.style.display = 'none';
         } else {
@@ -287,13 +305,29 @@
         }
     }
 
+    // --- DOM READY ---
     document.addEventListener('DOMContentLoaded', function() {
-        /* Configuración Inicial */
-        // Usamos los campos planos del EditarHechoDTO
+        // 1. CAPTURAR ESTADO INICIAL
+        initialState = {
+            titulo: document.getElementById('titulo').value,
+            descripcion: document.getElementById('descripcion').value,
+            categoria: document.getElementById('categoria').value,
+            fecha: document.getElementById('fecha').value,
+            lat: document.getElementById('lat-input').value,
+            lng: document.getElementById('lng-input').value,
+            existingImages: document.querySelectorAll('.existing-item').length
+        };
+
+        // 2. LISTENERS PARA INPUTS DE TEXTO
+        ['titulo', 'descripcion', 'fecha', 'address-input'].forEach(id => {
+            const el = document.getElementById(id);
+            if(el) el.addEventListener('input', checkChanges);
+        });
+
+        /* Configuración Mapa */
         const latInicial = /*[[${hecho.latitud ?: -34.6037}]]*/ -34.6037;
         const lngInicial = /*[[${hecho.longitud ?: -58.3816}]]*/ -58.3816;
 
-        // Elementos del DOM
         const mapElement = document.getElementById('map-editable');
         const latInput = document.getElementById('lat-input');
         const lngInput = document.getElementById('lng-input');
@@ -310,9 +344,9 @@
                 marker = L.marker([lat, lng]).addTo(map);
                 latInput.value = lat;
                 lngInput.value = lng;
+                checkChanges(); // <-- Check cambio mapa
             }
 
-            // 1. Click en mapa -> Actualiza marker y busca dirección (Reverse Geo)
             map.on('click', (e) => {
                 const { lat, lng } = e.latlng;
                 updateMapAndInputs(lat, lng);
@@ -324,17 +358,13 @@
                 fetch(url)
                     .then(r => r.json())
                     .then(data => {
-                        if(data && data.display_name) {
-                            addressInput.value = data.display_name;
-                        } else {
-                            addressInput.value = "Ubicación seleccionada";
-                        }
+                        addressInput.value = (data && data.display_name) ? data.display_name : "Ubicación seleccionada";
+                        checkChanges(); // Check por si cambia el texto del input
                     })
                     .catch(() => addressInput.value = "Error al obtener calle")
                     .finally(() => addressInput.disabled = false);
             });
 
-            // 2. Botón Buscar -> Busca coordenadas por texto
             if(geocodeBtn) {
                 geocodeBtn.addEventListener('click', () => {
                     const address = addressInput.value.trim();
@@ -353,71 +383,48 @@
         }
     });
 
-    // CATEGORIAS -----------------------------------
+    // --- CATEGORIAS ---
     const inputCat = document.getElementById('categoria');
     const listCat = document.getElementById('categoria-list');
-    // Obtenemos todos los items originales
     const allItems = listCat ? listCat.getElementsByClassName('autocomplete-item') : [];
+    let currentFocus = -1;
 
-    let currentFocus = -1; // Índice del elemento seleccionado (-1 es ninguno)
-
-    // 1. Escuchar el teclado en el input
     inputCat.addEventListener("keydown", function(e) {
         if (!listCat.classList.contains('active')) return;
-
-        // Obtenemos solo los items que están VISIBLES actualmente
         let visibleItems = getVisibleItems();
-
-        if (e.key === "ArrowDown") { // Flecha Abajo
+        if (e.key === "ArrowDown") {
             currentFocus++;
             addActive(visibleItems);
-        } else if (e.key === "ArrowUp") { // Flecha Arriba
+        } else if (e.key === "ArrowUp") {
             currentFocus--;
             addActive(visibleItems);
-        } else if (e.key === "Enter") { // Enter
+        } else if (e.key === "Enter") {
             if (currentFocus > -1) {
-                // Si hay un item marcado, simulamos el click
-                e.preventDefault(); // Evita que el form se envíe
-                if (visibleItems[currentFocus]) {
-                    visibleItems[currentFocus].click();
-                }
+                e.preventDefault();
+                if (visibleItems[currentFocus]) visibleItems[currentFocus].click();
             }
-        } else if (e.key === "Escape") { // Escape
+        } else if (e.key === "Escape") {
             closeList();
         }
     });
 
-    // Función auxiliar para obtener solo lo que se ve
     function getVisibleItems() {
         let visibles = [];
         for (let i = 0; i < allItems.length; i++) {
-            // CAMBIO: Ahora SOLO ignoramos los que tienen display: none.
-            // Ya NO ignoramos el 'no-results', así podemos seleccionarlo con flechas.
-            if (allItems[i].style.display !== "none") {
-                visibles.push(allItems[i]);
-            }
+            if (allItems[i].style.display !== "none") visibles.push(allItems[i]);
         }
         return visibles;
     }
 
-    // Función para pintar el item activo
     function addActive(x) {
         if (!x || x.length === 0) return false;
-
-        // Circular: si baja del último, vuelve al primero
         if (currentFocus >= x.length) currentFocus = 0;
         if (currentFocus < 0) currentFocus = (x.length - 1);
-
-        removeActive(x); // Limpiar estilo anterior
-
-        // Agregar clase activa
+        removeActive(x);
         x[currentFocus].classList.add("autocomplete-active");
-
-        // Scroll automático: asegurarnos que el item sea visible
         x[currentFocus].scrollIntoView({ block: 'nearest', inline: 'start' });
     }
 
-    // Función para limpiar estilos
     function removeActive(x) {
         for (let i = 0; i < x.length; i++) {
             x[i].classList.remove("autocomplete-active");
@@ -435,18 +442,13 @@
         if(!listCat) return;
         const filter = inputCat.value.toLowerCase();
         let visibleCount = 0;
-
-        // RESETEAMOS el foco cada vez que escribe
         currentFocus = -1;
-        // Quitamos la clase activa de todos
         removeActive(allItems);
 
         for (let i = 0; i < allItems.length; i++) {
             const item = allItems[i];
             if (item.id === 'no-results') continue;
-
             const txtValue = item.textContent || item.innerText;
-
             if (txtValue.toLowerCase().indexOf(filter) > -1) {
                 item.style.display = "";
                 visibleCount++;
@@ -464,24 +466,23 @@
         } else {
             if(noResults) noResults.style.display = "none";
         }
-
         listCat.classList.add('active');
     }
 
     function selectCategory(valor) {
         inputCat.value = valor;
         closeList();
+        checkChanges(); // <-- Check cambio categoria
     }
 
     function closeList() {
         if(listCat) {
             listCat.classList.remove('active');
             inputCat.classList.remove('dropdown-open');
-            currentFocus = -1; // Resetear índice
+            currentFocus = -1;
         }
     }
 
-    // Cerrar click afuera
     document.addEventListener('click', function(e) {
         const wrapper = document.getElementById('categoria-wrapper');
         if (wrapper && !wrapper.contains(e.target)) {

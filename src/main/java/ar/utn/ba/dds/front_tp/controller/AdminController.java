@@ -67,7 +67,7 @@ public class AdminController {
         log.error("🔥 BUG: Falló la carga de categorías.", ex);
       }
       // Lista vacía para evitar errores en la vista
-      model.addAttribute("categorias", new ArrayList<CategoriaInputDTO>());
+      model.addAttribute("categoriasDisponibles", new ArrayList<CategoriaInputDTO>());
       model.addAttribute("warningCategorias", "No se pudieron cargar las categorías existentes.");
     }
   }
