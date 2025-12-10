@@ -154,13 +154,28 @@ public class ColeccionesApiService {
   }
 
 
-  public void modificarColeccion(Long id, ColeccionOutputDTO coleccionOutput, String token) {
+  public Void modificarColeccion(Long id, ColeccionOutputDTO coleccionOutput, String token) {
     try {
-      String url = coleccionesServiceUrl + "/colecciones/" + id;
-      // Usamos el nuevo método que acepta el token explícito
-      webApiCallerService.putWithAuth(url, coleccionOutput, Void.class, token);
-    } catch (Exception e) {
-      throw new RuntimeException("Error al modificar la colección: " + e.getMessage());
+      return webClient.put()
+          .uri("/" + id)
+          .header(HttpHeaders.AUTHORIZATION, "Bearer " + token)
+          .bodyValue(coleccionOutput)
+          .retrieve()
+          .onStatus(HttpStatusCode::isError, response -> {
+            log.warn("Error recibido. Status: {}", response.statusCode().value());
+            return this.handlerExceptions.manejarError(response);
+          })
+          .bodyToMono(Void.class)
+          .block();
+    }  catch (WebClientRequestException e) {
+      log.error("🔥 Error de conexión con módulo externo: {}", e.getMessage());
+
+      throw new GlobalBusinessException(
+          503,
+          "SERVICE_UNAVAILABLE", // Código para identificarlo
+          "El sistema externo no responde. No se pudo guardar el hecho.",
+          List.of(e.getMessage())
+      );
     }
   }
 

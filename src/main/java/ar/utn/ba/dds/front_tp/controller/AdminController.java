@@ -92,6 +92,81 @@ public class AdminController {
     }
   }
 
+  // Método auxiliar para validar lógica compleja de criterios
+  private void validarCriterios(ColeccionOutputDTO coleccion, BindingResult bindingResult) {
+    if (coleccion.getCriteriosDePertenencias() == null) return;
+
+    List<CriterioDePertenenciaOutputDTO> lista = coleccion.getCriteriosDePertenencias();
+
+    for (int i = 0; i < lista.size(); i++) {
+      CriterioDePertenenciaOutputDTO c = lista.get(i);
+
+      // A. VALIDAR CATEGORÍA
+      if (c.getTipoCriterio() == TipoCriterio.CATEGORIA) {
+        Object catObj = c.getParametros().get("categoria");
+        if (catObj == null || catObj.toString().trim().isEmpty()) {
+          bindingResult.rejectValue(
+              "criteriosDePertenencias[" + i + "].parametros['categoria']",
+              "error.categoria",
+              "Debés seleccionar una categoría."
+          );
+        }
+      }
+
+      // B. VALIDAR FECHAS
+      if (c.getTipoCriterio() == TipoCriterio.FECHA) {
+        String inicioStr = (String) c.getParametros().get("fechaInicio");
+        String finStr = (String) c.getParametros().get("fechaFin");
+        boolean fechasCompletas = true;
+
+        // B1. Validar vacíos
+        if (inicioStr == null || inicioStr.trim().isEmpty()) {
+          bindingResult.rejectValue(
+              "criteriosDePertenencias[" + i + "].parametros['fechaInicio']",
+              "error.fechaInicio",
+              "La fecha de inicio es obligatoria."
+          );
+          fechasCompletas = false;
+        }
+        if (finStr == null || finStr.trim().isEmpty()) {
+          bindingResult.rejectValue(
+              "criteriosDePertenencias[" + i + "].parametros['fechaFin']",
+              "error.fechaFin",
+              "La fecha de fin es obligatoria."
+          );
+          fechasCompletas = false;
+        }
+
+        // B2. Validar Lógica (Inicio > Fin)
+        if (fechasCompletas) {
+          try {
+            LocalDate inicio = LocalDate.parse(inicioStr);
+            LocalDate fin = LocalDate.parse(finStr);
+
+            if (inicio.isAfter(fin)) {
+              bindingResult.rejectValue(
+                  "criteriosDePertenencias[" + i + "].parametros['fechaInicio']",
+                  "error.fechaCruzada",
+                  "La fecha de inicio no puede ser posterior al fin."
+              );
+              // Marcamos también fechaFin (sin mensaje extra) para que se ponga rojo
+              bindingResult.rejectValue(
+                  "criteriosDePertenencias[" + i + "].parametros['fechaFin']",
+                  "error.fechaCruzada",
+                  ""
+              );
+            }
+          } catch (DateTimeParseException e) {
+            bindingResult.rejectValue(
+                "criteriosDePertenencias[" + i + "].parametros['fechaInicio']",
+                "error.formato", "Formato de fecha inválido"
+            );
+          }
+        }
+      }
+    }
+  }
+
   // ========================================================================================
   // GESTIÓN DE COLECCIONES
   // ========================================================================================
@@ -136,103 +211,23 @@ public class AdminController {
                                Model model,
                                RedirectAttributes redirectAttributes) {
 
-    // 0. Verificar Sesión
+    // 1. Verificar Sesión
     AuthResponseDTO authData = (AuthResponseDTO) authentication.getDetails();
     if (authData == null || authData.getAccessToken() == null) {
       return "redirect:/auth/login";
     }
 
-    // 1. VALIDACIÓN MANUAL DE CAMPOS DINÁMICOS Y LÓGICA
-    if (coleccionOutputDTO.getCriteriosDePertenencias() != null) {
-      List<CriterioDePertenenciaOutputDTO> lista = coleccionOutputDTO.getCriteriosDePertenencias();
+    // 2. VALIDACIÓN MANUAL (Inyecta errores en BindingResult)
+    this.validarCriterios(coleccionOutputDTO, bindingResult);
 
-      for (int i = 0; i < lista.size(); i++) {
-        CriterioDePertenenciaOutputDTO c = lista.get(i);
-
-        // A. VALIDAR CATEGORÍA
-        if (c.getTipoCriterio() == TipoCriterio.CATEGORIA) {
-          Object catObj = c.getParametros().get("categoria");
-          if (catObj == null || catObj.toString().trim().isEmpty()) {
-            bindingResult.rejectValue(
-                "criteriosDePertenencias[" + i + "].parametros['categoria']",
-                "error.categoria",
-                "Debés seleccionar una categoría."
-            );
-          }
-        }
-
-        // B. VALIDAR FECHAS
-        if (c.getTipoCriterio() == TipoCriterio.FECHA) {
-          String inicioStr = (String) c.getParametros().get("fechaInicio");
-          String finStr = (String) c.getParametros().get("fechaFin");
-          boolean fechasCompletas = true;
-
-          // B1. Validar vacíos (Tu código)
-          if (inicioStr == null || inicioStr.trim().isEmpty()) {
-            bindingResult.rejectValue(
-                "criteriosDePertenencias[" + i + "].parametros['fechaInicio']",
-                "error.fechaInicio",
-                "La fecha de inicio es obligatoria."
-            );
-            fechasCompletas = false;
-          }
-          if (finStr == null || finStr.trim().isEmpty()) {
-            bindingResult.rejectValue(
-                "criteriosDePertenencias[" + i + "].parametros['fechaFin']",
-                "error.fechaFin",
-                "La fecha de fin es obligatoria."
-            );
-            fechasCompletas = false;
-          }
-
-          // B2. Validar Lógica (Inicio > Fin)
-          // Solo validamos cruce si ambos campos tienen datos
-          if (fechasCompletas) {
-            try {
-              LocalDate inicio = LocalDate.parse(inicioStr);
-              LocalDate fin = LocalDate.parse(finStr);
-
-              if (inicio.isAfter(fin)) {
-                // Error asociado al campo 'fechaInicio' para que se ponga rojo
-                bindingResult.rejectValue(
-                    "criteriosDePertenencias[" + i + "].parametros['fechaInicio']",
-                    "error.fechaCruzada",
-                    "La fecha de inicio no puede ser posterior al fin."
-                );
-                // Opcional: Marcar también fechaFin sin mensaje para que se ponga roja
-                bindingResult.rejectValue(
-                    "criteriosDePertenencias[" + i + "].parametros['fechaFin']",
-                    "error.fechaCruzada",
-                    ""
-                );
-              }
-            } catch (DateTimeParseException e) {
-              // Por seguridad, si mandan basura que no sea fecha
-              bindingResult.rejectValue(
-                  "criteriosDePertenencias[" + i + "].parametros['fechaInicio']",
-                  "error.formato", "Formato de fecha inválido"
-              );
-            }
-          }
-        }
-      }
-    }
-
-    Map<String, String> erroresVista = new HashMap<>();
-
-    // 2. Validación Local (@NotNull, @Size...)
+    // 3. Chequeo de errores (Locales + Manuales)
     if (bindingResult.hasErrors()) {
-      bindingResult.getFieldErrors().forEach(e -> erroresVista.put(e.getField(), e.getDefaultMessage()));
-
-      model.addAttribute("errors", erroresVista); // Usamos 'errors' como en tu HTML
-      model.addAttribute("coleccion", coleccionOutputDTO);
-
       this.cargarFuentesEnModelo(model);
       this.cargarCategoriasEnModelo(model);
       return "admin-crear-coleccion";
     }
 
-    // 3. Llamada al Servicio
+    // 4. Llamada al Servicio
     try {
       coleccionesApiService.crearColeccion(coleccionOutputDTO, authData.getAccessToken()).block();
 
@@ -240,42 +235,39 @@ public class AdminController {
       return "redirect:/admin/colecciones";
 
     } catch (ApiException ex) {
-      // 4. Manejo de Errores de Negocio (400, 409, 422 desde API)
+      // 5. Manejo de Errores de API (400, 409, 422)
       ApiError apiError = ex.getApiError();
 
       if (apiError != null) {
-        // Errores de campos específicos (Backend validation)
-        if (apiError.fields() != null && !apiError.fields().isEmpty()) {
-          erroresVista.putAll(apiError.fields());
-          model.addAttribute("errors", erroresVista);
+        // A. Inyectar errores de campos en BindingResult
+        if (apiError.fields() != null) {
+          apiError.fields().forEach((campo, msg) ->
+              bindingResult.rejectValue(campo, "api.error", msg)
+          );
         }
-
-        // Mensaje global
+        // B. Mensaje global
         if (apiError.message() != null) {
           model.addAttribute("globalError", apiError.message());
         }
-
-        // Detalles técnicos
+        // C. Detalles técnicos
         if (apiError.details() != null && !apiError.details().isEmpty()) {
           model.addAttribute("errorDetails", apiError.details());
         }
-      }
-      else {
+      } else {
         model.addAttribute("globalError", "Error al crear la colección: " + ex.getMessage());
       }
 
+      // Recargamos el modelo y volvemos a la vista con los errores marcados
       model.addAttribute("coleccion", coleccionOutputDTO);
       this.cargarFuentesEnModelo(model);
       this.cargarCategoriasEnModelo(model);
       return "admin-crear-coleccion";
 
     } catch (Exception ex) {
-      // 5. Catch-all para bugs
+      // 6. Catch-all
       log.error("💀 Error inesperado creando colección: ", ex);
-
       model.addAttribute("globalError", "Ocurrió un error inesperado. Por favor, intente nuevamente.");
       model.addAttribute("coleccion", coleccionOutputDTO);
-
       this.cargarFuentesEnModelo(model);
       this.cargarCategoriasEnModelo(model);
       return "admin-crear-coleccion";
@@ -352,22 +344,18 @@ public class AdminController {
       return "redirect:/auth/login";
     }
 
-    Map<String, String> erroresVista = new HashMap<>();
+    // 2. VALIDACIÓN MANUAL (Reutilizamos la lógica)
+    this.validarCriterios(coleccionOutputDTO, bindingResult);
 
-    // 2. Validación Local
+    // 3. Chequeo de errores
     if (bindingResult.hasErrors()) {
-      bindingResult.getFieldErrors().forEach(e -> erroresVista.put(e.getField(), e.getDefaultMessage()));
-
-      model.addAttribute("errors", erroresVista);
       model.addAttribute("idColeccion", id);
-      // "coleccion" ya está en el modelo
-
       this.cargarFuentesEnModelo(model);
       this.cargarCategoriasEnModelo(model);
       return "admin-editar-coleccion";
     }
 
-    // 3. Llamada al Servicio
+    // 4. Llamada al Servicio
     try {
       coleccionesApiService.modificarColeccion(id, coleccionOutputDTO, authData.getAccessToken());
 
@@ -375,32 +363,37 @@ public class AdminController {
       return "redirect:/admin/colecciones/" + id + "/detalle";
 
     } catch (ApiException ex) {
-      // 4. Manejo de Errores de Negocio
+      // 5. Manejo de Errores de API
       ApiError apiError = ex.getApiError();
 
       if (apiError != null) {
-        if (apiError.fields() != null && !apiError.fields().isEmpty()) {
-          erroresVista.putAll(apiError.fields());
-          model.addAttribute("errors", erroresVista);
+        // A. Inyectar errores de campos
+        if (apiError.fields() != null) {
+          apiError.fields().forEach((campo, msg) ->
+              bindingResult.rejectValue(campo, "api.error", msg)
+          );
         }
+        // B. Mensaje global
         if (apiError.message() != null) {
           model.addAttribute("globalError", apiError.message());
         }
       } else {
-        model.addAttribute("globalError", "Error al guardar los cambios.");
+        model.addAttribute("globalError", "Error al guardar los cambios: " + ex.getMessage());
       }
 
       model.addAttribute("idColeccion", id);
+      model.addAttribute("coleccion", coleccionOutputDTO);
       this.cargarFuentesEnModelo(model);
       this.cargarCategoriasEnModelo(model);
       return "admin-editar-coleccion";
 
     } catch (Exception e) {
-      // 5. Catch-all
+      // 6. Catch-all
       log.error("💀 Error inesperado editando colección {}: ", id, e);
       model.addAttribute("globalError", "Ocurrió un error inesperado. Intente nuevamente.");
 
       model.addAttribute("idColeccion", id);
+      model.addAttribute("coleccion", coleccionOutputDTO);
       this.cargarFuentesEnModelo(model);
       this.cargarCategoriasEnModelo(model);
       return "admin-editar-coleccion";
