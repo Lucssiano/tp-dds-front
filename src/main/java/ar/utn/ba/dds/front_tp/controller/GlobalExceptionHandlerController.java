@@ -7,9 +7,11 @@ import ar.utn.ba.dds.front_tp.exceptions.api.GeneralApiException;
 import ar.utn.ba.dds.front_tp.exceptions.api.InternalServerErrorException;
 import ar.utn.ba.dds.front_tp.exceptions.api.ResourceNotFoundException;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
+import org.springframework.web.servlet.resource.NoResourceFoundException;
 
 @ControllerAdvice
 @Slf4j
@@ -35,31 +37,36 @@ public class GlobalExceptionHandlerController {
   // ==========================================
   // 2. AUTORIZACIÓN (403)
   // ==========================================
-  // El usuario está logueado pero no tiene permisos (Rol insuficiente).
-  @ExceptionHandler(AuthorizationException.class)
-  public String handleAuthzError(AuthorizationException ex, RedirectAttributes redirectAttributes) {
+  // Agregamos AccessDeniedException.class para atrapar los @PreAuthorize fallidos
+  @ExceptionHandler({AuthorizationException.class, AccessDeniedException.class})
+  public String handleAuthzError(Exception ex, RedirectAttributes redirectAttributes) {
+    // Nota: cambié el argumento a Exception para que acepte ambas clases
     log.error("⛔ Acceso denegado (403): {}", ex.getMessage());
 
-    // Redirigimos a una vista dedicada de error
-    return "redirect:/error/403";
+    return "redirect:/403"; // Asegúrate de que esta vista exista
   }
 
   // ==========================================
   // 3. RECURSO NO ENCONTRADO (404)
   // ==========================================
   // ID incorrecto, URL mal escrita, recurso borrado.
-  @ExceptionHandler(ResourceNotFoundException.class)
-  public String handleNotFound(ResourceNotFoundException ex, RedirectAttributes redirectAttributes) {
+  @ExceptionHandler({ResourceNotFoundException.class, NoResourceFoundException.class})
+  public String handleNotFound(Exception ex, RedirectAttributes redirectAttributes) {
     log.warn("🔍 Recurso no encontrado (404): {}", ex.getMessage());
 
-    String mensajeBackend = (ex.getApiError() != null && ex.getApiError().message() != null)
-        ? ex.getApiError().message()
-        : "El recurso solicitado no fue encontrado.";
+    // 1. Mensaje por defecto (para cuando sea error de Spring o URL mal escrita)
+    String mensaje = "El recurso solicitado no fue encontrado.";
 
-    redirectAttributes.addFlashAttribute("error", mensajeBackend);
+    // 2. Si es TU excepción, intentamos rescatar el mensaje del Backend
+    if (ex instanceof ResourceNotFoundException myEx) {
+      if (myEx.getApiError() != null && myEx.getApiError().message() != null) {
+        mensaje = myEx.getApiError().message();
+      }
+    }
 
-    // Redirigimos a una vista dedicada de error 404
-    return "redirect:/error/404";
+    redirectAttributes.addFlashAttribute("error", mensaje);
+
+    return "redirect:/404";
   }
 
   // ==========================================

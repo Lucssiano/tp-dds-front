@@ -30,7 +30,7 @@ public class SecurityConfig {
                 "/", "/home", "/auth/**", "/hechos/**", "/colecciones/**",
                 "/css/**", "/js/**", "/images/**","/favicon.svg", "/favicon.ico",
                 "/privacidad", "/terminos", "/contacto",
-                "/hechos/subir-hecho", "/hechos/crear-hecho"
+                "/hechos/subir-hecho", "/hechos/crear-hecho", "/404", "/403"
             ).permitAll()
             // 🔒 Rutas de Administrador (requieren rol ADMIN)
             .requestMatchers("/admin/**").hasRole("ADMIN")
@@ -56,6 +56,9 @@ public class SecurityConfig {
             .authenticationEntryPoint((request, response, authException) ->
                 response.sendRedirect("/auth")
             )
+        )
+        .exceptionHandling(ex -> ex
+            .accessDeniedPage("/403") // Redirige a tu controller simple
         );
 
     return http.build();

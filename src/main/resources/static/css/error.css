@@ -1,0 +1,112 @@
+/* ==========================================
+   ERROR.CSS - Estilos para páginas 404, 403, 500
+   ========================================== */
+
+/* Clase específica para el body de estas páginas para centrar todo */
+.error-body {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    background-color: var(--bg-light);
+    margin: 0;
+}
+
+.error-card {
+    max-width: 500px;
+    width: 90%;
+    text-align: center;
+    padding: 50px 40px;
+    background-color: var(--bg-white);
+    border-radius: 8px;
+    box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1);
+    border: 1px solid #e2e8f0;
+    position: relative;
+    overflow: hidden; /* Para contener bordes o efectos */
+}
+
+/* Título gigante del número (404, 403) */
+.error-code {
+    font-size: 8rem;
+    font-weight: 800;
+    line-height: 1;
+    margin-bottom: 10px;
+    opacity: 0.15;
+    user-select: none;
+    /* Por defecto usa el primario, pero se puede sobreescribir */
+    color: var(--primary-color);
+}
+
+.error-title {
+    font-size: 1.75rem;
+    font-weight: 800;
+    color: var(--text-dark);
+    margin-bottom: 15px;
+    margin-top: -40px; /* Efecto de superposición */
+    position: relative;
+    z-index: 2;
+}
+
+.error-desc {
+    color: var(--text-medium);
+    margin-bottom: 25px;
+    font-size: 1.05rem;
+    line-height: 1.6;
+    position: relative;
+    z-index: 2;
+}
+
+/* === Variantes específicas para 403 (Error/Rojo) === */
+.error-card--danger {
+    border-top: 5px solid var(--error-text);
+}
+
+.error-card--danger .error-code {
+    color: var(--error-text);
+}
+
+/* Icono de candado para el 403 */
+.icon-lock {
+    width: 64px;
+    height: 64px;
+    margin-bottom: 20px;
+    fill: var(--error-text);
+    background-color: var(--error-bg);
+    padding: 15px;
+    border-radius: 50%;
+}
+
+/* === Cajas de mensajes del Backend === */
+
+/* Para detalles técnicos (404) */
+.technical-detail-box {
+    background-color: #eff6ff;
+    border-left: 4px solid var(--primary-color);
+    color: #1e3a8a;
+    padding: 15px;
+    border-radius: 4px;
+    text-align: left;
+    margin-bottom: 25px;
+    font-size: 0.95rem;
+}
+
+/* Para alertas de seguridad (403) */
+.security-alert-box {
+    background-color: var(--error-bg);
+    color: var(--error-text);
+    padding: 15px;
+    border-radius: 4px;
+    margin-bottom: 25px;
+    font-size: 0.95rem;
+    border: 1px solid #fecaca;
+    text-align: left;
+}
+
+.technical-detail-label {
+    font-weight: 700;
+    display: block;
+    margin-bottom: 4px;
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    opacity: 0.7;
+}

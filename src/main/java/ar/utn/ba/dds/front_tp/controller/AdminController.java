@@ -114,7 +114,7 @@ public class AdminController {
   public String verDetalleColeccion(@PathVariable Long id,
                                     Model model) {
     // NO AGREGO TRY-CATCH PARA Q EL ERROR LO ATRAPE EL CONTROLLER ADVICE
-    ColeccionInputDTO coleccion = this.coleccionesApiService.obtenerColeccionPorId(id);
+    ColeccionInputDTO coleccion = this.coleccionesApiService.obtenerColeccion(id);
     model.addAttribute("coleccion", coleccion);
     return "admin-coleccion-detalle";
   }
@@ -288,7 +288,7 @@ public class AdminController {
                                          RedirectAttributes redirectAttributes) {
     try {
       // 1. Obtener datos actuales
-      ColeccionInputDTO existente = coleccionesApiService.obtenerColeccionPorId(id);
+      ColeccionInputDTO existente = coleccionesApiService.obtenerColeccion(id);
 
       // 2. Mapear a DTO de Formulario (OutputDTO)
       ColeccionOutputDTO form = new ColeccionOutputDTO();

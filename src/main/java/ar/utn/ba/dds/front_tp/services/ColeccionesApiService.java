@@ -18,7 +18,6 @@ import org.springframework.web.util.UriComponentsBuilder;
 import reactor.core.publisher.Mono;
 import org.springframework.http.HttpStatusCode;
 
-import java.net.URI;
 import java.time.LocalDate;
 import java.util.Collections;
 import java.util.List;
@@ -112,6 +111,18 @@ public class ColeccionesApiService {
     }
   }
 
+  public ColeccionInputDTO obtenerColeccion(Long id) {
+    return webClient.get()
+        .uri("/" + id)
+        .retrieve()
+        .onStatus(HttpStatusCode::isError, response -> {
+          log.warn("Error recibido. Status: {}", response.statusCode().value());
+          return this.handlerExceptions.manejarError(response);
+        })
+        .bodyToMono(ColeccionInputDTO.class)
+        .block();
+  }
+
   public Mono<ColeccionInputDTO> crearColeccion(ColeccionOutputDTO coleccionOutputDTO, String token) {
     log.info("Iniciando creación de colección: {}", coleccionOutputDTO.getTitulo());
 
@@ -139,21 +150,6 @@ public class ColeccionesApiService {
 
     } catch (Exception e) {
       throw new RuntimeException("Error al eliminar la colección: " + e.getMessage());
-    }
-  }
-
-
-  public ColeccionInputDTO obtenerColeccionPorId(Long id) {
-    try {
-      String url = coleccionesServiceUrl + "/colecciones?ids=" + id;
-      List<ColeccionInputDTO> lista = webApiCallerService.getPublicList(url, ColeccionInputDTO.class);
-
-      if (lista != null && !lista.isEmpty()) {
-        return lista.get(0);
-      }
-      throw new RuntimeException("Colección no encontrada");
-    } catch (Exception e) {
-      throw new RuntimeException("Error al obtener la colección: " + e.getMessage());
     }
   }
 

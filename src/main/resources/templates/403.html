@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Acceso Denegado - MetaMapa</title>
+
+    <link rel="stylesheet" th:href="@{/css/global.css}">
+    <link rel="stylesheet" th:href="@{/css/error.css}"> <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
+</head>
+<body class="error-body">
+
+<div class="error-card error-card--danger">
+
+    <svg class="icon-lock" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+        <path d="M12 2C9.243 2 7 4.243 7 7v3H6a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8a2 2 0 0 0-2-2h-1v-3c0-2.757-2.243-5-5-5zm6 10v8H6v-8h12zm-9-3V7c0-1.654 1.346-3 3-3s3 1.346 3 3v2H9z"/>
+    </svg>
+
+    <h1 class="error-title">Acceso Restringido</h1>
+
+    <div th:if="${error}" class="security-alert-box">
+        <strong style="display:block; margin-bottom:5px;">Razón:</strong>
+        <span th:text="${error}"></span>
+    </div>
+
+    <p th:unless="${error}" class="error-desc">
+        Lo sentimos, pero no tienes los permisos necesarios para acceder a esta sección.
+    </p>
+
+    <div class="form-actions">
+        <button onclick="history.back()" class="btn btn--outline" style="margin-right: 10px;">
+            Volver
+        </button>
+
+        <a th:href="@{/}" class="btn btn--primary">
+            Ir al Inicio
+        </a>
+    </div>
+</div>
+
+</body>
+</html>

@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>No encontrado - MetaMapa</title>
+
+    <link rel="stylesheet" th:href="@{/css/global.css}">
+    <link rel="stylesheet" th:href="@{/css/error.css}"> <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
+</head>
+<body class="error-body">
+
+<div class="error-card">
+    <div class="error-code">404</div>
+
+    <h1 class="error-title">¿Te has perdido?</h1>
+
+    <div th:if="${error}" class="technical-detail-box">
+        <span class="technical-detail-label">Detalle del error:</span>
+        <span th:text="${error}"></span>
+    </div>
+
+    <p th:unless="${error}" class="error-desc">
+        No pudimos encontrar la página que estás buscando.
+        Es posible que haya sido eliminada o que la dirección sea incorrecta.
+    </p>
+
+    <div class="form-actions">
+        <button onclick="history.back()" class="btn btn--outline" style="margin-right: 10px;">
+            Volver
+        </button>
+
+        <a th:href="@{/}" class="btn btn--primary btn--large">
+            Ir al Inicio
+        </a>
+    </div>
+</div>
+
+</body>
+</html>
