@@ -1,5 +1,6 @@
 package ar.utn.ba.dds.front_tp.controller;
 
+import ar.utn.ba.dds.front_tp.dto.TipoCriterio;
 import ar.utn.ba.dds.front_tp.dto.admin.ActividadDTO;
 import ar.utn.ba.dds.front_tp.dto.admin.CategoriaEstadisticaDTO;
 import ar.utn.ba.dds.front_tp.dto.admin.ColeccionEstadisticaDTO;
@@ -32,6 +33,8 @@ import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import java.io.IOException;
+import java.time.LocalDate;
+import java.time.format.DateTimeParseException;
 import java.util.*;
 
 @Controller
@@ -90,7 +93,7 @@ public class AdminController {
   }
 
   // ========================================================================================
-  // GESTIÓN DE COLECCIONES (REFACTORIZADO Y ROBUSTO)
+  // GESTIÓN DE COLECCIONES
   // ========================================================================================
 
   @GetMapping("/colecciones")
@@ -109,32 +112,20 @@ public class AdminController {
 
   @GetMapping("/colecciones/{id}/detalle")
   public String verDetalleColeccion(@PathVariable Long id,
-                                    Model model,
-                                    RedirectAttributes redirectAttributes) {
-    try {
-      // NO usamos try-catch aquí para errores 404 simples, dejamos que el @ControllerAdvice maneje
-      // o si prefieres control manual como en 'hechos':
-      ColeccionInputDTO coleccion = this.coleccionesApiService.obtenerColeccionPorId(id);
-      model.addAttribute("coleccion", coleccion);
-      return "admin-coleccion-detalle";
-
-    } catch (ApiException ex) {
-      log.warn("Error de API al obtener detalle colección {}: {}", id, ex.getMessage());
-      redirectAttributes.addFlashAttribute("error", "No se pudo cargar la colección.");
-      return "redirect:/admin/colecciones";
-    } catch (Exception e) {
-      log.error("Error inesperado al obtener detalle colección {}: ", id, e);
-      redirectAttributes.addFlashAttribute("error", "Ocurrió un error inesperado.");
-      return "redirect:/admin/colecciones";
-    }
+                                    Model model) {
+    // NO AGREGO TRY-CATCH PARA Q EL ERROR LO ATRAPE EL CONTROLLER ADVICE
+    ColeccionInputDTO coleccion = this.coleccionesApiService.obtenerColeccionPorId(id);
+    model.addAttribute("coleccion", coleccion);
+    return "admin-coleccion-detalle";
   }
 
   @GetMapping("/colecciones/crear")
   public String mostrarFormularioCreacion(Model model) {
     model.addAttribute("coleccion", new ColeccionOutputDTO());
-    // Carga robusta de auxiliares
+
     this.cargarFuentesEnModelo(model);
     this.cargarCategoriasEnModelo(model);
+
     return "admin-crear-coleccion";
   }
 
@@ -145,10 +136,86 @@ public class AdminController {
                                Model model,
                                RedirectAttributes redirectAttributes) {
 
-    // 1. Verificar Sesión
+    // 0. Verificar Sesión
     AuthResponseDTO authData = (AuthResponseDTO) authentication.getDetails();
     if (authData == null || authData.getAccessToken() == null) {
       return "redirect:/auth/login";
+    }
+
+    // 1. VALIDACIÓN MANUAL DE CAMPOS DINÁMICOS Y LÓGICA
+    if (coleccionOutputDTO.getCriteriosDePertenencias() != null) {
+      List<CriterioDePertenenciaOutputDTO> lista = coleccionOutputDTO.getCriteriosDePertenencias();
+
+      for (int i = 0; i < lista.size(); i++) {
+        CriterioDePertenenciaOutputDTO c = lista.get(i);
+
+        // A. VALIDAR CATEGORÍA
+        if (c.getTipoCriterio() == TipoCriterio.CATEGORIA) {
+          Object catObj = c.getParametros().get("categoria");
+          if (catObj == null || catObj.toString().trim().isEmpty()) {
+            bindingResult.rejectValue(
+                "criteriosDePertenencias[" + i + "].parametros['categoria']",
+                "error.categoria",
+                "Debés seleccionar una categoría."
+            );
+          }
+        }
+
+        // B. VALIDAR FECHAS
+        if (c.getTipoCriterio() == TipoCriterio.FECHA) {
+          String inicioStr = (String) c.getParametros().get("fechaInicio");
+          String finStr = (String) c.getParametros().get("fechaFin");
+          boolean fechasCompletas = true;
+
+          // B1. Validar vacíos (Tu código)
+          if (inicioStr == null || inicioStr.trim().isEmpty()) {
+            bindingResult.rejectValue(
+                "criteriosDePertenencias[" + i + "].parametros['fechaInicio']",
+                "error.fechaInicio",
+                "La fecha de inicio es obligatoria."
+            );
+            fechasCompletas = false;
+          }
+          if (finStr == null || finStr.trim().isEmpty()) {
+            bindingResult.rejectValue(
+                "criteriosDePertenencias[" + i + "].parametros['fechaFin']",
+                "error.fechaFin",
+                "La fecha de fin es obligatoria."
+            );
+            fechasCompletas = false;
+          }
+
+          // B2. Validar Lógica (Inicio > Fin)
+          // Solo validamos cruce si ambos campos tienen datos
+          if (fechasCompletas) {
+            try {
+              LocalDate inicio = LocalDate.parse(inicioStr);
+              LocalDate fin = LocalDate.parse(finStr);
+
+              if (inicio.isAfter(fin)) {
+                // Error asociado al campo 'fechaInicio' para que se ponga rojo
+                bindingResult.rejectValue(
+                    "criteriosDePertenencias[" + i + "].parametros['fechaInicio']",
+                    "error.fechaCruzada",
+                    "La fecha de inicio no puede ser posterior al fin."
+                );
+                // Opcional: Marcar también fechaFin sin mensaje para que se ponga roja
+                bindingResult.rejectValue(
+                    "criteriosDePertenencias[" + i + "].parametros['fechaFin']",
+                    "error.fechaCruzada",
+                    ""
+                );
+              }
+            } catch (DateTimeParseException e) {
+              // Por seguridad, si mandan basura que no sea fecha
+              bindingResult.rejectValue(
+                  "criteriosDePertenencias[" + i + "].parametros['fechaInicio']",
+                  "error.formato", "Formato de fecha inválido"
+              );
+            }
+          }
+        }
+      }
     }
 
     Map<String, String> erroresVista = new HashMap<>();
