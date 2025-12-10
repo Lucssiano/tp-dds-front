@@ -34,7 +34,7 @@
 
             <div th:if="${globalError}" class="api-error-alert">
                 <strong th:text="${globalError}"></strong>
-                <ul th:if="${errorDetails}">
+                <ul th:if="${errorDetails}" class="error-list">
                     <li th:each="det : ${errorDetails}" th:text="${det}"></li>
                 </ul>
             </div>

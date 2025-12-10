@@ -306,6 +306,14 @@ main,
 	margin-bottom: 20px;
 }
 
+/* Utilidad para listas de errores */
+.error-list {
+	list-style-type: none;
+	padding-left: 0;
+	margin-top: 5px;
+	margin-bottom: 0;
+}
+
 /* Alerta de Éxito (Verde) - Para mensajes de RedirectAttributes */
 .api-success-alert {
 	background-color: #d1fae5; /* Verde muy claro */
