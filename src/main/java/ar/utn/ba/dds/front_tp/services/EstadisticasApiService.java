@@ -1,8 +1,7 @@
 package ar.utn.ba.dds.front_tp.services;
 
-import ar.utn.ba.dds.front_tp.dto.admin.CategoriaDTO;
-
 import ar.utn.ba.dds.front_tp.dto.admin.ColeccionEstadisticaDTO;
+import ar.utn.ba.dds.front_tp.dto.input.CategoriaInputDTO;
 import ar.utn.ba.dds.front_tp.services.internal.WebApiCallerService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -10,7 +9,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;
 import org.springframework.web.util.UriComponentsBuilder;
 
-import java.util.Arrays;
 import java.util.List;
 
 @Service
@@ -26,7 +24,7 @@ public class EstadisticasApiService {
         this.webApiCallerService = webApiCallerService;
     }
 
-    public List<CategoriaDTO> obtenerCategorias(List<String> categorias, Boolean top) {
+    public List<CategoriaInputDTO> obtenerCategorias(List<String> categorias, Boolean top) {
 
         String url = estadisticasServiceUrl + "/categoria";
 
@@ -43,7 +41,7 @@ public class EstadisticasApiService {
         return webClient.get()
                 .uri(finalUrl)
                 .retrieve()
-                .bodyToFlux(CategoriaDTO.class)
+                .bodyToFlux(CategoriaInputDTO.class)
                 .collectList()
                 .block();
     }

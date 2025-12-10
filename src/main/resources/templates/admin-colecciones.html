@@ -12,7 +12,6 @@
 
 <body>
 <div class="admin-layout">
-    <!-- Sidebar (menú lateral) -->
     <aside class="sidebar">
         <a th:href="@{/}" class="logo">MetaMapa Admin</a>
         <nav class="sidebar__nav">
@@ -25,43 +24,47 @@
     </aside>
 
     <main class="main-content">
-        <h1 class="page-title">Gestión de Colecciones</h1>
 
-        <!-- Mensajes de feedback (éxito/error) -->
-        <div th:if="${mensaje}" class="api-success-alert mt-2 mb-2" th:text="${mensaje}"></div>
-        <div th:if="${error}" class="alert alert--danger" th:text="${error}"></div>
+        <div th:if="${mensaje}" class="api-success-alert mb-2" th:text="${mensaje}"></div>
+        <div th:if="${error}" class="api-error-alert mb-2" th:text="${error}"></div>
 
-        <div class="content-header" style="padding-bottom: 40px">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px;">
+
+            <h1 class="page-title" style="margin-bottom: 0;">Gestión de Colecciones</h1>
+
             <div sec:authorize="hasRole('ADMIN')">
                 <a th:href="@{/admin/colecciones/crear}" class="btn btn--primary">
-                    Crear Nueva Colección
+                    Crear Colección
                 </a>
             </div>
         </div>
 
-
-        <!-- Tabla dinámica de colecciones -->
         <div class="table-container">
             <table class="data-table">
                 <thead>
                 <tr>
+                    <th>ID</th>
                     <th>Nombre</th>
                     <th>Descripción</th>
-                    <th>Acciones</th>
-                </tr>
+                    <th>Acción</th> </tr>
                 </thead>
                 <tbody>
-                <!-- Bucle para mostrar cada colección -->
                 <tr th:each="coleccion : ${colecciones}">
-                    <td th:text="${coleccion.titulo}">Nombre de la Colección</td>
-                    <td th:text="${coleccion.descripcion}">Descripción...</td>
+                    <td th:text="${coleccion.id}">1</td>
+                    <td th:text="${coleccion.titulo}" style="font-weight: 500;">Nombre</td>
+                    <td class="cell-wrap" th:text="${coleccion.descripcion}">Descripción...</td>
                     <td>
-                        <a th:href="@{/admin/colecciones/editar/{id}(id=${coleccion.id})}" class="btn btn--primary">Editar</a>
-                        <a th:href="@{/admin/colecciones/eliminar/{id}(id=${coleccion.id})}" class="btn btn--third">Eliminar</a>
+                        <a th:href="@{/admin/colecciones/{id}/detalle(id=${coleccion.id})}"
+                           class="btn btn--small btn--primary">
+                            Gestionar
+                        </a>
                     </td>
                 </tr>
+
                 <tr th:if="${#lists.isEmpty(colecciones)}">
-                    <td colspan="3" style="text-align: center;">No hay colecciones para mostrar.</td>
+                    <td colspan="4" style="text-align: center; color: #64748b; font-style: italic;">
+                        No hay colecciones creadas.
+                    </td>
                 </tr>
                 </tbody>
             </table>

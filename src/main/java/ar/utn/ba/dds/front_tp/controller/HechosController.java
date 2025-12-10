@@ -2,10 +2,9 @@ package ar.utn.ba.dds.front_tp.controller;
 
 import ar.utn.ba.dds.front_tp.Utils.JwtUtils;
 import ar.utn.ba.dds.front_tp.dto.editar.EditarHechoDTO;
-import ar.utn.ba.dds.front_tp.dto.hechos.CategoriaDTO;
+import ar.utn.ba.dds.front_tp.dto.input.CategoriaInputDTO;
 import ar.utn.ba.dds.front_tp.dto.input.ApiError;
 import ar.utn.ba.dds.front_tp.dto.input.HechoInputDTO;
-import ar.utn.ba.dds.front_tp.dto.input.SolicitudEliminacionInputDTO;
 import ar.utn.ba.dds.front_tp.dto.output.ColeccionOutputDTO;
 import ar.utn.ba.dds.front_tp.dto.output.SolicitudEliminacionOutputDTO;
 import ar.utn.ba.dds.front_tp.dto.usuarios.AuthResponseDTO;
@@ -61,8 +60,8 @@ public class HechosController {
   private final ObjectMapper objectMapper;
   private final HechoMapper hechoMapper;
 
-  private final ColeccionesApiService coleccionesApiService; // <--- AGREGAR
-  private final FuentesApiService fuentesApiService;         // <--- AGREGAR
+  private final ColeccionesApiService coleccionesApiService;
+  private final FuentesApiService fuentesApiService;
 
   private void cargarFiltrosEnModelo(Model model) {
     // 1. Cargar Top 3 Colecciones
@@ -81,24 +80,17 @@ public class HechosController {
 
   private void cargarCategoriasEnModelo(Model model) {
     try {
-      List<CategoriaDTO> categorias = this.hechosApiService.obtenerCategorias();
+      List<CategoriaInputDTO> categorias = this.hechosApiService.obtenerCategorias();
       model.addAttribute("categorias", categorias);
     } catch (Exception ex) {
-      // Usamos 'Exception' para que sea una red de seguridad TOTAL.
-
       if (ex instanceof ApiException) {
-        // Usamos WARN y solo mostramos el mensaje corto.
         log.warn("⚠️ No se cargaron las categorías. Causa: {}", ex.getMessage());
       } else {
-        // Usamos ERROR y pasamos 'ex' como segundo argumento para ver el Stack Trace completo.
-        log.error("🔥 BUG: Falló la carga de categorías por un error de código.", ex);
+        log.error("🔥 BUG: Falló la carga de categorías.", ex);
       }
-
-      // Ponemos la lista vacía (CRÍTICO para que no rompa el HTML)
-      model.addAttribute("categorias", new ArrayList<CategoriaDTO>());
-
-      // Aviso visual amarillo
-      model.addAttribute("warningCategorias", "No se pudieron cargar las sugerencias, pero podés escribir manualmente.");
+      // Lista vacía para evitar errores en la vista
+      model.addAttribute("categorias", new ArrayList<CategoriaInputDTO>());
+      model.addAttribute("warningCategorias", "No se pudieron cargar las categorías existentes.");
     }
   }
 

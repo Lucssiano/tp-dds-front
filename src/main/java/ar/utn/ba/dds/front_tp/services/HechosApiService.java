@@ -1,8 +1,7 @@
 package ar.utn.ba.dds.front_tp.services;
 
 import ar.utn.ba.dds.front_tp.dto.editar.EditarHechoDTO;
-import ar.utn.ba.dds.front_tp.dto.hechos.CategoriaDTO;
-import ar.utn.ba.dds.front_tp.dto.input.ApiError;
+import ar.utn.ba.dds.front_tp.dto.input.CategoriaInputDTO;
 import ar.utn.ba.dds.front_tp.dto.input.HechoInputDTO;
 import ar.utn.ba.dds.front_tp.dto.input.PageInputDTO;
 import ar.utn.ba.dds.front_tp.dto.output.CategoriaOutputDTO;
@@ -13,9 +12,7 @@ import ar.utn.ba.dds.front_tp.services.internal.HandlerExceptions;
 import ar.utn.ba.dds.front_tp.services.internal.WebApiCallerService;
 import jakarta.servlet.http.HttpSession;
 
-import java.net.URI;
 import java.time.LocalDate;
-import java.time.format.DateTimeFormatter;
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -53,7 +50,6 @@ public class HechosApiService {
 
   /**
    * Obtiene hechos, opcionalmente filtrados por modo y/o rango de fechas.
-   * @param modo Puede ser "CURADA", "IRRESTRICTA" o null.
    * @param fechaDesde La fecha de inicio del rango.
    * @param fechaHasta La fecha de fin del rango.
    * @return Una lista de HechoInputDTO.
@@ -180,7 +176,7 @@ public class HechosApiService {
         .retrieve().bodyToFlux(CategoriaOutputDTO.class).collectList().block();
   }
 
-  public List<CategoriaDTO> obtenerCategorias(){
+  public List<CategoriaInputDTO> obtenerCategorias(){
     try {
       return webClient.get()
           .uri(hechosServiceUrl +"/hechos/categorias")
@@ -189,7 +185,7 @@ public class HechosApiService {
             log.warn("Error recibido. Status: {}", response.statusCode().value());
             return this.handlerExceptions.manejarError(response);
           })
-          .bodyToFlux(CategoriaDTO.class)
+          .bodyToFlux(CategoriaInputDTO.class)
           .collectList()
           .block();
     } catch (WebClientRequestException e) {
@@ -236,8 +232,7 @@ public class HechosApiService {
           .queryParam("page", 0)
           .queryParam("size", 20)
           .toUriString();
-      var tipoRespuesta = new ParameterizedTypeReference<PageInputDTO<HechoInputDTO>>() {
-      };
+      var tipoRespuesta = new ParameterizedTypeReference<PageInputDTO<HechoInputDTO>>() {};
 
       PageInputDTO<HechoInputDTO> pagedResponse = webClient
           .get()

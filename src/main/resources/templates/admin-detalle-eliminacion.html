@@ -131,11 +131,11 @@
 
                 <div class="form-actions">
                     <form th:action="@{/admin/revisiones/solicitudes/{id}/aceptar(id=${solicitudEliminacion.id})}" method="post">
-                        <button class="btn btn--third" onclick="return confirm('ATENCIÓN: Esto eliminará el hecho de forma PERMANENTE. ¿Confirmar?')">Eliminar Hecho</button>
+                        <button class="btn btn--primary" onclick="return confirm('ATENCIÓN: Esto eliminará el hecho de forma PERMANENTE. ¿Confirmar?')">Aprobar Eliminación</button>
                     </form>
 
                     <form th:action="@{/admin/revisiones/solicitudes/{id}/rechazar(id=${solicitudEliminacion.id})}" method="post">
-                        <button class="btn btn--secondary">Descartar Solicitud</button>
+                        <button class="btn btn--third">Rechazar Solicitud</button>
                     </form>
                 </div>
 

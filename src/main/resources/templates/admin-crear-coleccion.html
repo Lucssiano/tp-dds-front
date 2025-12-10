@@ -4,9 +4,10 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Crear Colección - MetaMapa Admin</title>
+
   <link rel="stylesheet" th:href="@{/css/global.css}">
   <link rel="stylesheet" th:href="@{/css/admin.css}">
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" th:href="@{/css/hecho.css}"> <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 </head>
 
 <body>
@@ -17,190 +18,155 @@
       <a th:href="@{/admin/dashboard}" class="sidebar__link">Dashboard</a>
       <a th:href="@{/admin/colecciones}" class="sidebar__link sidebar__link--active">Colecciones</a>
       <a th:href="@{/admin/revisiones}" class="sidebar__link">Revisiones</a>
+      <a th:href="@{/admin/estadisticas}" class="sidebar__link">Estadísticas </a>
     </nav>
     <a th:href="@{/auth/logout}" class="btn btn--secondary sidebar__logout">Cerrar Sesión</a>
   </aside>
 
-  <main class="main-content">
-    <h1 class="page-title">Crear Nueva Colección</h1>
+  <div class="main-content">
+    <div class="detail-container">
 
-    <div class="alert alert-danger" th:if="${errors != null and !errors.isEmpty()}">
-      <ul>
-        <li th:each="err : ${errors}" th:text="${err.value}"></li>
-      </ul>
-    </div>
+      <h1 class="page-title">Gestión de Colecciones</h1>
 
-    <form th:action="@{/admin/colecciones/crear}" th:object="${coleccion}" method="post" class="form-card">
+      <div class="stat-card">
 
-      <!-- Título -->
-      <div class="form-group">
-        <label for="titulo">Título</label>
-        <input type="text" id="titulo" th:field="*{titulo}" placeholder="Ej: Eventos Naturales de Argentina" required class="form-control">
-      </div>
+        <form th:action="@{/admin/colecciones/crear}" th:object="${coleccion}" method="post">
 
-      <!-- Descripción -->
-      <div class="form-group">
-        <label for="descripcion">Descripción</label>
-        <textarea id="descripcion" th:field="*{descripcion}" placeholder="Breve descripción de la colección" rows="4" required class="form-control"></textarea>
-      </div>
-
-      <!-- Fuentes -->
-      <div class="form-group">
-        <label>Fuentes Asociadas</label>
-
-        <!-- Si NO hay fuentes -->
-        <div th:if="${#lists.isEmpty(fuentesDisponibles)}" class="no-fuentes-msg">
-          <p>No hay fuentes disponibles actualmente.</p>
-        </div>
-
-        <!-- Si hay fuentes -->
-          <div th:unless="${#lists.isEmpty(fuentesDisponibles)}">
-              <div class="checkbox-group" th:each="fuente : ${fuentesDisponibles}">
-                  <label>
-                      <input type="checkbox"
-                             th:field="*{fuentesIds}"
-                             th:value="${fuente.id}">
-                      <span th:text="${fuente.nombre}">Nombre de fuente</span>
-                  </label>
-              </div>
-              <small class="form-hint">Podés seleccionar varias fuentes.</small>
+          <div style="margin-bottom: 30px;">
+            <h1 class="section-title">Crear Nueva Colección</h1>
           </div>
+
+          <div th:if="${globalError}" class="api-error-alert mb-2">
+            <strong th:text="${globalError}"></strong>
+          </div>
+
+          <div class="alert alert-danger mb-2" th:if="${errors != null and !errors.isEmpty()}"
+               style="background-color: #fef2f2; border: 1px solid #fecaca; color: #991b1b; padding: 15px; border-radius: 6px;">
+            <ul style="margin: 0; padding-left: 20px;">
+              <li th:each="err : ${errors}" th:text="${err.value}"></li>
+            </ul>
+          </div>
+
+          <div class="content-block">
+            <label class="content-title" for="titulo">Título</label>
+            <input type="text" id="titulo" th:field="*{titulo}"
+                   class="clean-input"
+                   th:classappend="${errors != null and errors.containsKey('titulo')} ? 'input-error' : ''"
+                   placeholder="Ej: Eventos Naturales de Argentina">
+            <span class="field-error-msg" th:if="${errors != null and errors.containsKey('titulo')}" th:text="${errors['titulo']}"></span>
+          </div>
+
+          <div class="content-block">
+            <label class="content-title" for="descripcion">Descripción</label>
+            <textarea id="descripcion" th:field="*{descripcion}"
+                      class="clean-input" rows="4"
+                      th:classappend="${errors != null and errors.containsKey('descripcion')} ? 'input-error' : ''"
+                      placeholder="Breve descripción de la colección"></textarea>
+            <span class="field-error-msg" th:if="${errors != null and errors.containsKey('descripcion')}" th:text="${errors['descripcion']}"></span>
+          </div>
+
+          <div class="content-block">
+            <label class="content-title">Fuentes Asociadas</label>
+            <div th:if="${#lists.isEmpty(fuentesDisponibles)}" class="input-warning-msg">No hay fuentes disponibles.</div>
+
+            <div th:unless="${#lists.isEmpty(fuentesDisponibles)}" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 10px; margin-top: 10px;">
+              <div th:each="fuente : ${fuentesDisponibles}" style="display: flex; align-items: center; gap: 8px;">
+                <input type="checkbox" th:field="*{fuentesIds}" th:value="${fuente.id}" th:id="${'fuente-' + fuente.id}"
+                       style="width: 16px; height: 16px; cursor: pointer; accent-color: var(--primary-color);">
+                <label th:for="${'fuente-' + fuente.id}" th:text="${fuente.nombre}" style="cursor: pointer; color: #334155; font-weight: 500;"></label>
+              </div>
+            </div>
+            <span class="field-error-msg" th:if="${errors != null and errors.containsKey('fuentesIds')}" th:text="${errors['fuentesIds']}"></span>
+          </div>
+
+          <div class="content-block">
+            <label class="content-title" for="algoritmoConsenso">Algoritmo de Consenso</label>
+            <select id="algoritmoConsenso" th:field="*{algoritmoConsenso}" class="clean-input" style="background-color: white;">
+              <option value="">Seleccioná un algoritmo (opcional)</option>
+              <option th:value="MULTIPLES_MENCIONES">Múltiples menciones</option>
+              <option th:value="MAYORIA_SIMPLE">Mayoría simple</option>
+              <option th:value="ABSOLUTA">Absoluta</option>
+            </select>
+          </div>
+
+          <div class="content-block" style="border-bottom: none; padding-bottom: 0;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+              <label class="content-title" style="margin-bottom: 0;">Criterios de Pertenencia</label>
+              <button type="button" class="btn btn--small btn--secondary" onclick="agregarCriterio()">Agregar Criterio</button>
+            </div>
+
+            <div id="criterios-container"></div>
+
+            <span class="field-error-msg" th:if="${errors != null and errors.containsKey('criteriosDePertenencias')}" th:text="${errors['criteriosDePertenencias']}"></span>
+          </div>
+
+          <div class="form-actions">
+            <button type="submit" class="btn btn--primary">Crear Colección</button>
+            <a th:href="@{/admin/colecciones}" class="btn btn--third">Cancelar</a>
+          </div>
+        </form>
+
       </div>
-
-      <!-- Algoritmo de Consenso -->
-      <div class="form-group">
-        <label for="algoritmoConsenso">Algoritmo de Consenso</label>
-        <select id="algoritmoConsenso" th:field="*{algoritmoConsenso}" class="form-control">
-          <option value="">Seleccioná un algoritmo (opcional)</option>
-          <option th:value="MULTIPLES_MENCIONES">Múltiples menciones</option>
-          <option th:value="MAYORIA_SIMPLE">Mayoría simple</option>
-          <option th:value="ABSOLUTA">Absoluta</option>
-        </select>
-      </div>
-
-      <!-- Criterios de Pertenencia -->
-      <div class="form-group">
-        <label>Criterios de Pertenencia</label>
-
-        <div id="criterios-container">
-          <!-- Se agregan dinámicamente -->
-        </div>
-
-        <div class="text-danger" id="criterios-error" style="display:none;"></div>
-
-        <button type="button" class="btn btn--secondary" onclick="agregarCriterio()">Agregar Criterio</button>
-      </div>
-
-      <!-- Acciones -->
-      <div class="form-actions">
-        <button type="submit" class="btn btn--primary">Crear Colección</button>
-        <a th:href="@{/admin/colecciones}" class="btn btn--secondary">Cancelar</a>
-      </div>
-    </form>
-  </main>
+    </div>
+  </div>
 </div>
 
-<!-- Validación frontend -->
-<script>
-  document.querySelector("form").addEventListener("submit", function(e) {
-
-    // 1️⃣ Validar criterios de pertenencia
-    const criterios = document.querySelectorAll(".criterio-item");
-    const errorDiv = document.getElementById("criterios-error");
-
-    if (criterios.length === 0) {
-      e.preventDefault();
-      errorDiv.textContent = "Debés agregar al menos un criterio de pertenencia.";
-      errorDiv.style.display = "block";
-      return;
-    } else {
-      errorDiv.style.display = "none";
-    }
-
-    // Validar parámetros de cada criterio
-    for (const criterio of criterios) {
-      // Buscamos el select del tipo de criterio
-      const tipoSelect = criterio.querySelector("select[name*='tipoCriterio']");
-      const tipo = tipoSelect ? tipoSelect.value : "";
-
-      if (tipo === "FECHA") {
-        const inicio = criterio.querySelector("input[name*='fechaInicio']").value;
-        const fin = criterio.querySelector("input[name*='fechaFin']").value;
-        if (!inicio || !fin) {
-          e.preventDefault();
-          errorDiv.textContent = "Debés completar ambas fechas en cada criterio de tipo FECHA.";
-          errorDiv.style.display = "block";
-          return;
-        }
-      }
-
-      if (tipo === "CATEGORIA") {
-        // Buscamos el Select de Categoría (validación para el nuevo dropdown)
-        const catSelect = criterio.querySelector("select[name*='categoria']");
-
-        // La validación es: Si existe el select Y su valor es la opción por defecto ("")
-        if (catSelect && catSelect.value === "") {
-          e.preventDefault();
-          errorDiv.textContent = "Debés seleccionar una categoría válida.";
-          errorDiv.style.display = "block";
-          return;
-        }
-      }
-    }
-
-    // 2️⃣ Validar fuentes, solo si hay checkboxes
-    const todasLasFuentes = document.querySelectorAll("input[name='fuentes']");
-    if (todasLasFuentes.length > 0) {
-      const seleccionadas = document.querySelectorAll("input[name='fuentes']:checked");
-      if (seleccionadas.length === 0) {
-        e.preventDefault();
-        document.getElementById("fuentes-error").textContent = "Debés seleccionar al menos una fuente.";
-        document.getElementById("fuentes-error").style.display = "block";
-        return;
-      } else {
-        document.getElementById("fuentes-error").style.display = "none";
-      }
-    }
-  });
-</script>
-
-<<!-- Script dinámico de agregar criterios -->
 <script th:inline="javascript">
-  let criterioIndex = 0;
 
-  // 1. Obtenemos las categorías desde Java (Thymeleaf las inyecta aquí)
   /*[[${categoriasDisponibles}]]*/
   const categoriasBackend = [[${categoriasDisponibles}]] || [];
+  let criterioIndex = 0;
 
+  // Objeto para guardar el índice de foco de CADA input dinámico
+  // Clave: ID del criterio (index), Valor: posición del foco en la lista
+  let focusStates = {};
+
+  // --- 1. AGREGAR CRITERIO ---
   function agregarCriterio() {
     const container = document.getElementById('criterios-container');
-
     const wrapper = document.createElement('div');
-    wrapper.classList.add('criterio-item');
+
+    // Usamos la clase CSS definida en admin.css
+    wrapper.className = 'criterio-card';
+    wrapper.id = `criterio-row-${criterioIndex}`;
+
+    // HTML limpio usando clases CSS (.btn-delete-criterio, .form-grid-2)
     wrapper.innerHTML = `
-      <div class="form-subgroup">
-        <label>Nombre del Criterio</label>
-        <input type="text" name="criteriosDePertenencias[${criterioIndex}].nombreCriterio" placeholder="Ej: Filtro por Tema" class="form-control" required>
-      </div>
+            <button type="button" class="btn-delete-criterio" onclick="eliminarCriterio(${criterioIndex})" title="Eliminar">&times;</button>
 
-      <div class="form-subgroup">
-        <label>Tipo de Criterio</label>
-        <select name="criteriosDePertenencias[${criterioIndex}].tipoCriterio" class="form-control" required onchange="actualizarParametros(this, ${criterioIndex})">
-          <option value="">Seleccionar tipo</option>
-          <option value="FECHA">Fecha</option>
-          <option value="CATEGORIA">Categoría</option>
-        </select>
-      </div>
+            <div class="form-grid-2">
+                <div>
+                    <label class="content-title" style="font-size: 0.8rem;">Nombre del Criterio</label>
+                    <input type="text" name="criteriosDePertenencias[${criterioIndex}].nombreCriterio"
+                           placeholder="Ej: Filtro por Tema" class="clean-input">
+                </div>
+                <div>
+                    <label class="content-title" style="font-size: 0.8rem;">Tipo de Criterio</label>
+                    <select name="criteriosDePertenencias[${criterioIndex}].tipoCriterio"
+                            class="clean-input"
+                            onchange="actualizarParametros(this, ${criterioIndex})"
+                            style="background: white;">
+                        <option value="">Seleccionar tipo...</option>
+                        <option value="FECHA">Rango de Fechas</option>
+                        <option value="CATEGORIA">Categoría Específica</option>
+                    </select>
+                </div>
+            </div>
 
-      <div id="parametros-${criterioIndex}" class="form-subgroup"></div>
+            <div id="parametros-${criterioIndex}"></div>
+        `;
 
-      <button type="button" class="btn btn--danger btn--small" onclick="this.parentElement.remove()">Eliminar</button>
-      <hr>
-    `;
     container.appendChild(wrapper);
     criterioIndex++;
   }
 
+  function eliminarCriterio(index) {
+    const row = document.getElementById(`criterio-row-${index}`);
+    if(row) row.remove();
+    delete focusStates[index]; // Limpiar memoria
+  }
+
+  // --- 2. ACTUALIZAR PARÁMETROS ---
   function actualizarParametros(select, index) {
     const tipo = select.value;
     const paramsContainer = document.getElementById(`parametros-${index}`);
@@ -208,31 +174,187 @@
 
     if (tipo === "FECHA") {
       paramsContainer.innerHTML = `
-            <label>Fecha mínima</label>
-            <input type="date" name="criteriosDePertenencias[${index}].parametros[fechaInicio]" class="form-control" required>
-            <label>Fecha máxima</label>
-            <input type="date" name="criteriosDePertenencias[${index}].parametros[fechaFin]" class="form-control" required>
-        `;
+                <div class="form-grid-2">
+                    <div>
+                        <label class="content-title" style="font-size: 0.8rem;">Desde</label>
+                        <input type="date" name="criteriosDePertenencias[${index}].parametros[fechaInicio]" class="clean-input">
+                    </div>
+                    <div>
+                        <label class="content-title" style="font-size: 0.8rem;">Hasta</label>
+                        <input type="date" name="criteriosDePertenencias[${index}].parametros[fechaFin]" class="clean-input">
+                    </div>
+                </div>
+            `;
     } else if (tipo === "CATEGORIA") {
 
-      // 2. Construimos el SELECT dinámico usando las categorías
-      let optionsHtml = '<option value="">Seleccioná una categoría</option>';
-
+      // Generación de lista inicial
+      let opcionesHTML = "";
       categoriasBackend.forEach(cat => {
-        // Usamos 'nombre' o 'categoria' dependiendo de cómo esté mapeado tu CategoriaDTO
-        let nombreCat = cat.nombre || cat.categoria || "Sin nombre";
-        optionsHtml += `<option value="${nombreCat}">${nombreCat}</option>`;
+        const nombre = cat.nombre || cat.categoria || cat;
+        opcionesHTML += `<li class="autocomplete-item" onclick="selectDynamicCat(${index}, '${nombre}')">${nombre}</li>`;
       });
 
-      // Insertamos el Select
+      // Ítem "Crear nueva" oculto por defecto (usa la clase .autocomplete-create-item de admin.css)
+      opcionesHTML += `<li id="no-results-${index}" class="autocomplete-item autocomplete-create-item" onclick="selectDynamicCat(${index}, document.getElementById('cat-input-${index}').value)"></li>`;
+
       paramsContainer.innerHTML = `
-            <label>Categoría</label>
-            <select name="criteriosDePertenencias[${index}].parametros[categoria]" class="form-control" required>
-                ${optionsHtml}
-            </select>
-        `;
+                <label class="content-title" style="font-size: 0.8rem;">Categoría</label>
+
+                <div class="autocomplete-wrapper" id="cat-wrapper-${index}">
+                    <input type="text"
+                           id="cat-input-${index}"
+                           name="criteriosDePertenencias[${index}].parametros[categoria]"
+                           class="clean-input"
+                           placeholder="Escribe o selecciona..."
+                           autocomplete="off"
+                           oninput="filterDynamicCat(${index})"
+                           onfocus="showDynamicCat(${index})"
+                           onkeydown="handleKeydown(${index}, event)"> <ul id="cat-list-${index}" class="autocomplete-list">
+                        ${opcionesHTML}
+                    </ul>
+                </div>
+            `;
+
+      // Inicializar estado de foco para este índice
+      focusStates[index] = -1;
     }
   }
+
+  // --- 3. LÓGICA DE AUTOCOMPLETE EXACTA A SUBIR HECHO ---
+
+  // A. Manejo de Teclado (Flechas y Enter)
+  window.handleKeydown = function(index, e) {
+    const list = document.getElementById(`cat-list-${index}`);
+    if (!list || !list.classList.contains('active')) return;
+
+    let items = getVisibleItems(list);
+
+    if (e.key === "ArrowDown") {
+      focusStates[index]++;
+      addActive(items, index);
+    } else if (e.key === "ArrowUp") {
+      focusStates[index]--;
+      addActive(items, index);
+    } else if (e.key === "Enter") {
+      e.preventDefault(); // Prevenir submit del form
+      if (focusStates[index] > -1) {
+        if (items[focusStates[index]]) items[focusStates[index]].click();
+      } else if (items.length === 1 && items[0].id === `no-results-${index}`) {
+        // Caso especial: Solo se ve "Crear nueva", Enter la selecciona
+        items[0].click();
+      }
+    } else if (e.key === "Escape") {
+      closeDynamicList(index);
+    }
+  };
+
+  function getVisibleItems(list) {
+    const all = list.getElementsByTagName("li");
+    let visible = [];
+    for (let i = 0; i < all.length; i++) {
+      if (all[i].style.display !== "none") visible.push(all[i]);
+    }
+    return visible;
+  }
+
+  function addActive(items, index) {
+    if (!items || items.length === 0) return false;
+
+    // Loop circular
+    if (focusStates[index] >= items.length) focusStates[index] = 0;
+    if (focusStates[index] < 0) focusStates[index] = (items.length - 1);
+
+    removeActive(items);
+    items[focusStates[index]].classList.add("autocomplete-active"); // Clase en global/hecho.css
+    items[focusStates[index]].scrollIntoView({ block: 'nearest' });
+  }
+
+  function removeActive(items) {
+    for (let i = 0; i < items.length; i++) {
+      items[i].classList.remove("autocomplete-active");
+    }
+  }
+
+  // B. Funciones de Filtrado y UI
+  window.showDynamicCat = function(index) {
+    const list = document.getElementById(`cat-list-${index}`);
+    const input = document.getElementById(`cat-input-${index}`);
+    if(list) {
+      filterDynamicCat(index);
+      list.classList.add('active');
+      input.classList.add('dropdown-open');
+    }
+  };
+
+  window.filterDynamicCat = function(index) {
+    const input = document.getElementById(`cat-input-${index}`);
+    const list = document.getElementById(`cat-list-${index}`);
+    if(!input || !list) return;
+
+    const filter = input.value.toLowerCase();
+    const items = list.getElementsByTagName('li');
+    let visibleCount = 0;
+
+    focusStates[index] = -1; // Resetear foco al escribir
+    removeActive(items);     // Limpiar selección visual
+
+    for (let i = 0; i < items.length; i++) {
+      const item = items[i];
+      // Ignorar el item especial "Crear nueva" en el loop normal
+      if (item.id === `no-results-${index}`) continue;
+
+      const txtValue = item.textContent || item.innerText;
+      if (txtValue.toLowerCase().indexOf(filter) > -1) {
+        item.style.display = "";
+        visibleCount++;
+      } else {
+        item.style.display = "none";
+      }
+    }
+
+    // Lógica "Crear nueva"
+    const noResults = document.getElementById(`no-results-${index}`);
+    if (visibleCount === 0 && filter !== '') {
+      if(noResults) {
+        noResults.style.display = "block";
+        noResults.innerText = `Crear nueva: "${input.value}"`;
+      }
+    } else {
+      if(noResults) noResults.style.display = "none";
+    }
+
+    list.classList.add('active');
+  };
+
+  window.selectDynamicCat = function(index, valor) {
+    const input = document.getElementById(`cat-input-${index}`);
+    input.value = valor;
+    closeDynamicList(index);
+  };
+
+  function closeDynamicList(index) {
+    const list = document.getElementById(`cat-list-${index}`);
+    const input = document.getElementById(`cat-input-${index}`);
+    if(list) list.classList.remove('active');
+    if(input) input.classList.remove('dropdown-open');
+    focusStates[index] = -1;
+  }
+
+  // C. Click afuera (Global)
+  document.addEventListener('click', function(e) {
+    const wrappers = document.querySelectorAll('.autocomplete-wrapper');
+    wrappers.forEach(wrapper => {
+      // Extraer ID (cat-wrapper-X)
+      const idParts = wrapper.id.split('-');
+      const index = idParts[idParts.length - 1];
+
+      if (!wrapper.contains(e.target)) {
+        closeDynamicList(index);
+      }
+    });
+  });
+
 </script>
+
 </body>
 </html>
