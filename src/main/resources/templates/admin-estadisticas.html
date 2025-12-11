@@ -29,18 +29,12 @@
 
         <!-- Estadísticas absolutas -->
         <div class="dashboard-grid" style="margin-bottom: 40px;">
-            <div class="stat-card">
-                <h3 class="stat-card__title">Provincia con más hechos</h3>
-                <p class="stat-card__number" th:text="${provinciaConMasHechos}">Buenos Aires</p>
-            </div>
+
             <div class="stat-card">
                 <h3 class="stat-card__title">Categoría con más hechos</h3>
                 <p class="stat-card__number" th:text="${categoriaMaxima.categoria}"></p>
             </div>
-            <div class="stat-card">
-                <h3 class="stat-card__title">Solicitudes de eliminación spam</h3>
-                <p class="stat-card__number" th:text="${solicitudesSpam}">5</p>
-            </div>
+
         </div>
 
 

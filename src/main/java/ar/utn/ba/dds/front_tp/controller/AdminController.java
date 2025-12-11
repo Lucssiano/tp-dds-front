@@ -724,9 +724,11 @@ public class AdminController {
             Page<CategoriaEstadisticaDTO> paginaCategorias =
                     estadisticasApiService.obtenerCategoriasPaginadas(categorias, top, catPage, catSize);
 
-            // 2. Obtener la Categoría Máxima (Sin paginación)
-            List<CategoriaEstadisticaDTO> categoriaMaxList = estadisticasApiService.obtenerCategorias(List.of(),true);
-            CategoriaEstadisticaDTO categoriaMax = !categoriaMaxList.isEmpty() ? categoriaMaxList.get(0) : null;
+            Page<CategoriaEstadisticaDTO> categoriaMax =
+                    estadisticasApiService.obtenerCategoriasPaginadas(categorias, true, 0, 1);
+//            // 2. Obtener la Categoría Máxima (Sin paginación)
+//            List<CategoriaEstadisticaDTO> categoriaMaxList = estadisticasApiService.obtenerCategorias(List.of(),true);
+//            CategoriaEstadisticaDTO categoriaMax = !categoriaMaxList.isEmpty() ? categoriaMaxList.get(0) : null;
 
             // 3. Obtener la página de COLECCIONES paginada
             Page<ColeccionEstadisticaDTO> paginaColecciones =
@@ -742,7 +744,7 @@ public class AdminController {
             model.addAttribute("colecciones", paginaColecciones.getContent()); // Contenido para la tabla
 
             // OTROS
-            model.addAttribute("categoriaMaxima", categoriaMax);
+            model.addAttribute("categoriaMaxima", categoriaMax.getContent().get(0));
             // ... (otros atributos) ...
 
             // Filtros y Paginación (para los enlaces de navegación)
