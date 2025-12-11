@@ -31,6 +31,7 @@ import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
+import org.springframework.data.domain.Page;
 
 import java.io.IOException;
 import java.time.LocalDate;
@@ -704,31 +705,61 @@ public class AdminController {
     return "redirect:/admin/dashboard";
   }
 
-  @GetMapping("/estadisticas")
-  public String mostrarEstadisticas(@RequestParam(value = "top", required = false) Boolean top,
-                                    @RequestParam(value = "categorias", required = false) List<String> categorias,
-                                    Model model) {
-    try {
-      List<CategoriaEstadisticaDTO> resultado = estadisticasApiService.obtenerCategorias(categorias, top);
-        CategoriaEstadisticaDTO categoriaMax = estadisticasApiService.obtenerCategorias(categorias, true).get(0); //aca rompe
-      List<ColeccionEstadisticaDTO> resultadoColecciones = estadisticasApiService.obtenerColecciones(List.of());
+    @GetMapping("/estadisticas")
+    public String mostrarEstadisticas(
+            @RequestParam(value = "top", required = false) Boolean top,
+            @RequestParam(value = "categorias", required = false) List<String> categorias,
 
-      model.addAttribute("categorias", resultado);
-      model.addAttribute("categoriaMaxima", categoriaMax);
-      model.addAttribute("colecciones", resultadoColecciones);
+            // Paginación para CATEGORÍAS
+            @RequestParam(defaultValue = "0") int catPage,
+            @RequestParam(defaultValue = "10") int catSize,
 
-      List<String> nombres = resultado.stream().map(CategoriaEstadisticaDTO::getCategoria).toList();
-      model.addAttribute("nombresCategorias", nombres);
+            // Paginación para COLECCIONES
+            @RequestParam(defaultValue = "0") int colPage,
+            @RequestParam(defaultValue = "10") int colSize,
 
-      // Filtros para la vista
-      model.addAttribute("filtroCategorias", categorias);
-      model.addAttribute("filtroTop", top);
-      model.addAttribute("categoriaSeleccionada", categorias != null ? categorias : List.of());
+            Model model) {
+        try {
+            // 1. Obtener la página de CATEGORÍAS paginada
+            Page<CategoriaEstadisticaDTO> paginaCategorias =
+                    estadisticasApiService.obtenerCategoriasPaginadas(categorias, top, catPage, catSize);
 
-    } catch (Exception e) {
-      log.error("Error cargando estadísticas", e);
-      model.addAttribute("error", "No se pudieron cargar las estadísticas.");
+            // 2. Obtener la Categoría Máxima (Sin paginación)
+            List<CategoriaEstadisticaDTO> categoriaMaxList = estadisticasApiService.obtenerCategorias(List.of(),true);
+            CategoriaEstadisticaDTO categoriaMax = !categoriaMaxList.isEmpty() ? categoriaMaxList.get(0) : null;
+
+            // 3. Obtener la página de COLECCIONES paginada
+            Page<ColeccionEstadisticaDTO> paginaColecciones =
+                    estadisticasApiService.obtenerColeccionesPaginadas(List.of(), colPage, colSize); // Asumo List.of() o filtro si tienes uno
+
+            // 4. Agregar al modelo
+            // CATEGORÍAS
+            model.addAttribute("paginaCategorias", paginaCategorias);
+            model.addAttribute("categorias", paginaCategorias.getContent());
+
+            // COLECCIONES
+            model.addAttribute("paginaColecciones", paginaColecciones); // Nuevo objeto Page
+            model.addAttribute("colecciones", paginaColecciones.getContent()); // Contenido para la tabla
+
+            // OTROS
+            model.addAttribute("categoriaMaxima", categoriaMax);
+            // ... (otros atributos) ...
+
+            // Filtros y Paginación (para los enlaces de navegación)
+            model.addAttribute("filtroCategorias", categorias);
+            model.addAttribute("filtroTop", top);
+
+            // Parámetros de paginación de CATEGORÍAS
+            model.addAttribute("catPage", catPage);
+            model.addAttribute("catSize", catSize);
+
+            // Parámetros de paginación de COLECCIONES
+            model.addAttribute("colPage", colPage);
+            model.addAttribute("colSize", colSize);
+
+        } catch (Exception e) {
+            // ...
+        }
+        return "admin-estadisticas";
     }
-    return "admin-estadisticas";
-  }
 }

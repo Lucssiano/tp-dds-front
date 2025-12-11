@@ -475,3 +475,59 @@
     /* LA MAGIA: Corta cadenas largas (como IDs o URLs) sin espacios */
     word-break: break-all;
 }
+/* Estilos en admin.css (o donde tengas tu CSS) */
+.pagination-controls {
+    display: flex;
+    justify-content: center;
+    gap: 8px; /* Espacio entre los enlaces */
+    align-items: center;
+}
+
+.pagination-link {
+    text-decoration: none;
+    color: #007bff; /* Color primario de tu tema */
+    padding: 6px 12px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    transition: background-color 0.2s;
+    font-size: 0.95rem;
+}
+
+.pagination-link:hover {
+    background-color: #f0f0f0;
+    color: #0056b3;
+}
+
+.pagination-link.active {
+    background-color: #007bff;
+    color: white;
+    border-color: #007bff;
+    font-weight: bold;
+}
+
+.pagination-link.disabled {
+    color: #aaa;
+    pointer-events: none; /* Hace que no sea clickeable */
+    background-color: #eee;
+    border-color: #ddd;
+}
+/* Estilo para las filas vacías */
+.data-table .empty-row {
+    background-color: #f5f5f5; /* Fondo gris claro */
+    opacity: 0.7; /* Ligeramente opaco */
+    pointer-events: none; /* Asegura que no se pueda interactuar */
+}
+
+/* Opcional: Estilo para asegurar que todas las filas (llenas y vacías) tengan la misma altura */
+.data-table tr,
+.data-table .empty-row {
+    height: 40px; /* Ajusta este valor según tu diseño (ejemplo) */
+}
+
+/* Opcional: Asegurar la altura del contenedor si la altura de las filas no es suficiente */
+/* Si la altura de las 10 filas * 40px es 400px, puedes fijar la altura del contenedor. */
+.table-container {
+    /* Altura fija basada en 10 filas de 40px + encabezado (ejemplo) */
+    /* table-layout: fixed; es mejor si se aplica directamente al <table> */
+    overflow-y: hidden; /* Oculta cualquier scroll si algo se desborda mínimamente */
+}

@@ -43,6 +43,7 @@
             </div>
         </div>
 
+
         <h2 class="section-title" style="margin-top: 40px;">Hechos por Categoría</h2>
         <div class="table-container">
             <table class="data-table">
@@ -55,19 +56,131 @@
                 </tr>
                 </thead>
                 <tbody>
-                <!-- Bucle para mostrar cada colección -->
-                <tr th:each="categoria : ${categorias}">
+                <tr th:each="categoria : ${paginaCategorias.content}">
                     <td th:text="${categoria.categoria}">Nombre de la Categoria</td>
                     <td th:text="${categoria.provincia}">Provincia</td>
                     <td th:text="${categoria.cantidad}">Cantidad</td>
                     <td th:text="${categoria.hora}">Hora</td>
                 </tr>
-                <tr th:if="${#lists.isEmpty(categorias)}">
-                    <td colspan="3" style="text-align: center;">No hay estadisticas para mostrar.</td>
+                <tr th:if="${#lists.isEmpty(paginaCategorias.content)}">
+                    <td colspan="4" style="text-align: center;">No hay estadísticas para mostrar.</td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div th:if="${paginaCategorias.totalPages > 1}" class="pagination-controls" style="margin-top: 20px; text-align: center;">
+
+            <a th:if="${paginaCategorias.hasPrevious()}"
+               th:href="@{/admin/estadisticas(
+           catPage=${paginaCategorias.number - 1},
+           catSize=${paginaCategorias.size},
+           colPage=${colPage},           colSize=${colSize},
+           top=${filtroTop},
+           categorias=${filtroCategorias}
+       )}"
+               class="pagination-link">&laquo; Anterior</a>
+            <span th:unless="${paginaCategorias.hasPrevious()}" class="pagination-link disabled">&laquo; Anterior</span>
+
+            <span th:with="startPage=${T(java.lang.Math).max(0, paginaCategorias.number - 2)},
+                   endPage=${T(java.lang.Math).min(paginaCategorias.totalPages - 1, paginaCategorias.number + 2)}">
+        <a th:each="i : ${#numbers.sequence(startPage, endPage)}"
+           th:href="@{/admin/estadisticas(
+               catPage=${i},
+               catSize=${paginaCategorias.size},
+               colPage=${colPage},          colSize=${colSize},
+               top=${filtroTop},
+               categorias=${filtroCategorias}
+           )}"
+           th:classappend="${i == paginaCategorias.number} ? 'active'"
+           class="pagination-link"
+           th:text="${i + 1}">1</a>
+    </span>
+
+            <a th:if="${paginaCategorias.hasNext()}"
+               th:href="@{/admin/estadisticas(
+           catPage=${paginaCategorias.number + 1},
+           catSize=${paginaCategorias.size},
+           colPage=${colPage},          colSize=${colSize},
+           top=${filtroTop},
+           categorias=${filtroCategorias}
+       )}"
+               class="pagination-link">Siguiente &raquo;</a>
+            <span th:unless="${paginaCategorias.hasNext()}" class="pagination-link disabled">Siguiente &raquo;</span>
+
+            <p style="margin-top: 10px; font-size: 0.9em; color: #666;">
+                Página <span th:text="${paginaCategorias.number + 1}">1</span> de <span th:text="${paginaCategorias.totalPages}">5</span>.
+                Mostrando <span th:text="${paginaCategorias.numberOfElements}">10</span> de <span th:text="${paginaCategorias.totalElements}">50</span> elementos.
+            </p>
+        </div>
+        <h2 class="section-title" style="margin-top: 40px;">Provincias por coleccion</h2>
+        <div class="table-container">
+            <table class="data-table">
+                <thead>
+                <tr>
+                    <th>Coleccion</th>
+                    <th>Provincia más común</th>
+                    <th>Cantidad</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr th:each="coleccion : ${paginaColecciones.content}">
+                    <td th:text="${coleccion.titulo}">Nombre de la Coleccion</td>
+                    <td th:text="${coleccion.provincia}">Provincia</td>
+                    <td th:text="${coleccion.cantidad}">Cantidad de hechos en esa provincia</td>
+                </tr>
+                <tr th:if="${#lists.isEmpty(paginaColecciones.content)}">
+                    <td colspan="3" style="text-align: center;">No hay colecciones para mostrar.</td>
                 </tr>
                 </tbody>
 
             </table>
+        </div>
+
+        <div th:if="${paginaColecciones.totalPages > 1}" class="pagination-controls" style="margin-top: 20px; text-align: center;">
+
+            <a th:if="${paginaColecciones.hasPrevious()}"
+               th:href="@{/admin/estadisticas(
+                   colPage=${paginaColecciones.number - 1},
+                   colSize=${paginaColecciones.size},
+                   catPage=${catPage},          catSize=${catSize},
+                   top=${filtroTop},
+                   categorias=${filtroCategorias}
+               )}"
+               class="pagination-link">&laquo; Anterior</a>
+            <span th:unless="${paginaColecciones.hasPrevious()}" class="pagination-link disabled">&laquo; Anterior</span>
+
+            <span th:with="startPage=${T(java.lang.Math).max(0, paginaColecciones.number - 2)},
+                           endPage=${T(java.lang.Math).min(paginaColecciones.totalPages - 1, paginaColecciones.number + 2)}">
+
+                <a th:each="i : ${#numbers.sequence(startPage, endPage)}"
+                   th:href="@{/admin/estadisticas(
+                       colPage=${i},
+                       colSize=${paginaColecciones.size},
+                       catPage=${catPage},          catSize=${catSize},
+                       top=${filtroTop},
+                       categorias=${filtroCategorias}
+                   )}"
+                   th:classappend="${i == paginaColecciones.number} ? 'active'"
+                   class="pagination-link"
+                   th:text="${i + 1}">1</a>
+            </span>
+
+            <a th:if="${paginaColecciones.hasNext()}"
+               th:href="@{/admin/estadisticas(
+                   colPage=${paginaColecciones.number + 1},
+                   colSize=${paginaColecciones.size},
+                   catPage=${catPage},          catSize=${catSize},
+                   top=${filtroTop},
+                   categorias=${filtroCategorias}
+               )}"
+               class="pagination-link">Siguiente &raquo;</a>
+            <span th:unless="${paginaColecciones.hasNext()}" class="pagination-link disabled">Siguiente &raquo;</span>
+
+            <p style="margin-top: 10px; font-size: 0.9em; color: #666;">
+                Página <span th:text="${paginaColecciones.number + 1}">1</span> de <span th:text="${paginaColecciones.totalPages}">5</span>.
+                Mostrando <span th:text="${paginaColecciones.numberOfElements}">10</span> de <span th:text="${paginaColecciones.totalElements}">50</span> elementos.
+            </p>
         </div>
     </main>
 </div>
