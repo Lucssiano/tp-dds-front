@@ -8,30 +8,6 @@
     <link rel="stylesheet" th:href="@{/css/admin.css}">
     <link rel="stylesheet" th:href="@{/css/hecho.css}">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-
-    <style>
-        .autocomplete-create-item {
-            color: var(--primary-color);
-            font-weight: 600;
-            display: none;
-        }
-        .autocomplete-wrapper { position: relative; }
-
-        button:disabled {
-            background-color: #cbd5e1 !important;
-            color: #64748b !important;
-            cursor: not-allowed;
-            border-color: #cbd5e1 !important;
-            transform: none !important;
-            box-shadow: none !important;
-        }
-        /* Para que el dropdown flote por encima de todo */
-        .autocomplete-list {
-            z-index: 1000;
-            max-height: 200px;
-            overflow-y: auto;
-        }
-    </style>
 </head>
 
 <body>
@@ -48,9 +24,7 @@
 
     <div class="main-content">
         <div class="detail-container">
-
             <h1 class="page-title">Gestión de Colecciones</h1>
-
             <div class="stat-card">
 
                 <form id="main-form"
@@ -69,7 +43,6 @@
                     <div th:if="${#fields.hasGlobalErrors()}" class="api-error-alert mb-2">
                         <p th:each="err : ${#fields.globalErrors()}" th:text="${err}"></p>
                     </div>
-
 
                     <div class="content-block">
                         <label class="content-title" for="titulo">Título</label>
@@ -92,19 +65,26 @@
                     <div class="content-block">
                         <label class="content-title">Fuentes Asociadas</label>
 
-                        <div th:if="${#lists.isEmpty(fuentesDisponibles)}" class="input-warning-msg">No hay fuentes disponibles.</div>
+                        <div th:if="${#lists.isEmpty(fuentesDisponibles)}" class="input-warning-msg">
+                            No hay fuentes disponibles.
+                        </div>
 
-                        <div th:unless="${#lists.isEmpty(fuentesDisponibles)}" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 10px; margin-top: 10px;">
-                            <div th:each="fuente : ${fuentesDisponibles}" style="display: flex; align-items: center; gap: 8px;">
+                        <div th:unless="${#lists.isEmpty(fuentesDisponibles)}" class="checkbox-list">
+
+                            <div th:each="fuente : ${fuentesDisponibles}" class="checkbox-card">
+
                                 <input type="checkbox"
                                        th:field="*{fuentesIds}"
                                        th:value="${fuente.id}"
-                                       th:id="${'fuente-' + fuente.id}"
-                                       class="chk-fuente"
-                                       style="width: 16px; height: 16px; cursor: pointer; accent-color: var(--primary-color);">
-                                <label th:for="${'fuente-' + fuente.id}" th:text="${fuente.nombre}" style="cursor: pointer; color: #334155; font-weight: 500;"></label>
+                                       th:id="${'fuente-' + fuente.id}">
+
+                                <label th:for="${'fuente-' + fuente.id}"
+                                       th:text="${fuente.nombre}">
+                                </label>
                             </div>
+
                         </div>
+
                         <span class="field-error-msg" th:if="${#fields.hasErrors('fuentesIds')}" th:errors="*{fuentesIds}"></span>
                     </div>
 
@@ -128,6 +108,9 @@
                             <div th:each="criterio, stat : *{criteriosDePertenencias}"
                                  class="criterio-card"
                                  th:id="|criterio-row-${stat.index}|">
+
+                                <input type="hidden"
+                                       th:field="*{criteriosDePertenencias[__${stat.index}__].id}">
 
                                 <button type="button" class="btn-delete-absolute" th:attr="onclick=|eliminarCriterio(${stat.index})|" title="Eliminar">&times;</button>
 
@@ -156,7 +139,6 @@
                                 </div>
 
                                 <div th:id="|parametros-${stat.index}|">
-
                                     <th:block th:if="${#strings.toString(criterio.tipoCriterio) == 'FECHA'}">
                                         <div class="form-grid-2">
                                             <div>
@@ -204,12 +186,14 @@
                                         </div>
                                         <span class="field-error-msg" th:if="${#fields.hasErrors('criteriosDePertenencias[__${stat.index}__].parametros[categoria]')}" th:errors="*{criteriosDePertenencias[__${stat.index}__].parametros[categoria]}"></span>
                                     </th:block>
-
                                 </div>
                             </div>
                         </div>
 
-                        <span class="field-error-msg" th:if="${#fields.hasErrors('criteriosDePertenencias')}" th:errors="*{criteriosDePertenencias}"></span>
+                        <span class="field-error-msg"
+                              th:if="${#fields.hasErrors('criteriosDePertenencias')}"
+                              th:errors="*{criteriosDePertenencias}">
+                        </span>
                     </div>
 
                     <div class="form-actions">
@@ -217,27 +201,40 @@
                         <a th:href="@{/admin/colecciones/{id}/detalle(id=${idColeccion})}" class="btn btn--third">Cancelar</a>
                     </div>
                 </form>
-
             </div>
         </div>
     </div>
 </div>
 
 <script th:inline="javascript">
-    // Mismo Script de antes, solo que ajustamos la carga inicial
-    // para no duplicar los criterios que Thymeleaf ya renderizó.
 
     /*[[${categoriasDisponibles}]]*/
     const categoriasBackend = [[${categoriasDisponibles}]] || [];
-
-    // IMPORTANTE: Obtenemos el índice basado en cuántos renderizó Thymeleaf
     let criterioIndex = [[${coleccion.criteriosDePertenencias != null ? coleccion.criteriosDePertenencias.size() : 0}]];
 
     let focusStates = {};
     let initialState = null;
 
+    // --- NUEVA FUNCIÓN MÁGICA: REORDENAR ÍNDICES ---
+    // Esto asegura que si borras el índice 0, el 1 pase a ser 0.
+    // Así Spring nunca recibe "huecos" (List gaps) y no valida objetos vacíos.
+    function reordenarIndices() {
+        const tarjetas = document.querySelectorAll('.criterio-card');
+        tarjetas.forEach((card, nuevoIndex) => {
+            // Buscamos todos los inputs, selects y textareas dentro de esta tarjeta
+            const inputs = card.querySelectorAll('input, select, textarea');
+
+            inputs.forEach(input => {
+                // Reemplazamos cualquier cosa que parezca [123] por [nuevoIndex]
+                // Ej: criteriosDePertenencias[5].nombre -> criteriosDePertenencias[0].nombre
+                if (input.name) {
+                    input.name = input.name.replace(/\[\d+\]/, `[${nuevoIndex}]`);
+                }
+            });
+        });
+    }
+
     function getFormState() {
-        // ... (Tu misma función getFormState, no cambia) ...
         const state = {
             titulo: document.getElementById('titulo').value,
             descripcion: document.getElementById('descripcion').value,
@@ -250,9 +247,7 @@
             const tipoSelect = card.querySelector('select[name*="tipoCriterio"]');
             const fechaInicio = card.querySelector('input[name*="fechaInicio"]');
             const fechaFin = card.querySelector('input[name*="fechaFin"]');
-            const categoria = card.querySelector('input[name*="categoria"]'); // OJO: buscar por name parcial
-
-            // Truco: a veces name es parametros['categoria']
+            const categoria = card.querySelector('input[name*="categoria"]');
             const catVal = categoria ? categoria.value : '';
 
             state.criterios.push({
@@ -281,32 +276,28 @@
     }
 
     document.addEventListener('DOMContentLoaded', () => {
-        // YA NO LLAMAMOS a criteriosExistentes.forEach(c => agregarCriterioUI(c));
-        // Porque Thymeleaf ya los dibujó en el HTML del servidor.
-
-        // Solo capturamos estado inicial
         initialState = getFormState();
-
         document.getElementById('main-form').addEventListener('input', checkChanges);
         document.getElementById('main-form').addEventListener('change', checkChanges);
     });
 
     function agregarCriterio() {
-        // Usamos la lógica de JS para agregar NUEVOS
         agregarCriterioUI(null);
+        // IMPORTANTE: Reordenar al agregar para mantener coherencia
+        reordenarIndices();
         checkChanges();
     }
 
-    // --- GENERACIÓN DE HTML PARA NUEVOS CRITERIOS (Igual que Crear) ---
     function agregarCriterioUI(data) {
         const container = document.getElementById('criterios-container');
         const wrapper = document.createElement('div');
-        const idx = criterioIndex; // Usamos el índice global incrementado
+        const idx = criterioIndex; // Usamos el contador global para IDs únicos de DOM
 
         wrapper.className = 'criterio-card';
+        // Nota: Los IDs del DOM siguen siendo únicos e incrementales para que el JS no se rompa
+        // Lo que cambiamos con reordenarIndices() es solo el atributo "name" que se envía al server.
         wrapper.id = `criterio-row-${idx}`;
 
-        // HTML IGUAL al de Thymeleaf para consistencia visual
         wrapper.innerHTML = `
             <button type="button" class="btn-delete-absolute" onclick="eliminarCriterio(${idx})" title="Eliminar">&times;</button>
             <div class="form-grid-2">
@@ -334,15 +325,22 @@
         const row = document.getElementById(`criterio-row-${index}`);
         if(row) row.remove();
         delete focusStates[index];
+
+        // IMPORTANTE: Reordenar inmediatamente después de borrar
+        // Así el índice 5 pasa a ser 4, y Spring no ve huecos.
+        reordenarIndices();
+
         checkChanges();
     }
 
-    // --- ACTUALIZAR PARÁMETROS (JS) ---
-    // (Mismo código de siempre, asegurate que los names coincidan con el DTO)
+    // --- ACTUALIZAR PARÁMETROS ---
     function actualizarParametros(select, index, valores = {}) {
         const tipo = select.value;
         const paramsContainer = document.getElementById(`parametros-${index}`);
         paramsContainer.innerHTML = "";
+
+        // Nota: Aquí al generar HTML dinámico usamos ${index} que es el ID único.
+        // Después de insertarlo, llamamos a reordenarIndices() para arreglar los "name".
 
         if (tipo === "FECHA") {
             paramsContainer.innerHTML = `
@@ -373,13 +371,13 @@
                 </div>`;
             focusStates[index] = -1;
         }
+
+        // Reordenamos nombres para asegurar que los nuevos inputs tengan el índice correcto
+        reordenarIndices();
         checkChanges();
     }
 
-    // --- LÓGICA AUTOCOMPLETE (Idéntica a siempre) ---
-    // Copiar las funciones handleKeydown, filterDynamicCat, showDynamicCat, selectDynamicCat, closeDynamicList tal cual las tenías.
-    // Solo asegurate de llamar a checkChanges() dentro de selectDynamicCat y filterDynamicCat.
-
+    // --- LÓGICA AUTOCOMPLETE (Sin cambios) ---
     window.handleKeydown = function(index, e) {
         const list = document.getElementById(`cat-list-${index}`);
         if (!list || !list.classList.contains('active')) return;
@@ -435,7 +433,7 @@
     window.selectDynamicCat = function(index, val) {
         document.getElementById(`cat-input-${index}`).value = val;
         closeDynamicList(index);
-        checkChanges(); // IMPORTANTE PARA EDITAR
+        checkChanges();
     };
 
     function closeDynamicList(index) {

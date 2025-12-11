@@ -426,3 +426,52 @@
 .btn-delete-criterio:hover {
     color: #dc2626;
 }
+
+/* ==========================================
+   COMPONENTES DE FORMULARIO (Checkboxes en Grid/Flex)
+   ========================================== */
+
+/* Contenedor que permite que los items fluyan y bajen de línea */
+.checkbox-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-top: 10px;
+}
+
+/* Cada ítem (Fuente) encapsulado en una tarjeta pequeña */
+.checkbox-card {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background-color: #f8fafc; /* Un gris/azul muy pálido, más limpio */
+    border: 1px solid #cbd5e0;
+    padding: 8px 12px;
+    border-radius: 6px;
+    max-width: 100%; /* Asegura que no rompa el contenedor padre */
+    transition: border-color 0.2s;
+}
+
+.checkbox-card:hover {
+    border-color: var(--primary-color);
+    background-color: #ffffff;
+}
+
+/* El input check */
+.checkbox-card input[type="checkbox"] {
+    width: 16px;
+    height: 16px;
+    cursor: pointer;
+    accent-color: var(--primary-color);
+    flex-shrink: 0; /* IMPORTANTE: Evita que el checkbox se aplaste si el texto es largo */
+}
+
+/* El texto (Label) */
+.checkbox-card label {
+    cursor: pointer;
+    color: #334155;
+    font-weight: 500;
+    line-height: 1.2;
+    /* LA MAGIA: Corta cadenas largas (como IDs o URLs) sin espacios */
+    word-break: break-all;
+}

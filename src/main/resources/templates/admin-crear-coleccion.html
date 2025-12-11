@@ -10,16 +10,6 @@
   <link rel="stylesheet" th:href="@{/css/hecho.css}">
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 
-  <style>
-    /* Ajustes mínimos de superposición que no están en los CSS base */
-    .autocomplete-wrapper { position: relative; width: 100%; }
-    /* Aseguramos que el dropdown flote sobre todo */
-    .autocomplete-list {
-      z-index: 1000;
-      max-height: 200px;
-      overflow-y: auto;
-    }
-  </style>
 </head>
 
 <body>
@@ -45,178 +35,185 @@
               th:object="${coleccion}"
               method="post">
 
-        <div style="margin-bottom: 20px;">
-          <h1 class="section-title">Crear Nueva Colección</h1>
-        </div>
+          <div style="margin-bottom: 20px;">
+            <h1 class="section-title">Crear Nueva Colección</h1>
+          </div>
 
-        <div th:if="${globalError}" class="api-error-alert mb-2">
-          <strong th:text="${globalError}"></strong>
-          <ul th:if="${errorDetails}" class="error-list">
-            <li th:each="det : ${errorDetails}" th:text="${det}"></li>
-          </ul>
-        </div>
+          <div th:if="${globalError}" class="api-error-alert mb-2">
+            <strong th:text="${globalError}"></strong>
+            <ul th:if="${errorDetails}" class="error-list">
+              <li th:each="det : ${errorDetails}" th:text="${det}"></li>
+            </ul>
+          </div>
 
-  <!--      <div class="alert alert-danger mb-2" th:if="${errors != null and !errors.isEmpty()}"-->
-  <!--           style="background-color: var(&#45;&#45;error-bg); border: 1px solid var(&#45;&#45;error-border); color: var(&#45;&#45;error-text); padding: 15px; border-radius: 6px;">-->
-  <!--        <ul style="margin: 0; padding-left: 20px;">-->
-  <!--          <li th:each="err : ${errors}" th:text="${err.value}"></li>-->
-  <!--        </ul>-->
-  <!--      </div>-->
+          <div th:if="${#fields.hasGlobalErrors()}" class="api-error-alert mb-2">
+            <p th:each="err : ${#fields.globalErrors()}" th:text="${err}"></p>
+          </div>
 
-        <div class="content-block">
-          <label class="content-title" for="titulo">Título</label>
-          <input type="text" id="titulo" th:field="*{titulo}" class="clean-input"
-                 th:classappend="${#fields.hasErrors('titulo')} ? 'input-error' : ''"
-                 placeholder="Ej: Eventos Naturales de Argentina">
-          <span class="field-error-msg" th:if="${#fields.hasErrors('titulo')}" th:errors="*{titulo}"></span>
-        </div>
+          <div class="content-block">
+            <label class="content-title" for="titulo">Título</label>
+            <input type="text" id="titulo" th:field="*{titulo}" class="clean-input"
+                   th:classappend="${#fields.hasErrors('titulo')} ? 'input-error' : ''"
+                   placeholder="Ej: Eventos Naturales de Argentina">
+            <span class="field-error-msg" th:if="${#fields.hasErrors('titulo')}" th:errors="*{titulo}"></span>
+          </div>
 
-        <div class="content-block">
-          <label class="content-title" for="descripcion">Descripción</label>
-          <textarea id="descripcion" th:field="*{descripcion}" class="clean-input" rows="4"
-                    th:classappend="${#fields.hasErrors('descripcion')} ? 'input-error' : ''"></textarea>
-          <span class="field-error-msg" th:if="${#fields.hasErrors('descripcion')}" th:errors="*{descripcion}"></span>
-        </div>
+          <div class="content-block">
+            <label class="content-title" for="descripcion">Descripción</label>
+            <textarea id="descripcion" th:field="*{descripcion}" class="clean-input" rows="4"
+                      th:classappend="${#fields.hasErrors('descripcion')} ? 'input-error' : ''"></textarea>
+            <span class="field-error-msg" th:if="${#fields.hasErrors('descripcion')}" th:errors="*{descripcion}"></span>
+          </div>
 
-        <div class="content-block">
-          <label class="content-title">Fuentes Asociadas</label>
-          <div th:unless="${#lists.isEmpty(fuentesDisponibles)}" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 10px;">
-            <div th:each="fuente : ${fuentesDisponibles}" style="display: flex; align-items: center; gap: 8px;">
-              <input type="checkbox" th:field="*{fuentesIds}" th:value="${fuente.id}" style="cursor: pointer;">
-              <label th:text="${fuente.nombre}"></label>
+          <div class="content-block">
+            <label class="content-title">Fuentes Asociadas</label>
+
+            <div th:if="${#lists.isEmpty(fuentesDisponibles)}" class="input-warning-msg">
+              No hay fuentes disponibles.
             </div>
-          </div>
-          <span class="field-error-msg" th:if="${#fields.hasErrors('fuentesIds')}" th:errors="*{fuentesIds}"></span>
-        </div>
 
-        <div class="content-block">
-          <label class="content-title">Algoritmo de Consenso</label>
-          <select th:field="*{algoritmoConsenso}" class="clean-input">
-            <option value="">Seleccioná un algoritmo (opcional)</option>
-            <option value="MULTIPLES_MENCIONES">Múltiples menciones</option>
-            <option value="MAYORIA_SIMPLE">Mayoría simple</option>
-            <option value="ABSOLUTA">Absoluta</option>
-          </select>
-        </div>
+            <div th:unless="${#lists.isEmpty(fuentesDisponibles)}" class="checkbox-list">
 
-        <div class="content-block" style="border-bottom: none; padding-bottom: 0;">
-          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
-            <label class="content-title" style="margin-bottom: 0;">Criterios de Pertenencia</label>
-            <button type="button" class="btn btn--small btn--secondary" onclick="agregarCriterio()">+ Agregar Criterio</button>
-          </div>
+              <div th:each="fuente : ${fuentesDisponibles}" class="checkbox-card">
 
-          <div id="criterios-container">
-            <div th:each="criterio, stat : *{criteriosDePertenencias}"
-                 class="criterio-card"
-                 th:id="|criterio-row-${stat.index}|">
+                <input type="checkbox"
+                       th:field="*{fuentesIds}"
+                       th:value="${fuente.id}"
+                       th:id="${'fuente-' + fuente.id}">
 
-              <button type="button" class="btn-delete-criterio" th:attr="onclick=|eliminarCriterio(${stat.index})|" title="Eliminar">&times;</button>
-
-              <div class="form-grid-2">
-                <div>
-                  <label class="content-title" style="font-size: 0.8rem;">Nombre del Criterio</label>
-                  <input type="text"
-                         th:field="*{criteriosDePertenencias[__${stat.index}__].nombreCriterio}"
-                         class="clean-input"
-                         th:classappend="${#fields.hasErrors('criteriosDePertenencias[__${stat.index}__].nombreCriterio')} ? 'input-error' : ''">
-                  <span class="field-error-msg" th:if="${#fields.hasErrors('criteriosDePertenencias[__${stat.index}__].nombreCriterio')}" th:errors="*{criteriosDePertenencias[__${stat.index}__].nombreCriterio}"></span>
-                </div>
-                <div>
-                  <label class="content-title" style="font-size: 0.8rem;">Tipo de Criterio</label>
-                  <select th:field="*{criteriosDePertenencias[__${stat.index}__].tipoCriterio}"
-                          class="clean-input"
-                          th:attr="onchange=|actualizarParametros(this, ${stat.index})|"
-                          th:classappend="${#fields.hasErrors('criteriosDePertenencias[__${stat.index}__].tipoCriterio')} ? 'input-error' : ''">
-                    <option value="">Seleccionar tipo...</option>
-                    <option value="FECHA">Rango de Fechas</option>
-                    <option value="CATEGORIA">Categoría Específica</option>
-                  </select>
-                  <span class="field-error-msg" th:if="${#fields.hasErrors('criteriosDePertenencias[__${stat.index}__].tipoCriterio')}" th:errors="*{criteriosDePertenencias[__${stat.index}__].tipoCriterio}"></span>
-                </div>
+                <label th:for="${'fuente-' + fuente.id}"
+                       th:text="${fuente.nombre}">
+                </label>
               </div>
 
-              <div th:id="|parametros-${stat.index}|">
+            </div>
 
-                <th:block th:if="${#strings.toString(criterio.tipoCriterio) == 'FECHA'}">
-                  <div class="form-grid-2">
-                    <div>
-                      <label class="content-title" style="font-size: 0.8rem;">Desde</label>
-                      <input type="date"
-                             th:field="*{criteriosDePertenencias[__${stat.index}__].parametros['fechaInicio']}"
-                             class="clean-input"
-                             th:classappend="${(errors != null and errors.containsKey('criterioFecha')) or #fields.hasErrors('criteriosDePertenencias[__${stat.index}__].parametros[fechaInicio]')} ? 'input-error' : ''">
+            <span class="field-error-msg" th:if="${#fields.hasErrors('fuentesIds')}" th:errors="*{fuentesIds}"></span>
+          </div>
 
-                      <span class="field-error-msg"
-                            th:if="${#fields.hasErrors('criteriosDePertenencias[__${stat.index}__].parametros[fechaInicio]')}"
-                            th:errors="*{criteriosDePertenencias[__${stat.index}__].parametros[fechaInicio]}">
-                      </span>
-                    </div>
+          <div class="content-block">
+            <label class="content-title">Algoritmo de Consenso</label>
+            <select th:field="*{algoritmoConsenso}" class="clean-input">
+              <option value="">Seleccioná un algoritmo (opcional)</option>
+              <option value="MULTIPLES_MENCIONES">Múltiples menciones</option>
+              <option value="MAYORIA_SIMPLE">Mayoría simple</option>
+              <option value="ABSOLUTA">Absoluta</option>
+            </select>
+          </div>
 
-                    <div>
-                      <label class="content-title" style="font-size: 0.8rem;">Hasta</label>
-                      <input type="date"
-                             th:field="*{criteriosDePertenencias[__${stat.index}__].parametros['fechaFin']}"
-                             class="clean-input"
-                             th:classappend="${(errors != null and errors.containsKey('criterioFecha')) or #fields.hasErrors('criteriosDePertenencias[__${stat.index}__].parametros[fechaFin]')} ? 'input-error' : ''">
+          <div class="content-block" style="border-bottom: none; padding-bottom: 0;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+              <label class="content-title" style="margin-bottom: 0;">Criterios de Pertenencia</label>
+              <button type="button" class="btn btn--small btn--secondary" onclick="agregarCriterio()">Agregar Criterio</button>
+            </div>
 
-                      <span class="field-error-msg"
-                            th:if="${#fields.hasErrors('criteriosDePertenencias[__${stat.index}__].parametros[fechaFin]')}"
-                            th:errors="*{criteriosDePertenencias[__${stat.index}__].parametros[fechaFin]}">
-                      </span>
-                    </div>
-                  </div>
+            <div id="criterios-container">
+              <div th:each="criterio, stat : *{criteriosDePertenencias}"
+                   class="criterio-card"
+                   th:id="|criterio-row-${stat.index}|">
 
-                  <span class="field-error-msg"
-                        th:if="${errors != null and errors.containsKey('criterioFecha')}"
-                        th:text="${errors['criterioFecha']}">
-                  </span>
-                </th:block>
+                <button type="button" class="btn-delete-criterio" th:attr="onclick=|eliminarCriterio(${stat.index})|" title="Eliminar">&times;</button>
 
-                <th:block th:if="${#strings.toString(criterio.tipoCriterio) == 'CATEGORIA'}">
-                  <label class="content-title" style="font-size: 0.8rem;">Categoría Requerida</label>
-                  <div class="autocomplete-wrapper" th:id="|cat-wrapper-${stat.index}|">
+                <div class="form-grid-2">
+                  <div>
+                    <label class="content-title" style="font-size: 0.8rem;">Nombre del Criterio</label>
                     <input type="text"
-                           th:id="|cat-input-${stat.index}|"
-                           th:field="*{criteriosDePertenencias[__${stat.index}__].parametros['categoria']}"
+                           th:field="*{criteriosDePertenencias[__${stat.index}__].nombreCriterio}"
                            class="clean-input"
-                           placeholder="Escribe o selecciona..."
-                           autocomplete="off"
-                           th:attr="oninput=|filterDynamicCat(${stat.index})|, onfocus=|showDynamicCat(${stat.index})|, onkeydown=|handleKeydown(${stat.index}, event)|"
-                           th:classappend="${(errors != null and errors.containsKey('criterioCategoria')) or #fields.hasErrors('criteriosDePertenencias[__${stat.index}__].parametros[categoria]')} ? 'input-error' : ''">
-
-                    <ul th:id="|cat-list-${stat.index}|" class="autocomplete-list">
-                      <li th:each="cat : ${categoriasDisponibles}"
-                          class="autocomplete-item"
-                          th:text="${cat.nombre}"
-                          th:attr="onclick=|selectDynamicCat(${stat.index}, '${cat.nombre}')|">
-                      </li>
-                      <li th:id="|no-results-${stat.index}|"
-                          class="autocomplete-item autocomplete-create-item"
-                          th:attr="onclick=|selectNewCategory(${stat.index})|">
-                      </li>
-                    </ul>
+                           th:classappend="${#fields.hasErrors('criteriosDePertenencias[__${stat.index}__].nombreCriterio')} ? 'input-error' : ''">
+                    <span class="field-error-msg" th:if="${#fields.hasErrors('criteriosDePertenencias[__${stat.index}__].nombreCriterio')}" th:errors="*{criteriosDePertenencias[__${stat.index}__].nombreCriterio}"></span>
                   </div>
+                  <div>
+                    <label class="content-title" style="font-size: 0.8rem;">Tipo de Criterio</label>
+                    <select th:field="*{criteriosDePertenencias[__${stat.index}__].tipoCriterio}"
+                            class="clean-input"
+                            th:attr="onchange=|actualizarParametros(this, ${stat.index})|"
+                            th:classappend="${#fields.hasErrors('criteriosDePertenencias[__${stat.index}__].tipoCriterio')} ? 'input-error' : ''">
+                      <option value="">Seleccionar tipo...</option>
+                      <option value="FECHA">Rango de Fechas</option>
+                      <option value="CATEGORIA">Categoría Específica</option>
+                    </select>
+                    <span class="field-error-msg" th:if="${#fields.hasErrors('criteriosDePertenencias[__${stat.index}__].tipoCriterio')}" th:errors="*{criteriosDePertenencias[__${stat.index}__].tipoCriterio}"></span>
+                  </div>
+                </div>
 
-                  <span class="field-error-msg"
-                        th:if="${errors != null and errors.containsKey('criterioCategoria')}"
-                        th:text="${errors['criterioCategoria']}"></span>
+                <div th:id="|parametros-${stat.index}|">
 
-                  <span class="field-error-msg"
-                        th:if="${#fields.hasErrors('criteriosDePertenencias[__${stat.index}__].parametros[categoria]')}"
-                        th:errors="*{criteriosDePertenencias[__${stat.index}__].parametros[categoria]}"></span>
-                </th:block>
+                  <th:block th:if="${#strings.toString(criterio.tipoCriterio) == 'FECHA'}">
+                    <div class="form-grid-2">
+                      <div>
+                        <label class="content-title" style="font-size: 0.8rem;">Desde</label>
+                        <input type="date"
+                               th:field="*{criteriosDePertenencias[__${stat.index}__].parametros['fechaInicio']}"
+                               class="clean-input"
+                               th:classappend="${#fields.hasErrors('criteriosDePertenencias[__${stat.index}__].parametros[fechaInicio]')} ? 'input-error' : ''">
+
+                        <span class="field-error-msg"
+                              th:if="${#fields.hasErrors('criteriosDePertenencias[__${stat.index}__].parametros[fechaInicio]')}"
+                              th:errors="*{criteriosDePertenencias[__${stat.index}__].parametros[fechaInicio]}">
+                      </span>
+                      </div>
+
+                      <div>
+                        <label class="content-title" style="font-size: 0.8rem;">Hasta</label>
+                        <input type="date"
+                               th:field="*{criteriosDePertenencias[__${stat.index}__].parametros['fechaFin']}"
+                               class="clean-input"
+                               th:classappend="${#fields.hasErrors('criteriosDePertenencias[__${stat.index}__].parametros[fechaFin]')} ? 'input-error' : ''">
+
+                        <span class="field-error-msg"
+                              th:if="${#fields.hasErrors('criteriosDePertenencias[__${stat.index}__].parametros[fechaFin]')}"
+                              th:errors="*{criteriosDePertenencias[__${stat.index}__].parametros[fechaFin]}">
+                      </span>
+                      </div>
+                    </div>
+                  </th:block>
+
+                  <th:block th:if="${#strings.toString(criterio.tipoCriterio) == 'CATEGORIA'}">
+                    <label class="content-title" style="font-size: 0.8rem;">Categoría Requerida</label>
+                    <div class="autocomplete-wrapper" th:id="|cat-wrapper-${stat.index}|">
+                      <input type="text"
+                             th:id="|cat-input-${stat.index}|"
+                             th:field="*{criteriosDePertenencias[__${stat.index}__].parametros['categoria']}"
+                             class="clean-input"
+                             placeholder="Escribe o selecciona..."
+                             autocomplete="off"
+                             th:attr="oninput=|filterDynamicCat(${stat.index})|, onfocus=|showDynamicCat(${stat.index})|, onkeydown=|handleKeydown(${stat.index}, event)|"
+                             th:classappend="${#fields.hasErrors('criteriosDePertenencias[__${stat.index}__].parametros[categoria]')} ? 'input-error' : ''">
+
+                      <ul th:id="|cat-list-${stat.index}|" class="autocomplete-list">
+                        <li th:each="cat : ${categoriasDisponibles}"
+                            class="autocomplete-item"
+                            th:text="${cat.nombre}"
+                            th:attr="onclick=|selectDynamicCat(${stat.index}, '${cat.nombre}')|">
+                        </li>
+                        <li th:id="|no-results-${stat.index}|"
+                            class="autocomplete-item autocomplete-create-item"
+                            th:attr="onclick=|selectNewCategory(${stat.index})|">
+                        </li>
+                      </ul>
+                    </div>
+
+                    <span class="field-error-msg"
+                          th:if="${#fields.hasErrors('criteriosDePertenencias[__${stat.index}__].parametros[categoria]')}"
+                          th:errors="*{criteriosDePertenencias[__${stat.index}__].parametros[categoria]}"></span>
+                  </th:block>
+                </div>
               </div>
             </div>
+
+            <span class="field-error-msg"
+                  th:if="${#fields.hasErrors('criteriosDePertenencias')}"
+                  th:errors="*{criteriosDePertenencias}">
+          </span>
+
           </div>
 
-          <span class="field-error-msg" th:if="${errors != null and errors.containsKey('criteriosDePertenencias')}" th:text="${errors['criteriosDePertenencias']}"></span>
-        </div>
-
-        <div class="form-actions">
-          <button type="submit" class="btn btn--primary">Crear Colección</button>
-          <a th:href="@{/admin/colecciones}" class="btn btn--third">Cancelar</a>
-        </div>
-      </form>
+          <div class="form-actions">
+            <button type="submit" class="btn btn--primary">Crear Colección</button>
+            <a th:href="@{/admin/colecciones}" class="btn btn--third">Cancelar</a>
+          </div>
+        </form>
 
       </div>
     </div>
@@ -236,7 +233,6 @@
   }
 
   // --- AGREGAR CRITERIO (JS) ---
-  // Ahora usa form-grid-2 para que los nuevos criterios se vean igual que los de Thymeleaf
   function agregarCriterio() {
     const container = document.getElementById('criterios-container');
     const wrapper = document.createElement('div');
